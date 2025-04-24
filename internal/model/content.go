@@ -7,6 +7,7 @@ import (
 
 type Content struct {
 	gorm.Model
+	SortIndex    int            `gorm:"not null"`
 	CollectionID uint           `gorm:"not null"`
 	Collection   Collection     `gorm:"foreignKey:CollectionID"`
 	Data         datatypes.JSON `gorm:"type:json;not null"`
