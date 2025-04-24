@@ -8,6 +8,39 @@
             {{ . }}
         {{ end }}
 
+        <button type="submit">Submit</button>
+
     </form>
+
+    <script>
+
+        function initField(element) {
+            const fieldContainer = element.parentElement;
+            const addButton = element.querySelector('[data-action-add]');
+
+            if (!addButton) {
+                return
+            };
+
+            addButton.addEventListener('click', () => {
+                const newField = element.cloneNode(true);
+                newField.querySelector('input').value = '';
+                fieldContainer.appendChild(newField);
+
+                initField(newField);
+
+            });
+        }
+
+        function init() {
+            const fields = document.querySelectorAll('[data-field-item]');
+            
+            fields.forEach(field => { initField(field); });
+
+        }        
+
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
 
 {{ end }}
