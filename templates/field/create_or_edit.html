@@ -1,0 +1,41 @@
+{{ define "content" }}
+    <h1>New field</h1>
+    <form method="POST" action="{{ if .field }}/fields/edit/{{ .field.ID }}{{ else }}/fields/create{{ end }}">
+    <label>Name:</label><br>
+    <input type="text" name="name" {{ if .field.Name }}value="{{ .field.Name }}"{{ end }} ><br><br>
+
+    <label>Alias:</label><br>
+    <input type="text" name="alias" {{ if .field.Alias }}value="{{ .field.Alias }}"{{ end }}><br><br>
+
+    <label>Type:</label><br>
+    <select name="field_type">
+        {{ range .types }}
+            <option value="{{ . }}" {{ if eq . $.field.FieldType }}selected{{ end }}>{{ . }} </option>
+        {{ end }}
+        
+    </select><br><br>
+
+    <label>Collection:</label><br>
+    <select name="collection_id">
+        {{ range .collections }}
+            <option value="{{ .ID }}" {{ if eq .ID $.field.CollectionID }}selected{{ end }}>{{ .Name }}</option>
+        {{ end }}
+    </select><br><br>
+
+    <label>Required:</label><br>
+    <input type="checkbox" name="is_required" {{ if .field.IsRequired }}checked{{ end }}><br><br>
+
+    <label>Is list:</label><br>
+    <input type="checkbox" name="is_list" {{ if .field.IsList }}checked{{ end }}><br><br>
+
+    <label>Display field:</label><br>
+    <input type="checkbox" name="display_field" {{ if .field.DisplayField }}checked{{ end }}><br><br>
+
+    <button type="submit">{{ if .field }}Update{{ else }}Create{{ end }}</button>
+    </form>
+
+    <form method="POST" action="/fields/delete/{{ .field.ID }}" onsubmit="return confirm('Confirm deletion?');">
+    <button type="submit">Delete</button>
+    </form>
+
+{{ end }}

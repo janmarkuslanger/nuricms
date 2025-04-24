@@ -1,0 +1,9 @@
+<div>
+
+    <label>{{ .Name }}</label>
+    
+    <div>
+        <input type="text" name="{{ .Alias }}" {{ if .IsRequired }}required{{ end }}/>
+    </div>
+
+</div>

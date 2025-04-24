@@ -1,0 +1,28 @@
+{{ define "layout.html" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ block "title" . }}nuricms{{ end }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+</head>
+<body>
+
+    <header>
+        nuricms
+    
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/collections">Collections</a></li>
+                <li><a href="/fields">Fields</a></li>
+                <li><a href="/content/collections">Content</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {{ block "content" . }}{{ end }}
+    </main>
+</body>
+</html>
+{{ end }}

@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Gin Server",
+        "type": "go",
+        "request": "launch",
+        "mode": "auto",
+        "program": "${workspaceFolder}/cmd/nuricms/main.go",
+        "env": {
+          "GIN_MODE": "debug",
+          "PORT": "8080"
+        },
+        "args": [
+        ],
+        "buildFlags": "-tags=debug"
+      }
+    ]
+  }
+  
