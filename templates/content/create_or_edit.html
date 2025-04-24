@@ -1,11 +1,9 @@
 {{ define "content" }}
 
-    <h1>asdaDSAD</h1>
+    <h1>Content: {{ .Collection.Name }}</h1>
 
-    {{ range .fieldsHtml}}
+    {{ range .FieldsHtml}}
         {{ . }}
     {{ end }}
-
-
 
 {{ end }}

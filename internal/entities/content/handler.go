@@ -46,7 +46,10 @@ func (h Handler) showCreateCollection(c *gin.Context) {
 
 	fields, err := h.repos.Field.FindByCollectionID(collectionID)
 
+	collection, err := h.repos.Collection.FindByID(collectionID)
+
 	utils.RenderWithLayout(c, "content/create_or_edit.html", gin.H{
-		"fieldsHtml": RenderFields(fields),
+		"FieldsHtml": RenderFields(fields),
+		"Collection": collection,
 	}, http.StatusOK)
 }
