@@ -2,8 +2,12 @@
 
     <h1>Content: {{ .Collection.Name }}</h1>
 
-    {{ range .FieldsHtml}}
-        {{ . }}
-    {{ end }}
+    <form method="POST">
+
+        {{ range .FieldsHtml}}
+            {{ . }}
+        {{ end }}
+
+    </form>
 
 {{ end }}
