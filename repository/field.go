@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/model"
 	"gorm.io/gorm"
 )
 
@@ -18,5 +18,15 @@ func (r *FieldRepository) FindByCollectionID(collectionID uint64) ([]model.Field
 	if err := r.db.Where("collection_id = ?", collectionID).Find(&fields).Error; err != nil {
 		return nil, err
 	}
+	return fields, nil
+}
+
+func (r *FieldRepository) FindDisplayFieldsByCollectionID(collectionID uint64) ([]model.Field, error) {
+	var fields []model.Field
+
+	if err := r.db.Where("collection_id = ? AND display_field = 1", collectionID).Find(&fields).Error; err != nil {
+		return nil, err
+	}
+
 	return fields, nil
 }

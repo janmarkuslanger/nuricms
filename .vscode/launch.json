@@ -7,6 +7,7 @@
         "request": "launch",
         "mode": "auto",
         "program": "${workspaceFolder}/cmd/nuricms/main.go",
+        "cwd": "${workspaceFolder}", 
         "env": {
           "GIN_MODE": "debug",
           "PORT": "8080"

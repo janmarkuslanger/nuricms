@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/internal/core/db"
-	"github.com/janmarkuslanger/nuricms/internal/model"
-	"github.com/janmarkuslanger/nuricms/internal/repository"
-	"github.com/janmarkuslanger/nuricms/internal/utils"
+	"github.com/janmarkuslanger/nuricms/core/db"
+	"github.com/janmarkuslanger/nuricms/model"
+	"github.com/janmarkuslanger/nuricms/repository"
+	"github.com/janmarkuslanger/nuricms/utils"
 )
 
 type Handler struct {

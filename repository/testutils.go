@@ -1,0 +1,27 @@
+package repository
+
+import (
+	"github.com/janmarkuslanger/nuricms/model"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+func CreateTestDB() (*gorm.DB, error) {
+	gormDB, err := gorm.Open(sqlite.New(sqlite.Config{
+		DSN: ":memory:",
+	}), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+	err = gormDB.AutoMigrate(
+		&model.Collection{},
+		&model.Field{},
+		&model.Content{},
+		&model.ContentValue{},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return gormDB, nil
+}

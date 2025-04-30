@@ -34,6 +34,9 @@ func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, status
 		"eq": func(a, b interface{}) bool {
 			return a == b
 		},
+		"add": func(a int, b int) int {
+			return a + b
+		},
 	}
 
 	tmpl := template.Must(template.New("layout.html").

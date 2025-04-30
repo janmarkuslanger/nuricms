@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/model"
 	"gorm.io/gorm"
 )
 

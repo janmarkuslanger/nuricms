@@ -13,7 +13,10 @@
             {{ range .collections }}
             <tr>
                 <td>{{ .Name }}</td>
-                <td><a href="/content/collections/create/{{ .ID }}">Create content</a></td>
+                <td>
+                    <a href="/content/collections/{{ .ID }}/create">Create content</a>
+                    <a href="/content/collections/{{ .ID }}/show">Show content</a>
+                </td>
             </tr>
             {{ end }}
         </tbody>
