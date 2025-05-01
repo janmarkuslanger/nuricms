@@ -103,7 +103,7 @@ func (h Handler) createContent(c *gin.Context) {
 						FieldID:   field.ID,
 						Value:     fieldValue,
 					}
-					_, err := h.repos.ContentValue.Create(&contentValue)
+					err := h.repos.ContentValue.Create(&contentValue)
 
 					if err != nil {
 						return err
@@ -118,8 +118,8 @@ func (h Handler) createContent(c *gin.Context) {
 					FieldID:   field.ID,
 					Value:     fieldValue,
 				}
-				_, err := h.repos.ContentValue.Create(&contentValue)
 
+				err := h.repos.ContentValue.Create(&contentValue)
 				if err != nil {
 					return err
 				}
