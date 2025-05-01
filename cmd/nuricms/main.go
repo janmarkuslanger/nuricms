@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/core/db"
 	"github.com/janmarkuslanger/nuricms/core/handler"
+	"github.com/janmarkuslanger/nuricms/db"
 	"github.com/janmarkuslanger/nuricms/entities/collection"
 	"github.com/janmarkuslanger/nuricms/entities/content"
 	"github.com/janmarkuslanger/nuricms/entities/field"

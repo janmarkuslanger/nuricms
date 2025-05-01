@@ -1,30 +1,11 @@
 package utils
 
 import (
-	"bytes"
 	"html/template"
 	"net/http"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 )
-
-func RenderTemplate(templateName string, data interface{}) (string, error) {
-	templatePath := filepath.Join("templates", templateName+".html")
-	rawTemplate, err := template.ParseFiles(templatePath)
-
-	if err != nil {
-		return "", err
-	}
-
-	var buf bytes.Buffer
-
-	if err := rawTemplate.Execute(&buf, data); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
-}
 
 func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, statusCode int) {
 	funcMap := template.FuncMap{

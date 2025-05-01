@@ -20,6 +20,16 @@ func (r *ContentRepository) Create(content *model.Content) (model.Content, error
 	return *content, nil
 }
 
+func (r *ContentRepository) FindByID(id uint) (model.Content, error) {
+	var content model.Content
+	err := r.db.
+		Where("id = ?", id).
+		Preload("ContentValues").
+		Preload("ContentValues.Field").
+		Find(&content).Error
+	return content, err
+}
+
 func (r *ContentRepository) FindByCollectionID(collectionID uint) ([]model.Content, error) {
 	var contents []model.Content
 	err := r.db.

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/core/db"
+	"github.com/janmarkuslanger/nuricms/db"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/repository"
 	"github.com/janmarkuslanger/nuricms/utils"
@@ -103,8 +103,8 @@ func (h Handler) createContent(c *gin.Context) {
 						FieldID:   field.ID,
 						Value:     fieldValue,
 					}
-					err := h.repos.ContentValue.Create(&contentValue)
 
+					err := h.repos.ContentValue.Create(&contentValue)
 					if err != nil {
 						return err
 					}
@@ -150,7 +150,7 @@ func (h Handler) listContent(c *gin.Context) {
 		return
 	}
 
-	groups := GroupContentValuesByField(contents)
+	groups := CreateContentGroupsByField(contents)
 
 	fields, err := h.repos.Field.FindDisplayFieldsByCollectionID(collectionID)
 
@@ -168,20 +168,34 @@ func (h Handler) listContent(c *gin.Context) {
 
 func (h *Handler) showEditContent(c *gin.Context) {
 	collectionIDParam := c.Param("id")
-	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 32)
+	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 0)
+
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/collections")
+		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
 	collectionID := uint(collectionID64)
 
-	fields, err := h.repos.Field.FindByCollectionID(collectionID)
+	contentIDParam := c.Param("contentID")
+	contentID64, err := strconv.ParseUint(contentIDParam, 10, 0)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/collections")
+		return
+	}
+
+	contentID := uint(contentID64)
+
+	content, err := h.repos.Content.FindByID(contentID)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/collections")
+		return
+	}
 
 	collection, err := h.repos.Collection.FindByID(collectionID)
 
 	utils.RenderWithLayout(c, "content/create_or_edit.html", gin.H{
-		"FieldsHtml": RenderFields(fields),
+		"FieldsHtml": RenderFieldsByContent(content),
 		"Collection": collection,
 	}, http.StatusOK)
 }

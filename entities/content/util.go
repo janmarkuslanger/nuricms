@@ -2,29 +2,73 @@ package content
 
 import (
 	"html/template"
+	"path/filepath"
 
+	"github.com/janmarkuslanger/nuricms/config"
 	"github.com/janmarkuslanger/nuricms/model"
-	"github.com/janmarkuslanger/nuricms/utils"
+	pkgtemplate "github.com/janmarkuslanger/nuricms/pkg/template"
 )
 
 func RenderFields(fields []model.Field) []template.HTML {
-
 	var htmlFields []template.HTML
 
 	for _, field := range fields {
-		var templatePath string
-
-		if field.FieldType == "Text" {
-			templatePath = "template_fields/text"
-		}
-
-		templateContent, err := utils.RenderTemplate(templatePath, field)
+		templateName := config.FieldTemplates[string(field.FieldType)]
+		templatePath := filepath.Join("templates", templateName+".html")
+		templateContent, err := pkgtemplate.RenderTemplate(templatePath, field)
 
 		if err == nil {
 			safeHtml := template.HTML(templateContent)
 			htmlFields = append(htmlFields, safeHtml)
 		}
+	}
 
+	return htmlFields
+}
+
+type FieldContent struct {
+	Field  model.Field
+	Values []model.ContentValue
+}
+
+func CreateFieldContentsByContent(content model.Content) map[string]FieldContent {
+	fields := make(map[string]FieldContent)
+
+	for _, contentValue := range content.ContentValues {
+		fieldAlias := contentValue.Field.Alias
+
+		v, ok := fields[fieldAlias]
+
+		if ok {
+			v.Values = append(v.Values, contentValue)
+			continue
+		}
+
+		values := []model.ContentValue{contentValue}
+
+		fields[fieldAlias] = FieldContent{
+			Field:  contentValue.Field,
+			Values: values,
+		}
+	}
+
+	return fields
+}
+
+func RenderFieldsByContent(content model.Content) []template.HTML {
+	var htmlFields []template.HTML
+
+	fields := CreateFieldContentsByContent(content)
+
+	for _, field := range fields {
+		templateName := config.FieldTemplates[string(field.Field.FieldType)]
+		templatePath := filepath.Join("templates", templateName+".html")
+		templateContent, err := pkgtemplate.RenderTemplate(templatePath, field)
+
+		if err == nil {
+			safeHtml := template.HTML(templateContent)
+			htmlFields = append(htmlFields, safeHtml)
+		}
 	}
 
 	return htmlFields
@@ -35,7 +79,7 @@ type ContentGroup struct {
 	ValuesByField map[string][]model.ContentValue
 }
 
-func GroupContentValuesByField(contents []model.Content) []ContentGroup {
+func CreateContentGroupsByField(contents []model.Content) []ContentGroup {
 	var groups []ContentGroup
 
 	for _, content := range contents {
