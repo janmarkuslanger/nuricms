@@ -11,12 +11,14 @@ import (
 	"github.com/janmarkuslanger/nuricms/entities/field"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/repository"
+	"github.com/janmarkuslanger/nuricms/service"
 )
 
 func main() {
 	router := gin.Default()
 	database := db.Init()
 	repos := repository.NewSet(database)
+	services := service.NewSet(repos)
 
 	db.DB.AutoMigrate(
 		&model.Collection{},
@@ -26,9 +28,9 @@ func main() {
 	)
 
 	modules := []handler.Handler{
-		collection.NewHandler(repos),
-		field.NewHandler(repos),
-		content.NewHandler(repos),
+		collection.NewHandler(services),
+		field.NewHandler(services),
+		content.NewHandler(services),
 	}
 
 	for _, module := range modules {

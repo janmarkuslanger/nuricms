@@ -7,55 +7,58 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/db"
 	"github.com/janmarkuslanger/nuricms/model"
-	"github.com/janmarkuslanger/nuricms/repository"
+	"github.com/janmarkuslanger/nuricms/service"
 	"github.com/janmarkuslanger/nuricms/utils"
 	"gorm.io/gorm"
 )
 
 type Handler struct {
-	repos *repository.Set
+	services *service.Set
 }
 
-func NewHandler(repos *repository.Set) *Handler {
-	return &Handler{repos: repos}
+func NewHandler(services *service.Set) *Handler {
+	return &Handler{services: services}
 }
 
-func (h Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/content/collections", h.showCollections)
 	r.GET("/content/collections/:id/show", h.listContent)
-
 	r.GET("/content/collections/:id/create", h.showCreateContent)
 	r.POST("/content/collections/:id/create", h.createContent)
-
 	r.GET("/content/collections/:id/edit/:contentID", h.showEditContent)
 }
 
-func (h Handler) showCollections(c *gin.Context) {
-	collections, err := h.repos.Collection.GetAll()
-
+func (h *Handler) showCollections(c *gin.Context) {
+	collections, err := h.services.Collection.GetAll()
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
-
 	utils.RenderWithLayout(c, "content/collections.html", gin.H{
 		"collections": collections,
 	}, http.StatusOK)
 }
 
-func (h Handler) showCreateContent(c *gin.Context) {
-	collectionIDParam := c.Param("id")
-	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 0)
+func (h *Handler) showCreateContent(c *gin.Context) {
+	idParam := c.Param("id")
+	id64, err := strconv.ParseUint(idParam, 10, 0)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/collections")
+		return
+	}
+	collectionID := uint(id64)
+
+	fields, err := h.services.Field.GetByCollectionID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
 
-	collectionID := uint(collectionID64)
-
-	fields, err := h.repos.Field.FindByCollectionID(collectionID)
-
-	collection, err := h.repos.Collection.FindByID(collectionID)
+	collection, err := h.services.Collection.GetByID(collectionID)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/collections")
+		return
+	}
 
 	utils.RenderWithLayout(c, "content/create_or_edit.html", gin.H{
 		"FieldsHtml": RenderFields(fields),
@@ -63,64 +66,50 @@ func (h Handler) showCreateContent(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h Handler) createContent(c *gin.Context) {
-	collectionIDParam := c.Param("id")
-	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 0)
+func (h *Handler) createContent(c *gin.Context) {
+	idParam := c.Param("id")
+	id64, err := strconv.ParseUint(idParam, 10, 0)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
-
-	collectionID := uint(collectionID64)
+	collectionID := uint(id64)
 
 	db.DB.Transaction(func(tx *gorm.DB) error {
-		fields, err := h.repos.Field.FindByCollectionID(collectionID)
-
+		fields, err := h.services.Field.GetByCollectionID(collectionID)
 		if err != nil {
 			return err
 		}
 
-		content := model.Content{
-			CollectionID: collectionID,
-		}
-
-		newContent, err := h.repos.Content.Create(&content)
-
+		content := model.Content{CollectionID: collectionID}
+		newContent, err := h.services.Content.Create(&content)
 		if err != nil {
 			return err
 		}
 
 		for _, field := range fields {
-
 			if field.IsList {
-
-				fieldValues := c.PostFormArray(field.Alias)
-
-				for index, fieldValue := range fieldValues {
-					contentValue := model.ContentValue{
-						SortIndex: int(index + 1),
+				vals := c.PostFormArray(field.Alias)
+				for idx, val := range vals {
+					cv := model.ContentValue{
+						SortIndex: idx + 1,
 						ContentID: newContent.ID,
 						FieldID:   field.ID,
-						Value:     fieldValue,
+						Value:     val,
 					}
-
-					err := h.repos.ContentValue.Create(&contentValue)
-					if err != nil {
+					if err := h.services.ContentValue.Create(&cv); err != nil {
 						return err
 					}
-
 				}
 			} else {
-				fieldValue := c.PostForm(field.Alias)
-				contentValue := model.ContentValue{
+				val := c.PostForm(field.Alias)
+				cv := model.ContentValue{
 					SortIndex: 1,
 					ContentID: newContent.ID,
 					FieldID:   field.ID,
-					Value:     fieldValue,
+					Value:     val,
 				}
-
-				err := h.repos.ContentValue.Create(&contentValue)
-				if err != nil {
+				if err := h.services.ContentValue.Create(&cv); err != nil {
 					return err
 				}
 			}
@@ -132,19 +121,16 @@ func (h Handler) createContent(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
-func (h Handler) listContent(c *gin.Context) {
-	collectionIDParam := c.Param("id")
-	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 0)
-
+func (h *Handler) listContent(c *gin.Context) {
+	idParam := c.Param("id")
+	id64, err := strconv.ParseUint(idParam, 10, 0)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
+	collectionID := uint(id64)
 
-	collectionID := uint(collectionID64)
-
-	contents, err := h.repos.Content.FindDisplayValueByCollectionID(collectionID)
-
+	contents, err := h.services.Content.GetDisplayValueByCollectionID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -152,8 +138,7 @@ func (h Handler) listContent(c *gin.Context) {
 
 	groups := CreateContentGroupsByField(contents)
 
-	fields, err := h.repos.Field.FindDisplayFieldsByCollectionID(collectionID)
-
+	fields, err := h.services.Field.GetDisplayFieldsByCollectionID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -167,35 +152,36 @@ func (h Handler) listContent(c *gin.Context) {
 }
 
 func (h *Handler) showEditContent(c *gin.Context) {
-	collectionIDParam := c.Param("id")
-	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 0)
+	collParam := c.Param("id")
+	collID64, err := strconv.ParseUint(collParam, 10, 0)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/content/collections")
+		return
+	}
+	collectionID := uint(collID64)
 
+	contParam := c.Param("contentID")
+	contID64, err := strconv.ParseUint(contParam, 10, 0)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/content/collections")
+		return
+	}
+	contentID := uint(contID64)
+
+	contentObj, err := h.services.Content.GetByID(contentID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
-	collectionID := uint(collectionID64)
-
-	contentIDParam := c.Param("contentID")
-	contentID64, err := strconv.ParseUint(contentIDParam, 10, 0)
+	collection, err := h.services.Collection.GetByID(collectionID)
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/collections")
+		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
-
-	contentID := uint(contentID64)
-
-	content, err := h.repos.Content.FindByID(contentID)
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/collections")
-		return
-	}
-
-	collection, err := h.repos.Collection.FindByID(collectionID)
 
 	utils.RenderWithLayout(c, "content/create_or_edit.html", gin.H{
-		"FieldsHtml": RenderFieldsByContent(content),
+		"FieldsHtml": RenderFieldsByContent(contentObj),
 		"Collection": collection,
 	}, http.StatusOK)
 }
