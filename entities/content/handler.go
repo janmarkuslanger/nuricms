@@ -45,12 +45,13 @@ func (h Handler) showCollections(c *gin.Context) {
 
 func (h Handler) showCreateContent(c *gin.Context) {
 	collectionIDParam := c.Param("id")
-	collectionID, err := strconv.ParseUint(collectionIDParam, 10, 32)
-
+	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 0)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
+
+	collectionID := uint(collectionID64)
 
 	fields, err := h.repos.Field.FindByCollectionID(collectionID)
 
@@ -64,12 +65,13 @@ func (h Handler) showCreateContent(c *gin.Context) {
 
 func (h Handler) createContent(c *gin.Context) {
 	collectionIDParam := c.Param("id")
-	collectionID, err := strconv.ParseUint(collectionIDParam, 10, 32)
-
+	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 0)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
+
+	collectionID := uint(collectionID64)
 
 	db.DB.Transaction(func(tx *gorm.DB) error {
 		fields, err := h.repos.Field.FindByCollectionID(collectionID)
@@ -132,12 +134,14 @@ func (h Handler) createContent(c *gin.Context) {
 
 func (h Handler) listContent(c *gin.Context) {
 	collectionIDParam := c.Param("id")
-	collectionID, err := strconv.ParseUint(collectionIDParam, 10, 32)
+	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 0)
 
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
+
+	collectionID := uint(collectionID64)
 
 	contents, err := h.repos.Content.FindDisplayValueByCollectionID(collectionID)
 
@@ -164,12 +168,13 @@ func (h Handler) listContent(c *gin.Context) {
 
 func (h *Handler) showEditContent(c *gin.Context) {
 	collectionIDParam := c.Param("id")
-	collectionID, err := strconv.ParseUint(collectionIDParam, 10, 32)
-
+	collectionID64, err := strconv.ParseUint(collectionIDParam, 10, 32)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
+
+	collectionID := uint(collectionID64)
 
 	fields, err := h.repos.Field.FindByCollectionID(collectionID)
 

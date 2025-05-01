@@ -13,7 +13,7 @@ func NewFieldRepository(db *gorm.DB) *FieldRepository {
 	return &FieldRepository{db: db}
 }
 
-func (r *FieldRepository) FindByCollectionID(collectionID uint64) ([]model.Field, error) {
+func (r *FieldRepository) FindByCollectionID(collectionID uint) ([]model.Field, error) {
 	var fields []model.Field
 	if err := r.db.Where("collection_id = ?", collectionID).Find(&fields).Error; err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func (r *FieldRepository) FindByCollectionID(collectionID uint64) ([]model.Field
 	return fields, nil
 }
 
-func (r *FieldRepository) FindDisplayFieldsByCollectionID(collectionID uint64) ([]model.Field, error) {
+func (r *FieldRepository) FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {
 	var fields []model.Field
 
 	if err := r.db.Where("collection_id = ? AND display_field = 1", collectionID).Find(&fields).Error; err != nil {

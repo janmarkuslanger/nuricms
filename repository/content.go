@@ -20,7 +20,7 @@ func (r *ContentRepository) Create(content *model.Content) (model.Content, error
 	return *content, nil
 }
 
-func (r *ContentRepository) FindByCollectionID(collectionID uint64) ([]model.Content, error) {
+func (r *ContentRepository) FindByCollectionID(collectionID uint) ([]model.Content, error) {
 	var contents []model.Content
 	err := r.db.
 		Where("collection_id = ?", collectionID).
@@ -30,7 +30,7 @@ func (r *ContentRepository) FindByCollectionID(collectionID uint64) ([]model.Con
 	return contents, err
 }
 
-func (r *ContentRepository) FindDisplayValueByCollectionID(collectionID uint64) ([]model.Content, error) {
+func (r *ContentRepository) FindDisplayValueByCollectionID(collectionID uint) ([]model.Content, error) {
 	var contents []model.Content
 
 	err := r.db.

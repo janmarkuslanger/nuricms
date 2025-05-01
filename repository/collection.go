@@ -13,7 +13,7 @@ func NewCollectionRepository(db *gorm.DB) *CollectionRepository {
 	return &CollectionRepository{db: db}
 }
 
-func (r *CollectionRepository) FindByID(id uint64) (*model.Collection, error) {
+func (r *CollectionRepository) FindByID(id uint) (*model.Collection, error) {
 	var collection model.Collection
 	if err := r.db.Preload("Fields").First(&collection, id).Error; err != nil {
 		return nil, err

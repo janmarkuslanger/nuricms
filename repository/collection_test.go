@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCollectionRepository_FindByID(t *testing.T) {
+func TestFindByID(t *testing.T) {
 	gormDB, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
@@ -27,7 +27,7 @@ func TestCollectionRepository_FindByID(t *testing.T) {
 	assert.Equal(t, "Test Collection", collection.Name)
 }
 
-func TestCollectionRepository_GetAll(t *testing.T) {
+func TestGetAll(t *testing.T) {
 	gormDB, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
