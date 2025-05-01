@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreate(t *testing.T) {
+func TestCreateContentValue(t *testing.T) {
 	gormDB, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
