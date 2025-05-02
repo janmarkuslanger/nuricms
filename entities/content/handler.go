@@ -1,6 +1,7 @@
 package content
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -26,6 +27,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/content/collections/:id/create", h.showCreateContent)
 	r.POST("/content/collections/:id/create", h.createContent)
 	r.GET("/content/collections/:id/edit/:contentID", h.showEditContent)
+	r.POST("/content/collections/:id/edit/:contentID", h.editContent)
 }
 
 func (h *Handler) showCollections(c *gin.Context) {
@@ -120,6 +122,77 @@ func (h *Handler) createContent(c *gin.Context) {
 
 		return nil
 	})
+
+	c.Redirect(http.StatusSeeOther, "/content/collections")
+}
+
+func (h *Handler) editContent(c *gin.Context) {
+	collectionID, ok := ParseCollectionID(c)
+	if !ok {
+		c.Redirect(http.StatusSeeOther, "/content/collections")
+		return
+	}
+
+	id, err := strconv.Atoi(c.Param("contentID"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "Ungültige Content-ID")
+		return
+	}
+	contentID := uint(id)
+
+	err = db.DB.Transaction(func(tx *gorm.DB) error {
+		existingContent, err := h.services.Content.GetByID(contentID)
+		if err != nil {
+			return err
+		}
+		if existingContent.CollectionID != collectionID {
+			return fmt.Errorf("Content %d gehört nicht zu Collection %d", contentID, collectionID)
+		}
+
+		if err := tx.Where("content_id = ?", contentID).Delete(&model.ContentValue{}).Error; err != nil {
+			return err
+		}
+
+		fields, err := h.services.Field.GetByCollectionID(collectionID)
+		if err != nil {
+			return err
+		}
+
+		for _, field := range fields {
+			if field.IsList {
+				vals := c.PostFormArray(field.Alias)
+				for idx, val := range vals {
+					cv := model.ContentValue{
+						SortIndex: idx + 1,
+						ContentID: contentID,
+						FieldID:   field.ID,
+						Value:     val,
+					}
+					if err := tx.Create(&cv).Error; err != nil {
+						return err
+					}
+				}
+			} else {
+				val := c.PostForm(field.Alias)
+				cv := model.ContentValue{
+					SortIndex: 1,
+					ContentID: contentID,
+					FieldID:   field.ID,
+					Value:     val,
+				}
+				if err := tx.Create(&cv).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Fehler beim Aktualisieren: %v", err)
+		return
+	}
 
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }

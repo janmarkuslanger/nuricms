@@ -35,7 +35,7 @@ func ContentToFieldContent(content model.Content, collection model.Collection) m
 	fields := make(map[string]FieldContent)
 
 	for _, field := range collection.Fields {
-		values := make([]model.ContentValue, 1)
+		values := make([]model.ContentValue, 0)
 
 		fields[field.Alias] = FieldContent{
 			Field:  field,
@@ -50,7 +50,7 @@ func ContentToFieldContent(content model.Content, collection model.Collection) m
 
 		if ok {
 			v.Values = append(v.Values, contentValue)
-			continue
+			fields[fieldAlias] = v
 		}
 	}
 

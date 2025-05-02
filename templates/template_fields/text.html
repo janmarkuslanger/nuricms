@@ -1,16 +1,32 @@
 <div>
 
-    <label>{{ .Field.Name }}</label>
+    {{ $field := .Field }}
+
+    <label>{{ $field.Name }}</label>
+
     <div>
-
-        <div data-field-item>
-            <input type="text" name="{{ .Field.Alias }}" {{ if .Field.IsRequired }}required{{ end }}/>
-            
-            {{ if .Field.IsList }}
-                <button type="button" data-action-add>Add</button>
+        {{ if .Values }}
+        
+            {{range .Values}}
+        
+                <div data-field-item>
+                    <input type="text" name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }} value="{{ .Value }}" />
+                    
+                    {{ if $field.IsList }}
+                        <button type="button" data-action-add>Add</button>
+                    {{ end }}
+                </div>
             {{ end }}
-        </div>
 
+        {{ else }}
+            <div data-field-item>
+                <input type="text" name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}/>
+                
+                {{ if $field.IsList }}
+                    <button type="button" data-action-add>Add</button>
+                {{ end }}
+            </div>
+        {{ end }}
     </div>
-    
+
 </div>
