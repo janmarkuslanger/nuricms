@@ -1,13 +1,12 @@
 <div>
 
-    <label>{{ .Name }}</label>
-    
+    <label>{{ .Field.Name }}</label>
     <div>
 
         <div data-field-item>
-            <input type="text" name="{{ .Alias }}" {{ if .IsRequired }}required{{ end }}/>
+            <input type="text" name="{{ .Field.Alias }}" {{ if .Field.IsRequired }}required{{ end }}/>
             
-            {{ if .IsList }}
+            {{ if .Field.IsList }}
                 <button type="button" data-action-add>Add</button>
             {{ end }}
         </div>

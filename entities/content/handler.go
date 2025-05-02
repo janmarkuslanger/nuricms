@@ -40,13 +40,11 @@ func (h *Handler) showCollections(c *gin.Context) {
 }
 
 func (h *Handler) showCreateContent(c *gin.Context) {
-	idParam := c.Param("id")
-	id64, err := strconv.ParseUint(idParam, 10, 0)
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/collections")
+	collectionID, ok := ParseCollectionID(c)
+	if !ok {
+		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
-	collectionID := uint(id64)
 
 	fields, err := h.services.Field.GetByCollectionID(collectionID)
 	if err != nil {
@@ -60,20 +58,25 @@ func (h *Handler) showCreateContent(c *gin.Context) {
 		return
 	}
 
+	fieldsContent := make([]FieldContent, 0)
+	for _, field := range fields {
+		fieldsContent = append(fieldsContent, FieldContent{
+			Field: field,
+		})
+	}
+
 	utils.RenderWithLayout(c, "content/create_or_edit.html", gin.H{
-		"FieldsHtml": RenderFields(fields),
+		"FieldsHtml": RenderFields(fieldsContent),
 		"Collection": collection,
 	}, http.StatusOK)
 }
 
 func (h *Handler) createContent(c *gin.Context) {
-	idParam := c.Param("id")
-	id64, err := strconv.ParseUint(idParam, 10, 0)
-	if err != nil {
+	collectionID, ok := ParseCollectionID(c)
+	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
-	collectionID := uint(id64)
 
 	db.DB.Transaction(func(tx *gorm.DB) error {
 		fields, err := h.services.Field.GetByCollectionID(collectionID)
@@ -122,13 +125,11 @@ func (h *Handler) createContent(c *gin.Context) {
 }
 
 func (h *Handler) listContent(c *gin.Context) {
-	idParam := c.Param("id")
-	id64, err := strconv.ParseUint(idParam, 10, 0)
-	if err != nil {
+	collectionID, ok := ParseCollectionID(c)
+	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
-	collectionID := uint(id64)
 
 	contents, err := h.services.Content.GetDisplayValueByCollectionID(collectionID)
 	if err != nil {
@@ -136,7 +137,7 @@ func (h *Handler) listContent(c *gin.Context) {
 		return
 	}
 
-	groups := CreateContentGroupsByField(contents)
+	groups := ContentsToContentGroup(contents)
 
 	fields, err := h.services.Field.GetDisplayFieldsByCollectionID(collectionID)
 	if err != nil {
@@ -152,13 +153,11 @@ func (h *Handler) listContent(c *gin.Context) {
 }
 
 func (h *Handler) showEditContent(c *gin.Context) {
-	collParam := c.Param("id")
-	collID64, err := strconv.ParseUint(collParam, 10, 0)
-	if err != nil {
+	collectionID, ok := ParseCollectionID(c)
+	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
-	collectionID := uint(collID64)
 
 	contParam := c.Param("contentID")
 	contID64, err := strconv.ParseUint(contParam, 10, 0)
@@ -168,7 +167,7 @@ func (h *Handler) showEditContent(c *gin.Context) {
 	}
 	contentID := uint(contID64)
 
-	contentObj, err := h.services.Content.GetByID(contentID)
+	contentEntry, err := h.services.Content.GetByID(contentID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -181,7 +180,7 @@ func (h *Handler) showEditContent(c *gin.Context) {
 	}
 
 	utils.RenderWithLayout(c, "content/create_or_edit.html", gin.H{
-		"FieldsHtml": RenderFieldsByContent(contentObj),
+		"FieldsHtml": RenderFieldsByContent(contentEntry, *collection),
 		"Collection": collection,
 	}, http.StatusOK)
 }
