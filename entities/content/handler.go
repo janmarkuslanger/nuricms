@@ -28,6 +28,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.POST("/content/collections/:id/create", h.createContent)
 	r.GET("/content/collections/:id/edit/:contentID", h.showEditContent)
 	r.POST("/content/collections/:id/edit/:contentID", h.editContent)
+	r.POST("/content/collections/:id/delete/:contentID", h.deleteContent)
 }
 
 func (h *Handler) showCollections(c *gin.Context) {
@@ -145,8 +146,9 @@ func (h *Handler) editContent(c *gin.Context) {
 		if err != nil {
 			return err
 		}
+
 		if existingContent.CollectionID != collectionID {
-			return fmt.Errorf("Content %d gehört nicht zu Collection %d", contentID, collectionID)
+			return fmt.Errorf("Content %d doesnt relate to Collection %d", contentID, collectionID)
 		}
 
 		if err := tx.Where("content_id = ?", contentID).Delete(&model.ContentValue{}).Error; err != nil {
@@ -190,7 +192,7 @@ func (h *Handler) editContent(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Fehler beim Aktualisieren: %v", err)
+		c.String(http.StatusInternalServerError, "Error while updating: %v", err)
 		return
 	}
 
@@ -255,5 +257,45 @@ func (h *Handler) showEditContent(c *gin.Context) {
 	utils.RenderWithLayout(c, "content/create_or_edit.html", gin.H{
 		"FieldsHtml": RenderFieldsByContent(contentEntry, *collection),
 		"Collection": collection,
+		"Content":    contentEntry,
 	}, http.StatusOK)
+}
+
+func (h *Handler) deleteContent(c *gin.Context) {
+	collectionID, ok := ParseCollectionID(c)
+	if !ok {
+		c.Redirect(http.StatusSeeOther, "/content/collections")
+		return
+	}
+
+	id, err := strconv.Atoi(c.Param("contentID"))
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/content/collections")
+		return
+	}
+	contentID := uint(id)
+
+	err = db.DB.Transaction(func(tx *gorm.DB) error {
+		content, err := h.services.Content.GetByID(contentID)
+		if err != nil {
+			return err
+		}
+		if content.CollectionID != collectionID {
+			return fmt.Errorf("Content %d doesnt relate to Collection %d", contentID, collectionID)
+		}
+		if err := tx.Where("content_id = ?", contentID).Delete(&model.ContentValue{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Delete(&content).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error while deleting: %v", err)
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, "/content/collections")
 }

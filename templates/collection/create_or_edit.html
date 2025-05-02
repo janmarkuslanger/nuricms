@@ -1,20 +1,20 @@
 {{ define "content" }}
     <h1>New Collection</h1>
     <form method="POST" action="{{ if .collection }}/collections/edit/{{ .collection.ID }}{{ else }}/collections/create{{ end }}">
-    <label>Name:</label><br>
-    <input type="text" name="name" {{ if .collection.Name }}value="{{ .collection.Name }}"{{ end }} ><br><br>
+        <label>Name:</label><br>
+        <input type="text" name="name" {{ if .collection.Name }}value="{{ .collection.Name }}"{{ end }} ><br><br>
 
-    <label>Alias:</label><br>
-    <input type="text" name="alias" {{ if .collection.Alias }}value="{{ .collection.Alias }}"{{ end }}><br><br>
+        <label>Alias:</label><br>
+        <input type="text" name="alias" {{ if .collection.Alias }}value="{{ .collection.Alias }}"{{ end }}><br><br>
 
-    <label>Description:</label><br>
-    <textarea name="description">{{ if .collection.Description }}{{ .collection.Description }}{{ end }}</textarea><br><br>
+        <label>Description:</label><br>
+        <textarea name="description">{{ if .collection.Description }}{{ .collection.Description }}{{ end }}</textarea><br><br>
 
-    <button type="submit">{{ if .collection }}Update{{ else }}Create{{ end }}</button>
+        <button type="submit">{{ if .collection }}Update{{ else }}Create{{ end }}</button>
     </form>
 
     <form method="POST" action="/collections/delete/{{ .collection.ID }}" onsubmit="return confirm('Confirm deletion?');">
-    <button type="submit">Delete</button>
+        <button type="submit">Delete</button>
     </form>
 
 {{ end }}

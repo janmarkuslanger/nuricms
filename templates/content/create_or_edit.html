@@ -3,13 +3,15 @@
     <h1>Content: {{ .Collection.Name }}</h1>
 
     <form method="POST">
-
         {{ range .FieldsHtml}}
             {{ . }}
         {{ end }}
 
         <button type="submit">Submit</button>
+    </form>
 
+    <form method="POST" action="/content/collections/{{ .Collection.ID }}/delete/{{ .Content.ID }}" onsubmit="return confirm('Confirm deletion?');">
+        <button type="submit">Delete</button>
     </form>
 
     <script>
