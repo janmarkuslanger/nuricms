@@ -41,8 +41,13 @@
             };
 
             if (deleteButton) {
+                const field = findFieldRoot(deleteButton);
+
+                if (!field.previousElementSibling) {
+                    return;
+                }
+
                 deleteButton.addEventListener('click', () => {
-                    const field = findFieldRoot(deleteButton);
                     field.parentElement.removeChild(field);
                 });
             }
