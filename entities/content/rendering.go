@@ -65,12 +65,14 @@ func RenderFieldsByContent(content model.Content, collection model.Collection) [
 	for _, field := range fields {
 		templateName := config.FieldTemplates[string(field.Field.FieldType)]
 		templatePath := filepath.Join("templates", templateName+".html")
-		templateContent, err := pkgtemplate.RenderTemplate(templatePath, field)
 
-		if err == nil {
-			safeHtml := template.HTML(templateContent)
-			htmlFields = append(htmlFields, safeHtml)
+		templateContent, err := pkgtemplate.RenderTemplate(templatePath, field)
+		if err != nil {
+			continue
 		}
+
+		safeHtml := template.HTML(templateContent)
+		htmlFields = append(htmlFields, safeHtml)
 	}
 
 	return htmlFields

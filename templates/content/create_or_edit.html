@@ -16,22 +16,37 @@
 
     <script>
 
+        function findFieldRoot(element) {
+            if (element.hasAttribute('data-field-item')) {
+                return element
+            }
+
+            return findFieldRoot(element.parentElement);
+        }
+
         function initField(element) {
             const fieldContainer = element.parentElement;
             const addButton = element.querySelector('[data-action-add]');
+            const deleteButton = element.querySelector('[data-action-remove]');
+            
 
-            if (!addButton) {
-                return
+            if (addButton) {
+                addButton.addEventListener('click', () => {
+                    const newField = element.cloneNode(true);
+                    newField.querySelector('input').value = '';
+                    fieldContainer.appendChild(newField);
+    
+                    initField(newField);
+                });
             };
 
-            addButton.addEventListener('click', () => {
-                const newField = element.cloneNode(true);
-                newField.querySelector('input').value = '';
-                fieldContainer.appendChild(newField);
-
-                initField(newField);
-
-            });
+            if (deleteButton) {
+                deleteButton.addEventListener('click', () => {
+                    const field = findFieldRoot(deleteButton);
+                    field.parentElement.removeChild(field);
+                });
+            }
+            
         }
 
         function init() {

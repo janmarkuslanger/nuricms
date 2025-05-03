@@ -7,13 +7,17 @@
     <div>
         {{ if .Values }}
         
-            {{range .Values}}
+            {{ range $i, $value := .Values }}
         
                 <div data-field-item>
-                    <input type="text" name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }} value="{{ .Value }}" />
+                    <input type="text" name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }} value="{{ $value.Value }}" />
                     
                     {{ if $field.IsList }}
                         <button type="button" data-action-add>Add</button>
+
+                        {{ if (gt $i 0) }}
+                            <button type="button" data-action-remove>Remove</button>
+                        {{ end }}
                     {{ end }}
                 </div>
             {{ end }}
