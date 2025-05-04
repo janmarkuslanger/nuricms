@@ -10,8 +10,9 @@ import (
 )
 
 type FieldContent struct {
-	Field  model.Field
-	Values []model.ContentValue
+	Field   model.Field
+	Values  []model.ContentValue
+	Content []model.Content
 }
 
 func RenderFields(fields []FieldContent) []template.HTML {
@@ -31,15 +32,17 @@ func RenderFields(fields []FieldContent) []template.HTML {
 	return htmlFields
 }
 
-func ContentToFieldContent(content model.Content, collection model.Collection) map[string]FieldContent {
+// TODO: too much args
+func ContentToFieldContent(content model.Content, collection model.Collection, contents []model.Content) map[string]FieldContent {
 	fields := make(map[string]FieldContent)
 
 	for _, field := range collection.Fields {
 		values := make([]model.ContentValue, 0)
 
 		fields[field.Alias] = FieldContent{
-			Field:  field,
-			Values: values,
+			Field:   field,
+			Values:  values,
+			Content: contents,
 		}
 	}
 
@@ -57,10 +60,11 @@ func ContentToFieldContent(content model.Content, collection model.Collection) m
 	return fields
 }
 
-func RenderFieldsByContent(content model.Content, collection model.Collection) []template.HTML {
+// TODO: too much args
+func RenderFieldsByContent(content model.Content, collection model.Collection, contents []model.Content) []template.HTML {
 	var htmlFields []template.HTML
 
-	fields := ContentToFieldContent(content, collection)
+	fields := ContentToFieldContent(content, collection, contents)
 
 	for _, field := range fields {
 		templateName := config.FieldTemplates[string(field.Field.FieldType)]

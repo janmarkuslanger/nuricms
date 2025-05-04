@@ -61,10 +61,13 @@ func (h *Handler) showCreateContent(c *gin.Context) {
 		return
 	}
 
+	contents, err := h.services.Content.GetContentsWithDisplayContentValue()
+
 	fieldsContent := make([]FieldContent, 0)
 	for _, field := range fields {
 		fieldsContent = append(fieldsContent, FieldContent{
-			Field: field,
+			Field:   field,
+			Content: contents,
 		})
 	}
 
@@ -254,8 +257,10 @@ func (h *Handler) showEditContent(c *gin.Context) {
 		return
 	}
 
+	contents, err := h.services.Content.GetContentsWithDisplayContentValue()
+
 	utils.RenderWithLayout(c, "content/create_or_edit.html", gin.H{
-		"FieldsHtml": RenderFieldsByContent(contentEntry, *collection),
+		"FieldsHtml": RenderFieldsByContent(contentEntry, *collection, contents),
 		"Collection": collection,
 		"Content":    contentEntry,
 	}, http.StatusOK)

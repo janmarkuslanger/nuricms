@@ -1,0 +1,46 @@
+<div>
+
+    {{ $field := .Field }}
+    {{ $content := .Content }}
+
+    <label>{{ $field.Name }}</label>
+
+    <div>
+        {{ if .Values }}
+        
+            {{ range $i, $value := .Values }}
+        
+                <div data-field-item>
+                    <select type="text" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
+                        {{ if not $field.IsRequired }}<option value=""></option>{{ end }}
+                        {{ range $content }}
+                            {{ $idStr := printf "%d" .ID }}
+                            <option value="{{ .ID }}" {{if eq $idStr $value.Value }}selected{{end}}>{{ .Collection.Name }}: {{ range .ContentValues }}{{.Value}} {{end}}</option>
+                        {{end}}
+                    </select>
+                    
+                    {{ if $field.IsList }}
+                        <button type="button" data-action-add>Add</button>
+                        <button type="button" data-action-remove>Remove</button>
+                    {{ end }}
+                </div>
+            {{ end }}
+
+        {{ else }}
+            <div data-field-item>
+                <select type="text" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
+                    {{ if not $field.IsRequired }}<option value=""></option>{{ end }}
+                    {{ range $content }}
+                        <option value="{{ .ID }}">{{ .Collection.Name }}: {{ range .ContentValues }}{{.Value}} {{end}}</option>
+                    {{end}}
+                </select>
+                
+                {{ if $field.IsList }}
+                    <button type="button" data-action-add>Add</button>
+                    <button type="button" data-action-remove>Remove</button>
+                {{ end }}
+            </div>
+        {{ end }}
+    </div>
+
+</div>

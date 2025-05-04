@@ -28,3 +28,7 @@ func (s *ContentService) GetByCollectionID(collectionID uint) ([]model.Content, 
 func (s *ContentService) GetDisplayValueByCollectionID(collectionID uint) ([]model.Content, error) {
 	return s.repo.FindDisplayValueByCollectionID(collectionID)
 }
+
+func (s *ContentService) GetContentsWithDisplayContentValue() ([]model.Content, error) {
+	return s.repo.FindAllWithDisplayContentValue()
+}

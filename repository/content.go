@@ -55,3 +55,19 @@ func (r *ContentRepository) FindDisplayValueByCollectionID(collectionID uint) ([
 
 	return contents, err
 }
+
+func (r *ContentRepository) FindAllWithDisplayContentValue() ([]model.Content, error) {
+	var contents []model.Content
+
+	err := r.db.
+		Preload("ContentValues", func(db *gorm.DB) *gorm.DB {
+			return db.
+				Joins("Field").
+				Where("field.display_field = ?", true)
+		}).
+		Preload("ContentValues.Field").
+		Preload("Collection").
+		Find(&contents).Error
+
+	return contents, err
+}
