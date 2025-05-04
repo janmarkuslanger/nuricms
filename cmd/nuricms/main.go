@@ -12,6 +12,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/repository"
 	"github.com/janmarkuslanger/nuricms/service"
+	"github.com/janmarkuslanger/nuricms/utils"
 )
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	router.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello from nuricms 👋")
+		utils.RenderWithLayout(c, "home.html", gin.H{}, http.StatusOK)
 	})
 
 	router.Run(":8080")
