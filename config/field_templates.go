@@ -6,4 +6,5 @@ var FieldTemplates = map[string]string{
 	"Boolean":  "template_fields/boolean",
 	"Date":     "template_fields/date",
 	"Textarea": "template_fields/textarea",
+	"RichText": "template_fields/richtext",
 }

@@ -10,7 +10,11 @@
             {{ range $i, $value := .Values }}
         
                 <div data-field-item>
-                    <input type="checkbox" data-field  name="{{ $field.Alias }}" {{ if eq $value.Value "on" }}checked{{end}} {{ if $field.IsRequired }}required{{ end }} value="{{ $value.Value }}" />
+                    <input type="hidden" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }} value="{{ $value.Value }}" />
+                    <div
+                        data-richtext
+                    >{{ $value.Value }}</div>
+                    
                     {{ if $field.IsList }}
                         <button type="button" data-action-add>Add</button>
                         <button type="button" data-action-remove>Remove</button>
@@ -20,8 +24,12 @@
 
         {{ else }}
             <div data-field-item>
-                <input type="checkbox" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}/>
-                
+                <input type="hidden" data-field  name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}  />
+
+                <div
+                     data-richtext
+                    ></div>
+
                 {{ if $field.IsList }}
                     <button type="button" data-action-add>Add</button>
                     <button type="button" data-action-remove>Remove</button>

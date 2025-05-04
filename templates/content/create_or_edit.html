@@ -1,5 +1,9 @@
 {{ define "content" }}
 
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+
     <h1>Content: {{ .Collection.Name }}</h1>
 
     <form method="POST">
@@ -24,16 +28,38 @@
             return findFieldRoot(element.parentElement);
         }
 
+        function initQuill(element) {
+            const richText = element.querySelector('[data-richtext]');
+
+            if (!richText) {
+                return
+            }
+
+            const inputHidden = element.querySelector('[data-field]');
+
+            const quill = new Quill(richText, {
+                theme: 'snow'
+            });
+
+            inputHidden.value = quill.getText().trim() !== "" ? quill.getSemanticHTML() : ''
+
+            quill.on('text-change', () => {
+                inputHidden.value = quill.getText().trim() !== "" ? quill.getSemanticHTML() : ''
+            });
+        }        
+
         function initField(element) {
             const fieldContainer = element.parentElement;
             const addButton = element.querySelector('[data-action-add]');
             const deleteButton = element.querySelector('[data-action-remove]');
             
+            const newField = element.cloneNode(true);
 
+            initQuill(element)
+            
             if (addButton) {
                 addButton.addEventListener('click', () => {
-                    const newField = element.cloneNode(true);
-                    newField.querySelector('input').value = '';
+                    newField.querySelector('[data-field]').value = '';
                     fieldContainer.appendChild(newField);
     
                     initField(newField);
@@ -51,14 +77,11 @@
                     field.parentElement.removeChild(field);
                 });
             }
-            
         }
 
         function init() {
             const fields = document.querySelectorAll('[data-field-item]');
-            
             fields.forEach(field => { initField(field); });
-
         }        
 
         document.addEventListener('DOMContentLoaded', init);
