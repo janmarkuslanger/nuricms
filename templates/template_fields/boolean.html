@@ -4,7 +4,7 @@
 
     <label>{{ $field.Name }}</label>
 
-    <div>
+    <div data-field-container>
         {{ if .Values }}
         
             {{ range $i, $value := .Values }}
@@ -14,6 +14,7 @@
                     {{ if $field.IsList }}
                         <button type="button" data-action-add>Add</button>
                         <button type="button" data-action-remove>Remove</button>
+                        <button type="button">=</button>
                     {{ end }}
                 </div>
             {{ end }}
@@ -25,6 +26,7 @@
                 {{ if $field.IsList }}
                     <button type="button" data-action-add>Add</button>
                     <button type="button" data-action-remove>Remove</button>
+                    <button type="button">=</button>
                 {{ end }}
             </div>
         {{ end }}

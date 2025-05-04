@@ -82,6 +82,14 @@
         function init() {
             const fields = document.querySelectorAll('[data-field-item]');
             fields.forEach(field => { initField(field); });
+
+            const sortableLists = document.querySelectorAll("[data-field-container]");
+            sortableLists.forEach(list => {
+                new Sortable(list, {
+                    animation: 150,
+                    handle: "[data-field-item]",
+                });
+            });
         }        
 
         document.addEventListener('DOMContentLoaded', init);
