@@ -20,16 +20,16 @@ func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, status
 		},
 	}
 
-	tmpl := template.Must(template.New("layout.html").
+	tmpl := template.Must(template.New("layout.tpl").
 		Funcs(funcMap).
 		ParseFiles(
-			"templates/base/layout.html",
+			"templates/base/layout.tpl",
 			"templates/"+contentTemplate,
 		),
 	)
 
 	c.Status(statusCode)
-	if err := tmpl.ExecuteTemplate(c.Writer, "layout.html", data); err != nil {
+	if err := tmpl.ExecuteTemplate(c.Writer, "layout.tpl", data); err != nil {
 		c.String(http.StatusInternalServerError, "Template error: %v", err)
 	}
 }

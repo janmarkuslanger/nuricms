@@ -42,7 +42,7 @@ func main() {
 	}
 
 	router.GET("/", func(c *gin.Context) {
-		utils.RenderWithLayout(c, "home.html", gin.H{}, http.StatusOK)
+		utils.RenderWithLayout(c, "home.tpl", gin.H{}, http.StatusOK)
 	})
 
 	router.Run(":8080")

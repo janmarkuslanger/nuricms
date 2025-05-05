@@ -1,4 +1,4 @@
-{{ define "layout.html" }}
+{{ define "layout.tpl" }}
 <!DOCTYPE html>
 <html>
 <head>
