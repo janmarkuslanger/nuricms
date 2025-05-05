@@ -31,13 +31,13 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 func (h *Handler) listFields(c *gin.Context) {
 	var fields []model.Field
 	if err := db.DB.Preload("Collection").Find(&fields).Error; err != nil {
-		utils.RenderWithLayout(c, "field/index.tpl", gin.H{
+		utils.RenderWithLayout(c, "field/index.tmpl", gin.H{
 			"error": "Failed to retrieve fields.",
 		}, http.StatusInternalServerError)
 		return
 	}
 
-	utils.RenderWithLayout(c, "field/index.tpl", gin.H{
+	utils.RenderWithLayout(c, "field/index.tmpl", gin.H{
 		"fields": fields,
 	}, http.StatusOK)
 }
@@ -49,7 +49,7 @@ func (h *Handler) showCreateField(c *gin.Context) {
 		return
 	}
 
-	utils.RenderWithLayout(c, "field/create_or_edit.tpl", gin.H{
+	utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
 		"collections": collections,
 		"types": []model.FieldType{
 			model.FieldTypeText, model.FieldTypeNumber, model.FieldTypeBoolean,
@@ -72,7 +72,7 @@ func (h *Handler) showEditField(c *gin.Context) {
 		return
 	}
 
-	utils.RenderWithLayout(c, "field/create_or_edit.tpl", gin.H{
+	utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
 		"field":       field,
 		"collections": collections,
 		"types": []model.FieldType{
@@ -106,7 +106,7 @@ func (h *Handler) createField(c *gin.Context) {
 	}
 
 	if err := db.DB.Create(&field).Error; err != nil {
-		utils.RenderWithLayout(c, "field/create_or_edit.tpl", gin.H{
+		utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
 			"error": "Failed to create field.",
 			"field": field,
 		}, http.StatusInternalServerError)
@@ -134,7 +134,7 @@ func (h *Handler) editField(c *gin.Context) {
 	field.DisplayField = c.PostForm("display_field") == "on"
 
 	if err := db.DB.Save(&field).Error; err != nil {
-		utils.RenderWithLayout(c, "field/create_or_edit.tpl", gin.H{
+		utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
 			"error": "Failed to update field.",
 			"field": field,
 		}, http.StatusInternalServerError)

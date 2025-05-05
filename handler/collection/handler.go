@@ -30,19 +30,19 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 func (h *Handler) showCollections(c *gin.Context) {
 	var collections []model.Collection
 	if err := db.DB.Find(&collections).Error; err != nil {
-		utils.RenderWithLayout(c, "collection/index.tpl", gin.H{
+		utils.RenderWithLayout(c, "collection/index.tmpl", gin.H{
 			"error": "Failed to retrieve collections.",
 		}, http.StatusInternalServerError)
 		return
 	}
 
-	utils.RenderWithLayout(c, "collection/index.tpl", gin.H{
+	utils.RenderWithLayout(c, "collection/index.tmpl", gin.H{
 		"collections": collections,
 	}, http.StatusOK)
 }
 
 func (h *Handler) showCreateCollection(c *gin.Context) {
-	utils.RenderWithLayout(c, "collection/create_or_edit.tpl", gin.H{}, http.StatusOK)
+	utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
 func (h *Handler) createCollection(c *gin.Context) {
@@ -51,7 +51,7 @@ func (h *Handler) createCollection(c *gin.Context) {
 	description := c.PostForm("description")
 
 	if name == "" || alias == "" {
-		utils.RenderWithLayout(c, "collection/create_or_edit.tpl", gin.H{
+		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error": "Name and Alias are required fields.",
 		}, http.StatusOK)
 		return
@@ -64,7 +64,7 @@ func (h *Handler) createCollection(c *gin.Context) {
 	}
 
 	if err := db.DB.Create(&collection).Error; err != nil {
-		utils.RenderWithLayout(c, "collection/create_or_edit.tpl", gin.H{
+		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error": "Failed to create collection.",
 		}, http.StatusInternalServerError)
 		return
@@ -77,13 +77,13 @@ func (h *Handler) showEditCollection(c *gin.Context) {
 	id := c.Param("id")
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {
-		utils.RenderWithLayout(c, "collection/create_or_edit.tpl", gin.H{
+		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error": "Collection not found.",
 		}, http.StatusInternalServerError)
 		return
 	}
 
-	utils.RenderWithLayout(c, "collection/create_or_edit.tpl", gin.H{
+	utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 		"collection": collection,
 	}, http.StatusOK)
 }
@@ -92,7 +92,7 @@ func (h *Handler) editCollection(c *gin.Context) {
 	id := c.Param("id")
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {
-		utils.RenderWithLayout(c, "collection/create_or_edit.tpl", gin.H{
+		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error": "Collection not found.",
 		}, http.StatusNotFound)
 		return
@@ -103,7 +103,7 @@ func (h *Handler) editCollection(c *gin.Context) {
 	description := c.PostForm("description")
 
 	if name == "" || alias == "" {
-		utils.RenderWithLayout(c, "collection/create_or_edit.tpl", gin.H{
+		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error":      "Name and Alias are required fields.",
 			"collection": collection,
 		}, http.StatusBadRequest)
@@ -115,7 +115,7 @@ func (h *Handler) editCollection(c *gin.Context) {
 	collection.Description = description
 
 	if err := db.DB.Save(&collection).Error; err != nil {
-		utils.RenderWithLayout(c, "collection/create_or_edit.tpl", gin.H{
+		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error":      "Failed to update.",
 			"collection": collection,
 		}, http.StatusInternalServerError)

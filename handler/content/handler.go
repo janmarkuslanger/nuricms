@@ -37,7 +37,7 @@ func (h *Handler) showCollections(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
-	utils.RenderWithLayout(c, "content/collections.tpl", gin.H{
+	utils.RenderWithLayout(c, "content/collections.tmpl", gin.H{
 		"collections": collections,
 	}, http.StatusOK)
 }
@@ -71,7 +71,7 @@ func (h *Handler) showCreateContent(c *gin.Context) {
 		})
 	}
 
-	utils.RenderWithLayout(c, "content/create_or_edit.tpl", gin.H{
+	utils.RenderWithLayout(c, "content/create_or_edit.tmpl", gin.H{
 		"FieldsHtml": RenderFields(fieldsContent),
 		"Collection": collection,
 	}, http.StatusOK)
@@ -223,7 +223,7 @@ func (h *Handler) listContent(c *gin.Context) {
 		return
 	}
 
-	utils.RenderWithLayout(c, "content/content_list.tpl", gin.H{
+	utils.RenderWithLayout(c, "content/content_list.tmpl", gin.H{
 		"Groups":       groups,
 		"Fields":       fields,
 		"CollectionID": collectionID,
@@ -259,7 +259,7 @@ func (h *Handler) showEditContent(c *gin.Context) {
 
 	contents, err := h.services.Content.GetContentsWithDisplayContentValue()
 
-	utils.RenderWithLayout(c, "content/create_or_edit.tpl", gin.H{
+	utils.RenderWithLayout(c, "content/create_or_edit.tmpl", gin.H{
 		"FieldsHtml": RenderFieldsByContent(contentEntry, *collection, contents),
 		"Collection": collection,
 		"Content":    contentEntry,

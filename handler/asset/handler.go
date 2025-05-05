@@ -21,5 +21,5 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *Handler) showCreateAsset(c *gin.Context) {
-	utils.RenderWithLayout(c, "/asset/create_or_edit.tpl", gin.H{}, http.StatusOK)
+	utils.RenderWithLayout(c, "/asset/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }

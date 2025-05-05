@@ -1,6 +1,6 @@
 {
     "files.associations": {
-      "*.tpl": "html"
+      "*.tmpl": "html"
     },
     "[html]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
