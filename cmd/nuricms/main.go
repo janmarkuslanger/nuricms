@@ -26,6 +26,7 @@ func main() {
 		&model.Field{},
 		&model.Content{},
 		&model.ContentValue{},
+		&model.Asset{},
 	)
 
 	modules := []handler.Handler{
