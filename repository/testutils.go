@@ -18,6 +18,7 @@ func CreateTestDB() (*gorm.DB, error) {
 		&model.Field{},
 		&model.Content{},
 		&model.ContentValue{},
+		&model.Asset{},
 	)
 	if err != nil {
 		return nil, err
