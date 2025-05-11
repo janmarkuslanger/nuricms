@@ -2,6 +2,7 @@ package service
 
 import (
 	"mime/multipart"
+	"os"
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
@@ -28,9 +29,33 @@ func (s *AssetService) UploadFile(c *gin.Context, file *multipart.FileHeader) (s
 	return savePath, nil
 }
 
-func (s *AssetService) Create(asset *model.Asset) (*model.Asset, error) {
-	_, err := s.repo.Create(asset)
-	return asset, err
+func (s *AssetService) Create(asset *model.Asset) error {
+	return s.repo.Create(asset)
+}
+
+func (s *AssetService) Save(asset *model.Asset) error {
+	return s.repo.Save(asset)
+}
+
+func (s *AssetService) FindByID(id uint) (*model.Asset, error) {
+	return s.repo.GetOneByID(id)
+}
+
+func (s *AssetService) DeleteByID(id uint) error {
+	asset, err := s.repo.GetOneByID(id)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.Delete(asset)
+
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(asset.Path)
+	return err
 }
 
 func (s *AssetService) GetAll() ([]model.Asset, error) {

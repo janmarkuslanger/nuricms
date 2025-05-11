@@ -17,7 +17,9 @@
                 <td>{{ .ID }}</td>
                 <td>{{ .Name }}</td>
                 <td>{{ .Path }}</td>
-                <td></td>
+                <td>
+                    <a href="/assets/edit/{{ .ID }}">Edit</a>
+                </td>
             </tr>
             {{ end }}
         </tbody>

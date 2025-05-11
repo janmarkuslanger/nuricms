@@ -43,7 +43,7 @@ func (h *Handler) showCollections(c *gin.Context) {
 }
 
 func (h *Handler) showCreateContent(c *gin.Context) {
-	collectionID, ok := ParseCollectionID(c)
+	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -78,7 +78,7 @@ func (h *Handler) showCreateContent(c *gin.Context) {
 }
 
 func (h *Handler) createContent(c *gin.Context) {
-	collectionID, ok := ParseCollectionID(c)
+	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -131,7 +131,7 @@ func (h *Handler) createContent(c *gin.Context) {
 }
 
 func (h *Handler) editContent(c *gin.Context) {
-	collectionID, ok := ParseCollectionID(c)
+	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -203,7 +203,7 @@ func (h *Handler) editContent(c *gin.Context) {
 }
 
 func (h *Handler) listContent(c *gin.Context) {
-	collectionID, ok := ParseCollectionID(c)
+	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -231,7 +231,7 @@ func (h *Handler) listContent(c *gin.Context) {
 }
 
 func (h *Handler) showEditContent(c *gin.Context) {
-	collectionID, ok := ParseCollectionID(c)
+	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -267,7 +267,7 @@ func (h *Handler) showEditContent(c *gin.Context) {
 }
 
 func (h *Handler) deleteContent(c *gin.Context) {
-	collectionID, ok := ParseCollectionID(c)
+	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
