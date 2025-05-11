@@ -9,6 +9,7 @@ type Set struct {
 	Field        *FieldRepository
 	Collection   *CollectionRepository
 	ContentValue *ContentValueRepository
+	Asset        *AssetRepository
 }
 
 func NewSet(db *gorm.DB) *Set {
@@ -17,5 +18,6 @@ func NewSet(db *gorm.DB) *Set {
 		Field:        NewFieldRepository(db),
 		Collection:   NewCollectionRepository(db),
 		ContentValue: NewContentValueRepository(db),
+		Asset:        NewAssetRepository(db),
 	}
 }

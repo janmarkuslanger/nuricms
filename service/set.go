@@ -7,6 +7,7 @@ type Set struct {
 	Field        *FieldService
 	Content      *ContentService
 	ContentValue *ContentValueService
+	Asset        *AssetService
 }
 
 func NewSet(r *repository.Set) *Set {
@@ -15,5 +16,6 @@ func NewSet(r *repository.Set) *Set {
 		Field:        NewFieldService(r.Field),
 		Content:      NewContentService(r.Content),
 		ContentValue: NewContentValueService(r.ContentValue),
+		Asset:        NewAssetService(r.Asset),
 	}
 }

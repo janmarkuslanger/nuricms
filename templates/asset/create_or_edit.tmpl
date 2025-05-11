@@ -2,4 +2,18 @@
 
     <h1>Create asset</h1>
 
+    <form method="POST" enctype="multipart/form-data">
+        <div>
+            <label for="name">Name of the asset: </label><br>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+            <label for="file">Pick file</label><br>
+            <input type="file" id="file" name="file" required>
+        </div>
+
+        <button type="submit">Submit</button>
+    </form>
+
+
 {{ end }}

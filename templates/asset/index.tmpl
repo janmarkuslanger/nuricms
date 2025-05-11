@@ -1,0 +1,26 @@
+{{ define "content" }}
+
+    <h1>Asset list</h1>
+    <a href="/assets/create">Create new asset</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Path</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .assets }}
+            <tr>
+                <td>{{ .ID }}</td>
+                <td>{{ .Name }}</td>
+                <td>{{ .Path }}</td>
+                <td></td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+
+{{end}}
