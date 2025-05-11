@@ -24,7 +24,10 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *Handler) showAssets(c *gin.Context) {
-	utils.RenderWithLayout(c, "/asset/index.tmpl", gin.H{}, http.StatusOK)
+	assets, _ := h.services.Asset.GetAll()
+	utils.RenderWithLayout(c, "/asset/index.tmpl", gin.H{
+		"assets": assets,
+	}, http.StatusOK)
 }
 
 func (h *Handler) showCreateAsset(c *gin.Context) {

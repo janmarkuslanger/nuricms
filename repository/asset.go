@@ -19,3 +19,12 @@ func (r *AssetRepository) Create(asset *model.Asset) (model.Asset, error) {
 	}
 	return *asset, nil
 }
+
+func (r *AssetRepository) GetAll() ([]model.Asset, error) {
+	var assets []model.Asset
+	if err := r.db.Find(&assets).Error; err != nil {
+		return nil, err
+	}
+
+	return assets, nil
+}

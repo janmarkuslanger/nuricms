@@ -41,6 +41,8 @@ func main() {
 		module.RegisterRoutes(router)
 	}
 
+	router.Static("/public/assets", "./public/assets")
+
 	router.GET("/", func(c *gin.Context) {
 		utils.RenderWithLayout(c, "home.tmpl", gin.H{}, http.StatusOK)
 	})

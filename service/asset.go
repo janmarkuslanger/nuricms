@@ -32,3 +32,7 @@ func (s *AssetService) Create(asset *model.Asset) (*model.Asset, error) {
 	_, err := s.repo.Create(asset)
 	return asset, err
 }
+
+func (s *AssetService) GetAll() ([]model.Asset, error) {
+	return s.repo.GetAll()
+}
