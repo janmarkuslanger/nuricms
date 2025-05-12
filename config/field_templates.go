@@ -8,4 +8,5 @@ var FieldTemplates = map[string]string{
 	"Textarea":   "template_fields/textarea",
 	"RichText":   "template_fields/richtext",
 	"Collection": "template_fields/collection",
+	"Asset":      "template_fields/asset",
 }
