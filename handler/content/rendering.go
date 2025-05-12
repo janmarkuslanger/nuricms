@@ -13,6 +13,7 @@ type FieldContent struct {
 	Field   model.Field
 	Values  []model.ContentValue
 	Content []model.Content
+	Assets  []model.Asset
 }
 
 func RenderFields(fields []FieldContent) []template.HTML {
@@ -33,7 +34,7 @@ func RenderFields(fields []FieldContent) []template.HTML {
 }
 
 // TODO: too much args
-func ContentToFieldContent(content model.Content, collection model.Collection, contents []model.Content) map[string]FieldContent {
+func ContentToFieldContent(content model.Content, collection model.Collection, contents []model.Content, assets []model.Asset) map[string]FieldContent {
 	fields := make(map[string]FieldContent)
 
 	for _, field := range collection.Fields {
@@ -43,6 +44,7 @@ func ContentToFieldContent(content model.Content, collection model.Collection, c
 			Field:   field,
 			Values:  values,
 			Content: contents,
+			Assets:  assets,
 		}
 	}
 
@@ -61,10 +63,10 @@ func ContentToFieldContent(content model.Content, collection model.Collection, c
 }
 
 // TODO: too much args
-func RenderFieldsByContent(content model.Content, collection model.Collection, contents []model.Content) []template.HTML {
+func RenderFieldsByContent(content model.Content, collection model.Collection, contents []model.Content, assets []model.Asset) []template.HTML {
 	var htmlFields []template.HTML
 
-	fields := ContentToFieldContent(content, collection, contents)
+	fields := ContentToFieldContent(content, collection, contents, assets)
 
 	for _, field := range fields {
 		templateName := config.FieldTemplates[string(field.Field.FieldType)]
