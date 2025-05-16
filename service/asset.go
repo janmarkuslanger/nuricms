@@ -38,11 +38,11 @@ func (s *AssetService) Save(asset *model.Asset) error {
 }
 
 func (s *AssetService) FindByID(id uint) (*model.Asset, error) {
-	return s.repo.GetOneByID(id)
+	return s.repo.FindByID(id)
 }
 
 func (s *AssetService) DeleteByID(id uint) error {
-	asset, err := s.repo.GetOneByID(id)
+	asset, err := s.repo.FindByID(id)
 
 	if err != nil {
 		return err
@@ -59,5 +59,5 @@ func (s *AssetService) DeleteByID(id uint) error {
 }
 
 func (s *AssetService) GetAll() ([]model.Asset, error) {
-	return s.repo.GetAll()
+	return s.repo.List()
 }

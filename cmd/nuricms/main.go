@@ -10,6 +10,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/handler/collection"
 	"github.com/janmarkuslanger/nuricms/handler/content"
 	"github.com/janmarkuslanger/nuricms/handler/field"
+	"github.com/janmarkuslanger/nuricms/handler/user"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/repository"
 	"github.com/janmarkuslanger/nuricms/service"
@@ -28,6 +29,7 @@ func main() {
 		&model.Content{},
 		&model.ContentValue{},
 		&model.Asset{},
+		&model.User{},
 	)
 
 	modules := []handler.Handler{
@@ -35,6 +37,7 @@ func main() {
 		field.NewHandler(services),
 		content.NewHandler(services),
 		asset.NewHandler(services),
+		user.NewHandler(services),
 	}
 
 	for _, module := range modules {

@@ -1,0 +1,24 @@
+{{ define "content" }}
+
+    <h1>Field list</h1>
+    <a href="/user/create">Create new user</a>
+    <table>
+        <thead>
+            <tr>
+                <th>E-Mail</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .User }}
+            <tr>
+                <td>{{ .Email }}</td>
+                <td>{{ .Role }}</td>
+                <td><a href="/user/edit/{{ .ID }}">Edit</a></td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+
+{{end}}
