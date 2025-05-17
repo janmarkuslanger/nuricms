@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/db"
+	"github.com/janmarkuslanger/nuricms/middleware"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/service"
 	"github.com/janmarkuslanger/nuricms/utils"
@@ -20,12 +21,14 @@ func NewHandler(services *service.Set) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
-	r.GET("/fields", h.listFields)
-	r.GET("/fields/create", h.showCreateField)
-	r.POST("/fields/create", h.createField)
-	r.GET("/fields/edit/:id", h.showEditField)
-	r.POST("/fields/edit/:id", h.editField)
-	r.POST("/fields/delete/:id", h.deleteField)
+	secure := r.Group("/fields", middleware.Userauth(h.services.User))
+
+	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.listFields)
+	secure.GET("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCreateField)
+	secure.POST("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.createField)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showEditField)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.editField)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.deleteField)
 }
 
 func (h *Handler) listFields(c *gin.Context) {

@@ -20,6 +20,12 @@ func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, status
 		},
 	}
 
+	if _, ok := c.Get("userID"); ok {
+		data["IsLoggedIn"] = true
+	} else {
+		data["IsLoggedIn"] = false
+	}
+
 	tmpl := template.Must(template.New("layout.tmpl").
 		Funcs(funcMap).
 		ParseFiles(

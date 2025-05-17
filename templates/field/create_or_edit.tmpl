@@ -1,6 +1,6 @@
 {{ define "content" }}
     <h1>New field</h1>
-    <form method="POST" action="{{ if .field }}/fields/edit/{{ .field.ID }}{{ else }}/fields/create{{ end }}">
+    <form method="POST">
     <label>Name:</label><br>
     <input type="text" name="name" {{ if .field.Name }}value="{{ .field.Name }}"{{ end }} ><br><br>
 

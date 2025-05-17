@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/db"
+	"github.com/janmarkuslanger/nuricms/middleware"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/service"
 	"github.com/janmarkuslanger/nuricms/utils"
@@ -22,13 +23,15 @@ func NewHandler(services *service.Set) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
-	r.GET("/content/collections", h.showCollections)
-	r.GET("/content/collections/:id/show", h.listContent)
-	r.GET("/content/collections/:id/create", h.showCreateContent)
-	r.POST("/content/collections/:id/create", h.createContent)
-	r.GET("/content/collections/:id/edit/:contentID", h.showEditContent)
-	r.POST("/content/collections/:id/edit/:contentID", h.editContent)
-	r.POST("/content/collections/:id/delete/:contentID", h.deleteContent)
+	secure := r.Group("/content/collections", middleware.Userauth(h.services.User))
+
+	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCollections)
+	secure.GET("/:id/show", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.listContent)
+	secure.GET("/:id/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCreateContent)
+	secure.POST("/:id/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.createContent)
+	secure.GET("/:id/edit/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showEditContent)
+	secure.POST("/:id/edit/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.editContent)
+	secure.POST("/:id/delete/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.deleteContent)
 }
 
 func (h *Handler) showCollections(c *gin.Context) {

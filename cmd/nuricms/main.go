@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/core/handler"
 	"github.com/janmarkuslanger/nuricms/db"
@@ -10,10 +8,11 @@ import (
 	"github.com/janmarkuslanger/nuricms/handler/collection"
 	"github.com/janmarkuslanger/nuricms/handler/content"
 	"github.com/janmarkuslanger/nuricms/handler/field"
+	"github.com/janmarkuslanger/nuricms/handler/home"
+	"github.com/janmarkuslanger/nuricms/handler/user"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/repository"
 	"github.com/janmarkuslanger/nuricms/service"
-	"github.com/janmarkuslanger/nuricms/utils"
 )
 
 func main() {
@@ -28,6 +27,7 @@ func main() {
 		&model.Content{},
 		&model.ContentValue{},
 		&model.Asset{},
+		&model.User{},
 	)
 
 	modules := []handler.Handler{
@@ -35,6 +35,8 @@ func main() {
 		field.NewHandler(services),
 		content.NewHandler(services),
 		asset.NewHandler(services),
+		user.NewHandler(services),
+		home.NewHandler(services),
 	}
 
 	for _, module := range modules {
@@ -42,10 +44,6 @@ func main() {
 	}
 
 	router.Static("/public/assets", "./public/assets")
-
-	router.GET("/", func(c *gin.Context) {
-		utils.RenderWithLayout(c, "home.tmpl", gin.H{}, http.StatusOK)
-	})
 
 	router.Run(":8080")
 }

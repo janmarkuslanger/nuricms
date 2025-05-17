@@ -25,7 +25,7 @@ func (r *AssetRepository) Delete(asset *model.Asset) error {
 	return err
 }
 
-func (r *AssetRepository) GetOneByID(id uint) (*model.Asset, error) {
+func (r *AssetRepository) FindByID(id uint) (*model.Asset, error) {
 	var asset model.Asset
 
 	if err := r.db.First(&asset, id).Error; err != nil {
@@ -35,7 +35,7 @@ func (r *AssetRepository) GetOneByID(id uint) (*model.Asset, error) {
 	return &asset, nil
 }
 
-func (r *AssetRepository) GetAll() ([]model.Asset, error) {
+func (r *AssetRepository) List() ([]model.Asset, error) {
 	var assets []model.Asset
 	if err := r.db.Find(&assets).Error; err != nil {
 		return nil, err
