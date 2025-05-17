@@ -11,12 +11,12 @@ import (
 )
 
 type AssetService struct {
-	repo *repository.AssetRepository
+	repos *repository.Set
 }
 
-func NewAssetService(repo *repository.AssetRepository) *AssetService {
+func NewAssetService(repos *repository.Set) *AssetService {
 	return &AssetService{
-		repo: repo,
+		repos: repos,
 	}
 }
 
@@ -30,25 +30,25 @@ func (s *AssetService) UploadFile(c *gin.Context, file *multipart.FileHeader) (s
 }
 
 func (s *AssetService) Create(asset *model.Asset) error {
-	return s.repo.Create(asset)
+	return s.repos.Asset.Create(asset)
 }
 
 func (s *AssetService) Save(asset *model.Asset) error {
-	return s.repo.Save(asset)
+	return s.repos.Asset.Save(asset)
 }
 
 func (s *AssetService) FindByID(id uint) (*model.Asset, error) {
-	return s.repo.FindByID(id)
+	return s.repos.Asset.FindByID(id)
 }
 
 func (s *AssetService) DeleteByID(id uint) error {
-	asset, err := s.repo.FindByID(id)
+	asset, err := s.repos.Asset.FindByID(id)
 
 	if err != nil {
 		return err
 	}
 
-	err = s.repo.Delete(asset)
+	err = s.repos.Asset.Delete(asset)
 
 	if err != nil {
 		return err
@@ -59,5 +59,5 @@ func (s *AssetService) DeleteByID(id uint) error {
 }
 
 func (s *AssetService) GetAll() ([]model.Asset, error) {
-	return s.repo.List()
+	return s.repos.Asset.List()
 }

@@ -6,13 +6,13 @@ import (
 )
 
 type ContentValueService struct {
-	repo *repository.ContentValueRepository
+	repos *repository.Set
 }
 
-func NewContentValueService(r *repository.ContentValueRepository) *ContentValueService {
-	return &ContentValueService{repo: r}
+func NewContentValueService(repos *repository.Set) *ContentValueService {
+	return &ContentValueService{repos: repos}
 }
 
 func (s *ContentValueService) Create(cv *model.ContentValue) error {
-	return s.repo.Create(cv)
+	return s.repos.ContentValue.Create(cv)
 }

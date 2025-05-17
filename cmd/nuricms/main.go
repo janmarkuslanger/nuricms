@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/core/handler"
 	"github.com/janmarkuslanger/nuricms/db"
+	"github.com/janmarkuslanger/nuricms/handler/api"
 	"github.com/janmarkuslanger/nuricms/handler/asset"
 	"github.com/janmarkuslanger/nuricms/handler/collection"
 	"github.com/janmarkuslanger/nuricms/handler/content"
@@ -37,6 +38,7 @@ func main() {
 		asset.NewHandler(services),
 		user.NewHandler(services),
 		home.NewHandler(services),
+		api.NewHandler(services),
 	}
 
 	for _, module := range modules {

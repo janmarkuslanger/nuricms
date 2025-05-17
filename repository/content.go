@@ -30,14 +30,25 @@ func (r *ContentRepository) FindByID(id uint) (model.Content, error) {
 	return content, err
 }
 
-func (r *ContentRepository) FindByCollectionID(collectionID uint) ([]model.Content, error) {
-	var contents []model.Content
-	err := r.db.
+func (r *ContentRepository) FindByCollectionID(collectionID uint, offset int, limit int) ([]model.Content, error) {
+	q := r.db.
 		Where("collection_id = ?", collectionID).
 		Preload("ContentValues").
-		Preload("ContentValues.Field").
-		Find(&contents).Error
-	return contents, err
+		Preload("ContentValues.Field")
+
+	if offset > 0 {
+		q = q.Offset(offset)
+	}
+
+	if limit > 0 {
+		q = q.Limit(limit)
+	}
+
+	var contents []model.Content
+	if err := q.Find(&contents).Error; err != nil {
+		return nil, err
+	}
+	return contents, nil
 }
 
 func (r *ContentRepository) FindDisplayValueByCollectionID(collectionID uint) ([]model.Content, error) {
@@ -56,7 +67,7 @@ func (r *ContentRepository) FindDisplayValueByCollectionID(collectionID uint) ([
 	return contents, err
 }
 
-func (r *ContentRepository) FindAllWithDisplayContentValue() ([]model.Content, error) {
+func (r *ContentRepository) ListWithDisplayContentValue() ([]model.Content, error) {
 	var contents []model.Content
 
 	err := r.db.

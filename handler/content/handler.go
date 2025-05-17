@@ -150,7 +150,7 @@ func (h *Handler) editContent(c *gin.Context) {
 	contentID := uint(id)
 
 	err = db.DB.Transaction(func(tx *gorm.DB) error {
-		existingContent, err := h.services.Content.GetByID(contentID)
+		existingContent, err := h.services.Content.FindByID(contentID)
 		if err != nil {
 			return err
 		}
@@ -250,7 +250,7 @@ func (h *Handler) showEditContent(c *gin.Context) {
 	}
 	contentID := uint(contID64)
 
-	contentEntry, err := h.services.Content.GetByID(contentID)
+	contentEntry, err := h.services.Content.FindByID(contentID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -287,7 +287,7 @@ func (h *Handler) deleteContent(c *gin.Context) {
 	contentID := uint(id)
 
 	err = db.DB.Transaction(func(tx *gorm.DB) error {
-		content, err := h.services.Content.GetByID(contentID)
+		content, err := h.services.Content.FindByID(contentID)
 		if err != nil {
 			return err
 		}

@@ -6,17 +6,17 @@ import (
 )
 
 type CollectionService struct {
-	repo *repository.CollectionRepository
+	repos *repository.Set
 }
 
-func NewCollectionService(r *repository.CollectionRepository) *CollectionService {
-	return &CollectionService{repo: r}
+func NewCollectionService(repos *repository.Set) *CollectionService {
+	return &CollectionService{repos: repos}
 }
 
 func (s *CollectionService) GetAll() ([]model.Collection, error) {
-	return s.repo.GetAll()
+	return s.repos.Collection.GetAll()
 }
 
 func (s *CollectionService) GetByID(id uint) (*model.Collection, error) {
-	return s.repo.FindByID(id)
+	return s.repos.Collection.FindByID(id)
 }

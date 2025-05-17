@@ -23,11 +23,11 @@ func NewSet(r *repository.Set) *Set {
 	}
 
 	return &Set{
-		Collection:   NewCollectionService(r.Collection),
-		Field:        NewFieldService(r.Field),
-		Content:      NewContentService(r.Content),
-		ContentValue: NewContentValueService(r.ContentValue),
-		Asset:        NewAssetService(r.Asset),
-		User:         NewUserService(r.User, []byte(secret)),
+		Collection:   NewCollectionService(r),
+		Field:        NewFieldService(r),
+		Content:      NewContentService(r),
+		ContentValue: NewContentValueService(r),
+		Asset:        NewAssetService(r),
+		User:         NewUserService(r, []byte(secret)),
 	}
 }

@@ -11,16 +11,16 @@ import (
 )
 
 type UserService struct {
-	repo      *repository.UserRepository
+	repos     *repository.Set
 	jwtSecret []byte
 }
 
-func NewUserService(r *repository.UserRepository, jwtSecret []byte) *UserService {
-	return &UserService{repo: r, jwtSecret: jwtSecret}
+func NewUserService(repos *repository.Set, jwtSecret []byte) *UserService {
+	return &UserService{repos: repos, jwtSecret: jwtSecret}
 }
 
 func (s *UserService) List() ([]model.User, error) {
-	return s.repo.List()
+	return s.repos.User.List()
 }
 
 func (s *UserService) DeleteByID(id uint) error {
@@ -29,7 +29,7 @@ func (s *UserService) DeleteByID(id uint) error {
 		return err
 	}
 
-	return s.repo.Delete(user)
+	return s.repos.User.Delete(user)
 }
 
 func (s *UserService) CreateUser(email, password string, role model.Role) (*model.User, error) {
@@ -50,26 +50,26 @@ func (s *UserService) CreateUser(email, password string, role model.Role) (*mode
 		Password: string(hash),
 		Role:     role,
 	}
-	if err := s.repo.Create(user); err != nil {
+	if err := s.repos.User.Create(user); err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
 func (s *UserService) FindByID(id uint) (*model.User, error) {
-	return s.repo.FindByID(id)
+	return s.repos.User.FindByID(id)
 }
 
 func (s *UserService) Save(user *model.User) error {
-	return s.repo.Save(user)
+	return s.repos.User.Save(user)
 }
 
 func (s *UserService) Delete(user *model.User) error {
-	return s.repo.Delete(user)
+	return s.repos.User.Delete(user)
 }
 
 func (s *UserService) LoginUser(email, password string) (string, error) {
-	user, err := s.repo.FindByEmail(email)
+	user, err := s.repos.User.FindByEmail(email)
 	if err != nil {
 		return "", err
 	}

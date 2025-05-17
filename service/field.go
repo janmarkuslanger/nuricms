@@ -6,17 +6,17 @@ import (
 )
 
 type FieldService struct {
-	repo *repository.FieldRepository
+	repos *repository.Set
 }
 
-func NewFieldService(r *repository.FieldRepository) *FieldService {
-	return &FieldService{repo: r}
+func NewFieldService(repos *repository.Set) *FieldService {
+	return &FieldService{repos: repos}
 }
 
 func (s *FieldService) GetByCollectionID(collectionID uint) ([]model.Field, error) {
-	return s.repo.FindByCollectionID(collectionID)
+	return s.repos.Field.FindByCollectionID(collectionID)
 }
 
 func (s *FieldService) GetDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {
-	return s.repo.FindDisplayFieldsByCollectionID(collectionID)
+	return s.repos.Field.FindDisplayFieldsByCollectionID(collectionID)
 }
