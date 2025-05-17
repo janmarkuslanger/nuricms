@@ -12,7 +12,7 @@ func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, status
 		"safeHTML": func(s string) template.HTML {
 			return template.HTML(s)
 		},
-		"eq": func(a, b interface{}) bool {
+		"eq": func(a, b any) bool {
 			return a == b
 		},
 		"add": func(a int, b int) int {

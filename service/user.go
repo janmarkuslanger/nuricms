@@ -87,7 +87,7 @@ func (s *UserService) LoginUser(email, password string) (string, error) {
 }
 
 func (s *UserService) ValidateJWT(tokenStr string) (userID uint, email string, role model.Role, err error) {
-	tok, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+	tok, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		return s.jwtSecret, nil
 	})
 	if err != nil || !tok.Valid {

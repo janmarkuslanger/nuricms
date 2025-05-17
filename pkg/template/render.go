@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-func RenderTemplate(templatePath string, data interface{}) (string, error) {
+func RenderTemplate(templatePath string, data any) (string, error) {
 	rawTemplate, err := template.ParseFiles(templatePath)
 
 	if err != nil {

@@ -10,9 +10,9 @@ import (
 )
 
 type ContentValueResponse struct {
-	Field string      `json:"field"`
-	Type  string      `json:"type"`
-	Value interface{} `json:"value"`
+	Field string `json:"field"`
+	Type  string `json:"type"`
+	Value any    `json:"value"`
 }
 
 type ContentResponse struct {
@@ -53,7 +53,7 @@ func (h *Handler) listContents(c *gin.Context) {
 	for _, ct := range contents {
 		var cvres []ContentValueResponse
 		for _, cv := range ct.ContentValues {
-			var val interface{} = cv.Value
+			var val any = cv.Value
 
 			switch cv.Field.FieldType {
 			case "Asset":
