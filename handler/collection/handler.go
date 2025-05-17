@@ -20,15 +20,14 @@ func NewHandler(services *service.Set) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
-	auth := middleware.Userauth(h.services.User)
-	secure := r.Group("/collections", auth)
+	secure := r.Group("/collections", middleware.Userauth(h.services.User))
 
-	secure.GET("/", h.showCollections)
-	secure.GET("/create", h.showCreateCollection)
-	secure.POST("/create", h.createCollection)
-	secure.GET("/edit/:id", h.showEditCollection)
-	secure.POST("/edit/:id", h.editCollection)
-	secure.POST("/delete/:id", h.deleteCollection)
+	secure.GET("/", middleware.Roleauth(model.RoleAdmin, model.RoleEditor), h.showCollections)
+	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), h.showCreateCollection)
+	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), h.createCollection)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.showEditCollection)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.editCollection)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteCollection)
 }
 
 func (h *Handler) showCollections(c *gin.Context) {

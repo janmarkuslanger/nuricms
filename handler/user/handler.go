@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/janmarkuslanger/nuricms/middleware"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/service"
 	"github.com/janmarkuslanger/nuricms/utils"
@@ -18,12 +19,49 @@ func NewHandler(services *service.Set) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
-	r.GET("/user", h.showUser)
-	r.GET("/user/create", h.showCreateUser)
-	r.POST("/user/create", h.createUser)
-	r.GET("/user/edit/:id", h.showEditUser)
-	r.POST("/user/edit/:id", h.editUser)
-	r.POST("/user/delete/:id", h.deleteUser)
+	secure := r.Group("/user", middleware.Userauth(h.services.User))
+
+	r.GET("/login", h.showLogin)
+	r.POST("/login", h.login)
+
+	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showUser)
+	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), h.showCreateUser)
+	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), h.createUser)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.showEditUser)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.editUser)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteUser)
+}
+
+func (h *Handler) showLogin(c *gin.Context) {
+	utils.RenderWithLayout(c, "auth/login.tmpl", gin.H{}, http.StatusOK)
+}
+
+func (h *Handler) login(c *gin.Context) {
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+
+	if email == "" || password == "" {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	token, err := h.services.User.LoginUser(email, password)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	c.SetCookie(
+		"auth_token",
+		token,
+		3600*24,
+		"/",
+		"",
+		true,
+		true,
+	)
+
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
 func (h *Handler) showUser(c *gin.Context) {
@@ -72,7 +110,7 @@ func (h *Handler) editUser(c *gin.Context) {
 	}
 
 	email := c.PostForm("email")
-	password := c.PostForm("email")
+	password := c.PostForm("password")
 	role := c.PostForm("role")
 
 	user.Email = email

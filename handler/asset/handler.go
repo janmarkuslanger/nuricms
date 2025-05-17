@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/janmarkuslanger/nuricms/middleware"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/service"
 	"github.com/janmarkuslanger/nuricms/utils"
@@ -18,12 +19,14 @@ func NewHandler(services *service.Set) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
-	r.GET("/assets", h.showAssets)
-	r.GET("/assets/create", h.showCreateAsset)
-	r.POST("/assets/create", h.createAsset)
-	r.GET("/assets/edit/:id", h.showEditAsset)
-	r.POST("/assets/edit/:id", h.editAsset)
-	r.POST("/assets/delete/:id", h.deleteAsset)
+	secure := r.Group("/assets", middleware.Userauth(h.services.User))
+
+	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showAssets)
+	secure.GET("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCreateAsset)
+	secure.POST("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.createAsset)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showEditAsset)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.editAsset)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteAsset)
 }
 
 func (h *Handler) showAssets(c *gin.Context) {

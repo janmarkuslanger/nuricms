@@ -11,34 +11,34 @@ import (
 
 func Userauth(userService *service.UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token missing or invalid"})
-			return
+		token, err := c.Cookie("auth_token")
+		if err != nil {
+			hdr := c.GetHeader("Authorization")
+			if !strings.HasPrefix(hdr, "Bearer ") {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+				return
+			}
+			token = strings.TrimPrefix(hdr, "Bearer ")
 		}
 
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		userID, email, role, err := userService.ValidateJWT(token)
+		uid, email, role, err := userService.ValidateJWT(token)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
-
-		c.Set("userID", userID)
+		c.Set("userID", uid)
 		c.Set("userEmail", email)
 		c.Set("userRole", role)
+
 		c.Next()
 	}
 }
 
-func RoleMiddleware(allowed ...model.Role) gin.HandlerFunc {
+func Roleauth(allowed ...model.Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		val, exists := c.Get("userRole")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "role not found"})
-			return
-		}
+		val, _ := c.Get("userRole")
 		userRole := val.(model.Role)
+
 		for _, want := range allowed {
 			if userRole == want {
 				c.Next()
