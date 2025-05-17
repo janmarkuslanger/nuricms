@@ -14,9 +14,11 @@
         <button type="submit">Submit</button>
     </form>
 
-    <form method="POST" action="/content/collections/{{ .Collection.ID }}/delete/{{ .Content.ID }}" onsubmit="return confirm('Confirm deletion?');">
-        <button type="submit">Delete</button>
-    </form>
+    {{ if .Content }}
+        <form method="POST" action="/content/collections/{{ .Collection.ID }}/delete/{{ .Content.ID }}" onsubmit="return confirm('Confirm deletion?');">
+            <button type="submit">Delete</button>
+        </form>
+    {{ end }}
 
     <script>
 
