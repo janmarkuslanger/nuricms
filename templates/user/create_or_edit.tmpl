@@ -2,24 +2,26 @@
     {{ $user := .User }}
     <h1>New field</h1>
     <form method="POST">
-    <label>E-Mail:</label><br>
-    <input type="email" name="email" {{ if $user }}value="{{ $user.Email }}"{{ end }}><br><br>
+        <label>E-Mail:</label><br>
+        <input type="email" name="email" {{ if $user }}value="{{ $user.Email }}"{{ end }}><br><br>
 
-    <label>Password:</label><br>
-    <input type="password" name="password"><br><br>
+        <label>Password:</label><br>
+        <input type="password" name="password"><br><br>
 
-    <label>Role:</label><br>
-    <select name="role">
-        {{ range .Roles }}
-            <option value="{{ . }}" {{ if eq . $user.Role }}selected{{ end }}>{{ . }}</option>
-        {{ end }}
-    </select>
+        <label>Role:</label><br>
+        <select name="role">
+            {{ range .Roles }}
+                <option value="{{ . }}" {{ if eq . $user.Role }}selected{{ end }}>{{ . }}</option>
+            {{ end }}
+        </select>
 
         <button type="submit">{{ if $user }}Update{{ else }}Create{{ end }}</button>
     </form>
 
-    <form method="POST" action="/user/delete/{{ $user.ID }}" onsubmit="return confirm('Confirm deletion?');">
-        <button type="submit">Delete</button>
-    </form>
+    {{ if $user }}
+        <form method="POST" action="/user/delete/{{ $user.ID }}" onsubmit="return confirm('Confirm deletion?');">
+            <button type="submit">Delete</button>
+        </form>
+    {{ end }}
 
 {{ end }}

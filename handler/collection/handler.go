@@ -87,7 +87,7 @@ func (h *Handler) showEditCollection(c *gin.Context) {
 	}
 
 	utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
-		"collection": collection,
+		"Collection": collection,
 	}, http.StatusOK)
 }
 
@@ -108,7 +108,7 @@ func (h *Handler) editCollection(c *gin.Context) {
 	if name == "" || alias == "" {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error":      "Name and Alias are required fields.",
-			"collection": collection,
+			"Collection": collection,
 		}, http.StatusBadRequest)
 		return
 	}
@@ -120,7 +120,7 @@ func (h *Handler) editCollection(c *gin.Context) {
 	if err := db.DB.Save(&collection).Error; err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error":      "Failed to update.",
-			"collection": collection,
+			"Collection": collection,
 		}, http.StatusInternalServerError)
 		return
 	}
