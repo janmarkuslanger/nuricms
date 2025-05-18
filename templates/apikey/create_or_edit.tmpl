@@ -1,0 +1,22 @@
+{{ define "content" }}
+
+    {{ if not .Apikey }}
+    <h1>Create apikey</h1>
+
+    <form method="POST">
+        <div>
+            <label for="name">Name of the key: </label><br>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <button type="submit">Submit</button>
+    </form>
+    {{ end }}
+
+    {{ if .Apikey }}
+        <form method="POST" action="/apikeys/delete/{{ .Apikey.ID }}" onsubmit="return confirm('Confirm deletion?');">
+            <button type="submit">Delete</button>
+        </form>
+    {{ end }}
+
+{{ end }}

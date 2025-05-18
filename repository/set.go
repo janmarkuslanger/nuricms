@@ -11,6 +11,7 @@ type Set struct {
 	ContentValue *ContentValueRepository
 	Asset        *AssetRepository
 	User         *UserRepository
+	Apikey       *ApikeyRepository
 }
 
 func NewSet(db *gorm.DB) *Set {
@@ -21,5 +22,6 @@ func NewSet(db *gorm.DB) *Set {
 		ContentValue: NewContentValueRepository(db),
 		Asset:        NewAssetRepository(db),
 		User:         NewUserRepository(db),
+		Apikey:       NewApikeyRepository(db),
 	}
 }

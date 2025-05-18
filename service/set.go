@@ -14,6 +14,7 @@ type Set struct {
 	ContentValue *ContentValueService
 	Asset        *AssetService
 	User         *UserService
+	Apikey       *ApikeyService
 }
 
 func NewSet(r *repository.Set) *Set {
@@ -29,5 +30,6 @@ func NewSet(r *repository.Set) *Set {
 		ContentValue: NewContentValueService(r),
 		Asset:        NewAssetService(r),
 		User:         NewUserService(r, []byte(secret)),
+		Apikey:       NewApikeyService(r),
 	}
 }
