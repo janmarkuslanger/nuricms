@@ -1,0 +1,28 @@
+{{ define "content" }}
+
+    <h1>API keys</h1>
+    <a href="/apikeys/create">Create new api key</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Key</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .Apikeys }}
+            <tr>
+                <td>{{ .ID }}</td>
+                <td>{{ .Name }}</td>
+                <td>{{ .Token }}</td>
+                <td>
+                    <a href="/apikeys/edit/{{ .ID }}">Edit</a>
+                </td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+
+{{end}}

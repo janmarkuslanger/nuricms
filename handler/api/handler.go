@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/janmarkuslanger/nuricms/middleware"
 	"github.com/janmarkuslanger/nuricms/service"
 )
 
@@ -29,7 +30,10 @@ func NewHandler(services *service.Set) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
-	r.GET("/api/collections/:alias/contents", h.listContents)
+	api := r.Group("/api",
+		middleware.ApikeyAuth(h.services.Apikey),
+	)
+	api.GET("/collections/:alias/contents", h.listContents)
 }
 
 // GET /api/collections/:alias/contents?page=1
