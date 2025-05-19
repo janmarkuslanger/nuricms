@@ -12,6 +12,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/handler/field"
 	"github.com/janmarkuslanger/nuricms/handler/home"
 	"github.com/janmarkuslanger/nuricms/handler/user"
+	"github.com/janmarkuslanger/nuricms/handler/webhook"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/repository"
 	"github.com/janmarkuslanger/nuricms/service"
@@ -31,6 +32,7 @@ func main() {
 		&model.Asset{},
 		&model.User{},
 		&model.Apikey{},
+		&model.Webhook{},
 	)
 
 	modules := []handler.Handler{
@@ -42,6 +44,7 @@ func main() {
 		home.NewHandler(services),
 		api.NewHandler(services),
 		apikey.NewHandler(services),
+		webhook.NewHandler(services),
 	}
 
 	for _, module := range modules {

@@ -12,6 +12,7 @@ type Set struct {
 	Asset        *AssetRepository
 	User         *UserRepository
 	Apikey       *ApikeyRepository
+	Webhook      *WebhookRepository
 }
 
 func NewSet(db *gorm.DB) *Set {
@@ -23,5 +24,6 @@ func NewSet(db *gorm.DB) *Set {
 		Asset:        NewAssetRepository(db),
 		User:         NewUserRepository(db),
 		Apikey:       NewApikeyRepository(db),
+		Webhook:      NewWebhookRepository(db),
 	}
 }

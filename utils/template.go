@@ -3,6 +3,7 @@ package utils
 import (
 	"html/template"
 	"net/http"
+	"slices"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,9 @@ func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, status
 		},
 		"add": func(a int, b int) int {
 			return a + b
+		},
+		"in": func(s string, list []string) bool {
+			return slices.Contains(list, s)
 		},
 	}
 
