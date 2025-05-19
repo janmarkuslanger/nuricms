@@ -1,0 +1,26 @@
+{{ define "content" }}
+
+    <h1>Webhook list</h1>
+    <a href="/webhooks/create">Create new webhook</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .Webhooks }}
+            <tr>
+                <td>{{ .ID }}</td>
+                <td>{{ .Name }}</td>
+                <td>{{ .Active }}</td>
+                <td><a href="/webhooks/edit/{{ .ID }}">Edit</a></td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+
+{{end}}

@@ -32,7 +32,7 @@ func (s *UserService) DeleteByID(id uint) error {
 	return s.repos.User.Delete(user)
 }
 
-func (s *UserService) CreateUser(email, password string, role model.Role) (*model.User, error) {
+func (s *UserService) Create(email, password string, role model.Role) (*model.User, error) {
 	switch role {
 	case model.RoleAdmin, model.RoleEditor:
 

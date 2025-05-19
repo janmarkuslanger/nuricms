@@ -129,7 +129,7 @@ func (h *Handler) createUser(c *gin.Context) {
 	password := c.PostForm("email")
 	role := c.PostForm("role")
 
-	_, err := h.services.User.CreateUser(email, password, model.Role(role))
+	_, err := h.services.User.Create(email, password, model.Role(role))
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/user")
 		return
