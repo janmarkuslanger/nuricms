@@ -11,6 +11,7 @@ FROM alpine:latest
 RUN apk add --no-cache sqlite-libs
 WORKDIR /app
 COPY --from=builder /app/cmd/nuricms/nuricms .
+COPY --from=builder /app/templates ./templates
 ENV GIN_MODE=release
 EXPOSE 8080
 CMD ["./nuricms"]
