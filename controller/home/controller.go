@@ -9,19 +9,19 @@ import (
 	"github.com/janmarkuslanger/nuricms/utils"
 )
 
-type Handler struct {
+type Controller struct {
 	services *service.Set
 }
 
-func NewHandler(services *service.Set) *Handler {
-	return &Handler{services: services}
+func NewController(services *service.Set) *Controller {
+	return &Controller{services: services}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure := r.Group("/", middleware.Userauth(h.services.User))
 	secure.GET("", h.home)
 }
 
-func (h *Handler) home(c *gin.Context) {
+func (h *Controller) home(c *gin.Context) {
 	utils.RenderWithLayout(c, "home.tmpl", gin.H{}, http.StatusOK)
 }

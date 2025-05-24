@@ -12,15 +12,15 @@ import (
 	"github.com/janmarkuslanger/nuricms/utils"
 )
 
-type Handler struct {
+type Controller struct {
 	services *service.Set
 }
 
-func NewHandler(services *service.Set) *Handler {
-	return &Handler{services: services}
+func NewController(services *service.Set) *Controller {
+	return &Controller{services: services}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure := r.Group("/fields", middleware.Userauth(h.services.User))
 
 	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.listFields)
@@ -31,7 +31,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	secure.POST("/delete/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.deleteField)
 }
 
-func (h *Handler) listFields(c *gin.Context) {
+func (h *Controller) listFields(c *gin.Context) {
 	var fields []model.Field
 	if err := db.DB.Preload("Collection").Find(&fields).Error; err != nil {
 		utils.RenderWithLayout(c, "field/index.tmpl", gin.H{
@@ -45,7 +45,7 @@ func (h *Handler) listFields(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) showCreateField(c *gin.Context) {
+func (h *Controller) showCreateField(c *gin.Context) {
 	var collections []model.Collection
 	if err := db.DB.Find(&collections).Error; err != nil {
 		c.Redirect(http.StatusSeeOther, "/fields")
@@ -62,7 +62,7 @@ func (h *Handler) showCreateField(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) showEditField(c *gin.Context) {
+func (h *Controller) showEditField(c *gin.Context) {
 	var field model.Field
 	if err := db.DB.Preload("Collection").First(&field, c.Param("id")).Error; err != nil {
 		c.Redirect(http.StatusSeeOther, "/fields")
@@ -86,7 +86,7 @@ func (h *Handler) showEditField(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) createField(c *gin.Context) {
+func (h *Controller) createField(c *gin.Context) {
 	name := c.PostForm("name")
 	alias := c.PostForm("alias")
 	collectionIDStr := c.PostForm("collection_id")
@@ -119,7 +119,7 @@ func (h *Handler) createField(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/fields")
 }
 
-func (h *Handler) editField(c *gin.Context) {
+func (h *Controller) editField(c *gin.Context) {
 	id := c.Param("id")
 	var field model.Field
 	if err := db.DB.First(&field, id).Error; err != nil {
@@ -147,7 +147,7 @@ func (h *Handler) editField(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/fields")
 }
 
-func (h *Handler) deleteField(c *gin.Context) {
+func (h *Controller) deleteField(c *gin.Context) {
 	id := c.Param("id")
 
 	var field model.Field

@@ -14,15 +14,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type Handler struct {
+type Controller struct {
 	services *service.Set
 }
 
-func NewHandler(services *service.Set) *Handler {
-	return &Handler{services: services}
+func NewController(services *service.Set) *Controller {
+	return &Controller{services: services}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure := r.Group("/content/collections", middleware.Userauth(h.services.User))
 
 	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCollections)
@@ -34,7 +34,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	secure.POST("/:id/delete/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.deleteContent)
 }
 
-func (h *Handler) showCollections(c *gin.Context) {
+func (h *Controller) showCollections(c *gin.Context) {
 	collections, err := h.services.Collection.GetAll()
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
@@ -45,7 +45,7 @@ func (h *Handler) showCollections(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) showCreateContent(c *gin.Context) {
+func (h *Controller) showCreateContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -82,7 +82,7 @@ func (h *Handler) showCreateContent(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) createContent(c *gin.Context) {
+func (h *Controller) createContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -135,7 +135,7 @@ func (h *Handler) createContent(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
-func (h *Handler) editContent(c *gin.Context) {
+func (h *Controller) editContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -207,7 +207,7 @@ func (h *Handler) editContent(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
-func (h *Handler) listContent(c *gin.Context) {
+func (h *Controller) listContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -235,7 +235,7 @@ func (h *Handler) listContent(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) showEditContent(c *gin.Context) {
+func (h *Controller) showEditContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -272,7 +272,7 @@ func (h *Handler) showEditContent(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) deleteContent(c *gin.Context) {
+func (h *Controller) deleteContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")

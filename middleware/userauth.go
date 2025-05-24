@@ -15,7 +15,7 @@ func Userauth(userService *service.UserService) gin.HandlerFunc {
 		if err != nil {
 			hdr := c.GetHeader("Authorization")
 			if !strings.HasPrefix(hdr, "Bearer ") {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+				c.Redirect(http.StatusSeeOther, "/login")
 				return
 			}
 			token = strings.TrimPrefix(hdr, "Bearer ")
@@ -23,7 +23,7 @@ func Userauth(userService *service.UserService) gin.HandlerFunc {
 
 		uid, email, role, err := userService.ValidateJWT(token)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.Redirect(http.StatusSeeOther, "/login")
 			return
 		}
 		c.Set("userID", uid)

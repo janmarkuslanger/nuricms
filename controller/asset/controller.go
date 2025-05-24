@@ -10,15 +10,15 @@ import (
 	"github.com/janmarkuslanger/nuricms/utils"
 )
 
-type Handler struct {
+type Controller struct {
 	services *service.Set
 }
 
-func NewHandler(services *service.Set) *Handler {
-	return &Handler{services: services}
+func NewController(services *service.Set) *Controller {
+	return &Controller{services: services}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure := r.Group("/assets", middleware.Userauth(h.services.User))
 
 	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showAssets)
@@ -29,18 +29,18 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteAsset)
 }
 
-func (h *Handler) showAssets(c *gin.Context) {
+func (h *Controller) showAssets(c *gin.Context) {
 	assets, _ := h.services.Asset.GetAll()
 	utils.RenderWithLayout(c, "/asset/index.tmpl", gin.H{
 		"assets": assets,
 	}, http.StatusOK)
 }
 
-func (h *Handler) showCreateAsset(c *gin.Context) {
+func (h *Controller) showCreateAsset(c *gin.Context) {
 	utils.RenderWithLayout(c, "/asset/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
-func (h *Handler) deleteAsset(c *gin.Context) {
+func (h *Controller) deleteAsset(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {
@@ -51,7 +51,7 @@ func (h *Handler) deleteAsset(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/assets")
 }
 
-func (h *Handler) showEditAsset(c *gin.Context) {
+func (h *Controller) showEditAsset(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {
@@ -69,7 +69,7 @@ func (h *Handler) showEditAsset(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) createAsset(c *gin.Context) {
+func (h *Controller) createAsset(c *gin.Context) {
 	file, err := c.FormFile("file")
 
 	if err != nil {
@@ -91,7 +91,7 @@ func (h *Handler) createAsset(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/assets")
 }
 
-func (h *Handler) editAsset(c *gin.Context) {
+func (h *Controller) editAsset(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {
