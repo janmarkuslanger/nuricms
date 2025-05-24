@@ -1,7 +1,7 @@
-package handler
+package core
 
 import "github.com/gin-gonic/gin"
 
-type Handler interface {
+type Controller interface {
 	RegisterRoutes(r *gin.Engine)
 }

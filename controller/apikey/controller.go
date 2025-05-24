@@ -10,15 +10,15 @@ import (
 	"github.com/janmarkuslanger/nuricms/utils"
 )
 
-type Handler struct {
+type Controller struct {
 	services *service.Set
 }
 
-func NewHandler(services *service.Set) *Handler {
-	return &Handler{services: services}
+func NewController(services *service.Set) *Controller {
+	return &Controller{services: services}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure := r.Group("/apikeys", middleware.Userauth(h.services.User))
 
 	secure.GET("/", middleware.Roleauth(model.RoleAdmin), h.showApikeys)
@@ -28,18 +28,18 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteApikey)
 }
 
-func (h *Handler) showApikeys(c *gin.Context) {
+func (h *Controller) showApikeys(c *gin.Context) {
 	keys, _ := h.services.Apikey.List()
 	utils.RenderWithLayout(c, "/apikey/index.tmpl", gin.H{
 		"Apikeys": keys,
 	}, http.StatusOK)
 }
 
-func (h *Handler) showCreateApikey(c *gin.Context) {
+func (h *Controller) showCreateApikey(c *gin.Context) {
 	utils.RenderWithLayout(c, "/apikey/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
-func (h *Handler) createApikey(c *gin.Context) {
+func (h *Controller) createApikey(c *gin.Context) {
 	name := c.PostForm("name")
 	if name == "" {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
@@ -48,7 +48,7 @@ func (h *Handler) createApikey(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/apikeys")
 }
 
-func (h *Handler) showEditApikey(c *gin.Context) {
+func (h *Controller) showEditApikey(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
@@ -64,7 +64,7 @@ func (h *Handler) showEditApikey(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) deleteApikey(c *gin.Context) {
+func (h *Controller) deleteApikey(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/apikeys")

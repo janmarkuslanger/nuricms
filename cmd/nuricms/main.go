@@ -2,17 +2,17 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/core/handler"
+	"github.com/janmarkuslanger/nuricms/controller/api"
+	"github.com/janmarkuslanger/nuricms/controller/apikey"
+	"github.com/janmarkuslanger/nuricms/controller/asset"
+	"github.com/janmarkuslanger/nuricms/controller/collection"
+	"github.com/janmarkuslanger/nuricms/controller/content"
+	"github.com/janmarkuslanger/nuricms/controller/field"
+	"github.com/janmarkuslanger/nuricms/controller/home"
+	"github.com/janmarkuslanger/nuricms/controller/user"
+	"github.com/janmarkuslanger/nuricms/controller/webhook"
+	"github.com/janmarkuslanger/nuricms/core"
 	"github.com/janmarkuslanger/nuricms/db"
-	"github.com/janmarkuslanger/nuricms/handler/api"
-	"github.com/janmarkuslanger/nuricms/handler/apikey"
-	"github.com/janmarkuslanger/nuricms/handler/asset"
-	"github.com/janmarkuslanger/nuricms/handler/collection"
-	"github.com/janmarkuslanger/nuricms/handler/content"
-	"github.com/janmarkuslanger/nuricms/handler/field"
-	"github.com/janmarkuslanger/nuricms/handler/home"
-	"github.com/janmarkuslanger/nuricms/handler/user"
-	"github.com/janmarkuslanger/nuricms/handler/webhook"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/repository"
 	"github.com/janmarkuslanger/nuricms/service"
@@ -35,16 +35,16 @@ func main() {
 		&model.Webhook{},
 	)
 
-	modules := []handler.Handler{
-		collection.NewHandler(services),
-		field.NewHandler(services),
-		content.NewHandler(services),
-		asset.NewHandler(services),
-		user.NewHandler(services),
-		home.NewHandler(services),
-		api.NewHandler(services),
-		apikey.NewHandler(services),
-		webhook.NewHandler(services),
+	modules := []core.Controller{
+		collection.NewController(services),
+		field.NewController(services),
+		content.NewController(services),
+		asset.NewController(services),
+		user.NewController(services),
+		home.NewController(services),
+		api.NewController(services),
+		apikey.NewController(services),
+		webhook.NewController(services),
 	}
 
 	for _, module := range modules {

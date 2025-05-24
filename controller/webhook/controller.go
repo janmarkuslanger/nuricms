@@ -11,15 +11,15 @@ import (
 	"github.com/janmarkuslanger/nuricms/utils"
 )
 
-type Handler struct {
+type Controller struct {
 	services *service.Set
 }
 
-func NewHandler(services *service.Set) *Handler {
-	return &Handler{services: services}
+func NewController(services *service.Set) *Controller {
+	return &Controller{services: services}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure := r.Group("/webhooks", middleware.Userauth(h.services.User))
 
 	secure.GET("/", middleware.Roleauth(model.RoleAdmin), h.showWebhook)
@@ -30,7 +30,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteWebhook)
 }
 
-func (h *Handler) showWebhook(c *gin.Context) {
+func (h *Controller) showWebhook(c *gin.Context) {
 	webhooks, _ := h.services.Webhook.List()
 
 	utils.RenderWithLayout(c, "webhook/index.tmpl", gin.H{
@@ -38,14 +38,14 @@ func (h *Handler) showWebhook(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) showCreateWebhook(c *gin.Context) {
+func (h *Controller) showCreateWebhook(c *gin.Context) {
 	utils.RenderWithLayout(c, "webhook/create_or_edit.tmpl", gin.H{
 		"RequestTypes": model.GetRequestTypes(),
 		"EventTypes":   model.GetWebhookEvents(),
 	}, http.StatusOK)
 }
 
-func (h *Handler) createWebhook(c *gin.Context) {
+func (h *Controller) createWebhook(c *gin.Context) {
 	name := c.PostForm("name")
 	url := c.PostForm("url")
 	requestType := model.RequestType(c.PostForm("request_type"))
@@ -66,7 +66,7 @@ func (h *Handler) createWebhook(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/webhooks")
 }
 
-func (h *Handler) showEditWebhook(c *gin.Context) {
+func (h *Controller) showEditWebhook(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/webhooks")
@@ -85,7 +85,7 @@ func (h *Handler) showEditWebhook(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) editWebhook(c *gin.Context) {
+func (h *Controller) editWebhook(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/webhooks")
@@ -123,7 +123,7 @@ func (h *Handler) editWebhook(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/webhooks")
 }
 
-func (h *Handler) deleteWebhook(c *gin.Context) {
+func (h *Controller) deleteWebhook(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {

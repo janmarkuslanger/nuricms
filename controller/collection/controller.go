@@ -11,15 +11,15 @@ import (
 	"github.com/janmarkuslanger/nuricms/utils"
 )
 
-type Handler struct {
+type Controller struct {
 	services *service.Set
 }
 
-func NewHandler(services *service.Set) *Handler {
-	return &Handler{services: services}
+func NewController(services *service.Set) *Controller {
+	return &Controller{services: services}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure := r.Group("/collections", middleware.Userauth(h.services.User))
 
 	secure.GET("/", middleware.Roleauth(model.RoleAdmin, model.RoleEditor), h.showCollections)
@@ -30,7 +30,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteCollection)
 }
 
-func (h *Handler) showCollections(c *gin.Context) {
+func (h *Controller) showCollections(c *gin.Context) {
 	var collections []model.Collection
 	if err := db.DB.Find(&collections).Error; err != nil {
 		utils.RenderWithLayout(c, "collection/index.tmpl", gin.H{
@@ -44,11 +44,11 @@ func (h *Handler) showCollections(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) showCreateCollection(c *gin.Context) {
+func (h *Controller) showCreateCollection(c *gin.Context) {
 	utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
-func (h *Handler) createCollection(c *gin.Context) {
+func (h *Controller) createCollection(c *gin.Context) {
 	name := c.PostForm("name")
 	alias := c.PostForm("alias")
 	description := c.PostForm("description")
@@ -76,7 +76,7 @@ func (h *Handler) createCollection(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/collections")
 }
 
-func (h *Handler) showEditCollection(c *gin.Context) {
+func (h *Controller) showEditCollection(c *gin.Context) {
 	id := c.Param("id")
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {
@@ -91,7 +91,7 @@ func (h *Handler) showEditCollection(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Handler) editCollection(c *gin.Context) {
+func (h *Controller) editCollection(c *gin.Context) {
 	id := c.Param("id")
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {
@@ -128,7 +128,7 @@ func (h *Handler) editCollection(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/collections")
 }
 
-func (h *Handler) deleteCollection(c *gin.Context) {
+func (h *Controller) deleteCollection(c *gin.Context) {
 	id := c.Param("id")
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {

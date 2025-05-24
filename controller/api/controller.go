@@ -1,4 +1,3 @@
-// handlers/api_content.go
 package api
 
 import (
@@ -21,15 +20,15 @@ type ContentResponse struct {
 	Values []ContentValueResponse `json:"values"`
 }
 
-type Handler struct {
+type Controller struct {
 	services *service.Set
 }
 
-func NewHandler(services *service.Set) *Handler {
-	return &Handler{services: services}
+func NewController(services *service.Set) *Controller {
+	return &Controller{services: services}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api",
 		middleware.ApikeyAuth(h.services.Apikey),
 	)
@@ -37,7 +36,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 }
 
 // GET /api/collections/:alias/contents?page=1
-func (h *Handler) listContents(c *gin.Context) {
+func (h *Controller) listContents(c *gin.Context) {
 	alias := c.Param("alias")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if page < 1 {
