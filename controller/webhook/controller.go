@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,7 @@ func NewController(services *service.Set) *Controller {
 func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure := r.Group("/webhooks", middleware.Userauth(h.services.User))
 
-	secure.GET("/", middleware.Roleauth(model.RoleAdmin), h.showWebhook)
+	secure.GET("/", middleware.Roleauth(model.RoleAdmin), h.showWebhooks)
 	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), h.showCreateWebhook)
 	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), h.createWebhook)
 	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.showEditWebhook)
@@ -30,11 +31,34 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteWebhook)
 }
 
-func (h *Controller) showWebhook(c *gin.Context) {
-	webhooks, _ := h.services.Webhook.List()
+func (h *Controller) showWebhooks(c *gin.Context) {
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("pageSize", "10")
+
+	pageNum, err := strconv.Atoi(page)
+	if err != nil {
+		pageNum = 1
+	}
+
+	pageSizeNum, err := strconv.Atoi(pageSize)
+	if err != nil {
+		pageSizeNum = 10
+	}
+
+	webhooks, totalCount, err := h.services.Webhook.List(pageNum, pageSizeNum)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve webhooks."})
+		return
+	}
+
+	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
 
 	utils.RenderWithLayout(c, "webhook/index.tmpl", gin.H{
-		"Webhooks": webhooks,
+		"Webhooks":    webhooks,
+		"TotalCount":  totalCount,
+		"TotalPages":  totalPages,
+		"CurrentPage": pageNum,
+		"PageSize":    pageSizeNum,
 	}, http.StatusOK)
 }
 

@@ -20,3 +20,7 @@ func (s *FieldService) GetByCollectionID(collectionID uint) ([]model.Field, erro
 func (s *FieldService) GetDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {
 	return s.repos.Field.FindDisplayFieldsByCollectionID(collectionID)
 }
+
+func (s *FieldService) List(page, pageSize int) ([]model.Field, int64, error) {
+	return s.repos.Field.List(page, pageSize)
+}

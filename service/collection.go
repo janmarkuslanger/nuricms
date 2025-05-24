@@ -13,8 +13,8 @@ func NewCollectionService(repos *repository.Set) *CollectionService {
 	return &CollectionService{repos: repos}
 }
 
-func (s *CollectionService) GetAll() ([]model.Collection, error) {
-	return s.repos.Collection.GetAll()
+func (s *CollectionService) List(page, pageSize int) ([]model.Collection, int64, error) {
+	return s.repos.Collection.List(page, pageSize)
 }
 
 func (s *CollectionService) GetByID(id uint) (*model.Collection, error) {

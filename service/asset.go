@@ -58,6 +58,6 @@ func (s *AssetService) DeleteByID(id uint) error {
 	return err
 }
 
-func (s *AssetService) GetAll() ([]model.Asset, error) {
-	return s.repos.Asset.List()
+func (s *AssetService) List(page, pageSize int) ([]model.Asset, int64, error) {
+	return s.repos.Asset.List(page, pageSize)
 }

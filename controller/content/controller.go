@@ -35,13 +35,29 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *Controller) showCollections(c *gin.Context) {
-	collections, err := h.services.Collection.GetAll()
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("pageSize", "10")
+
+	pageNum, err := strconv.Atoi(page)
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/collections")
-		return
+		pageNum = 1
 	}
+
+	pageSizeNum, err := strconv.Atoi(pageSize)
+	if err != nil {
+		pageSizeNum = 10
+	}
+
+	collections, totalCount, err := h.services.Collection.List(pageNum, pageSizeNum)
+
+	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
+
 	utils.RenderWithLayout(c, "content/collections.tmpl", gin.H{
-		"collections": collections,
+		"Collections": collections,
+		"TotalCount":  totalCount,
+		"TotalPages":  totalPages,
+		"CurrentPage": pageNum,
+		"PageSize":    pageSizeNum,
 	}, http.StatusOK)
 }
 
@@ -65,7 +81,7 @@ func (h *Controller) showCreateContent(c *gin.Context) {
 	}
 
 	contents, err := h.services.Content.GetContentsWithDisplayContentValue()
-	assets, err := h.services.Asset.GetAll()
+	assets, _, err := h.services.Asset.List(1, 100000)
 
 	fieldsContent := make([]FieldContent, 0)
 	for _, field := range fields {
@@ -214,7 +230,20 @@ func (h *Controller) listContent(c *gin.Context) {
 		return
 	}
 
-	contents, err := h.services.Content.GetDisplayValueByCollectionID(collectionID)
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("pageSize", "10")
+
+	pageNum, err := strconv.Atoi(page)
+	if err != nil {
+		pageNum = 1
+	}
+
+	pageSizeNum, err := strconv.Atoi(pageSize)
+	if err != nil {
+		pageSizeNum = 10
+	}
+
+	contents, totalCount, err := h.services.Content.GetDisplayValueByCollectionID(collectionID, pageNum, pageSizeNum)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -228,10 +257,16 @@ func (h *Controller) listContent(c *gin.Context) {
 		return
 	}
 
+	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
+
 	utils.RenderWithLayout(c, "content/content_list.tmpl", gin.H{
 		"Groups":       groups,
 		"Fields":       fields,
 		"CollectionID": collectionID,
+		"TotalCount":   totalCount,
+		"TotalPages":   totalPages,
+		"CurrentPage":  pageNum,
+		"PageSize":     pageSizeNum,
 	}, http.StatusOK)
 }
 
@@ -263,7 +298,7 @@ func (h *Controller) showEditContent(c *gin.Context) {
 	}
 
 	contents, err := h.services.Content.GetContentsWithDisplayContentValue()
-	assets, err := h.services.Asset.GetAll()
+	assets, _, err := h.services.Asset.List(1, 100000)
 
 	utils.RenderWithLayout(c, "content/create_or_edit.tmpl", gin.H{
 		"FieldsHtml": RenderFieldsByContent(contentEntry, *collection, contents, assets),

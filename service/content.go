@@ -36,8 +36,8 @@ func (s *ContentService) GetByCollectionID(collectionID uint) ([]model.Content, 
 	return s.repos.Content.FindByCollectionID(collectionID, 0, 0)
 }
 
-func (s *ContentService) GetDisplayValueByCollectionID(collectionID uint) ([]model.Content, error) {
-	return s.repos.Content.FindDisplayValueByCollectionID(collectionID)
+func (s *ContentService) GetDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error) {
+	return s.repos.Content.FindDisplayValueByCollectionID(collectionID, page, pageSize)
 }
 
 func (s *ContentService) GetContentsWithDisplayContentValue() ([]model.Content, error) {

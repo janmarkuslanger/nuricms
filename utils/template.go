@@ -16,8 +16,11 @@ func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, status
 		"eq": func(a, b any) bool {
 			return a == b
 		},
-		"add": func(a int, b int) int {
+		"add": func(a, b int) int {
 			return a + b
+		},
+		"sub": func(a, b int) int {
+			return a - b
 		},
 		"in": func(s string, list []string) bool {
 			return slices.Contains(list, s)

@@ -35,13 +35,21 @@ func (r *AssetRepository) FindByID(id uint) (*model.Asset, error) {
 	return &asset, nil
 }
 
-func (r *AssetRepository) List() ([]model.Asset, error) {
+func (r *AssetRepository) List(page, pageSize int) ([]model.Asset, int64, error) {
 	var assets []model.Asset
-	if err := r.db.Find(&assets).Error; err != nil {
-		return nil, err
+	var totalCount int64
+
+	if err := r.db.Model(&model.Asset{}).Count(&totalCount).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return assets, nil
+	offset := (page - 1) * pageSize
+
+	if err := r.db.Offset(offset).Limit(pageSize).Find(&assets).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return assets, totalCount, nil
 }
 
 func (r *AssetRepository) Save(asset *model.Asset) error {

@@ -35,10 +35,19 @@ func (r *CollectionRepository) FindByAlias(alias string) (*model.Collection, err
 	return &collection, nil
 }
 
-func (r *CollectionRepository) GetAll() ([]model.Collection, error) {
+func (r *CollectionRepository) List(page, pageSize int) ([]model.Collection, int64, error) {
 	var collections []model.Collection
-	if err := r.db.Find(&collections).Error; err != nil {
-		return nil, err
+	var totalCount int64
+
+	if err := r.db.Model(&model.Collection{}).Count(&totalCount).Error; err != nil {
+		return nil, 0, err
 	}
-	return collections, nil
+
+	offset := (page - 1) * pageSize
+
+	if err := r.db.Offset(offset).Limit(pageSize).Find(&collections).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return collections, totalCount, nil
 }

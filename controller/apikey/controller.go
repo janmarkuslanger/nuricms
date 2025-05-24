@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/middleware"
@@ -29,9 +30,33 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *Controller) showApikeys(c *gin.Context) {
-	keys, _ := h.services.Apikey.List()
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("pageSize", "10")
+
+	pageNum, err := strconv.Atoi(page)
+	if err != nil {
+		pageNum = 1
+	}
+
+	pageSizeNum, err := strconv.Atoi(pageSize)
+	if err != nil {
+		pageSizeNum = 10
+	}
+
+	keys, totalCount, err := h.services.Apikey.List(pageNum, pageSizeNum)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
+
 	utils.RenderWithLayout(c, "/apikey/index.tmpl", gin.H{
-		"Apikeys": keys,
+		"Apikeys":     keys,
+		"TotalCount":  totalCount,
+		"TotalPages":  totalPages,
+		"CurrentPage": pageNum,
+		"PageSize":    pageSizeNum,
 	}, http.StatusOK)
 }
 

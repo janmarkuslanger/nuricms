@@ -18,13 +18,21 @@ func (r *ApikeyRepository) Create(key *model.Apikey) error {
 	return r.db.Create(key).Error
 }
 
-func (r *ApikeyRepository) List() ([]model.Apikey, error) {
+func (r *ApikeyRepository) List(page, pageSize int) ([]model.Apikey, int64, error) {
 	var keys []model.Apikey
-	if err := r.db.Find(&keys).Error; err != nil {
-		return nil, err
+	var totalCount int64
+
+	if err := r.db.Model(&model.Apikey{}).Count(&totalCount).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return keys, nil
+	offset := (page - 1) * pageSize
+
+	if err := r.db.Offset(offset).Limit(pageSize).Find(&keys).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return keys, totalCount, nil
 }
 
 func (r *ApikeyRepository) Delete(apikey *model.Apikey) error {

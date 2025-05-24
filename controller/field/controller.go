@@ -32,16 +32,33 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *Controller) listFields(c *gin.Context) {
-	var fields []model.Field
-	if err := db.DB.Preload("Collection").Find(&fields).Error; err != nil {
-		utils.RenderWithLayout(c, "field/index.tmpl", gin.H{
-			"error": "Failed to retrieve fields.",
-		}, http.StatusInternalServerError)
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("pageSize", "10")
+
+	pageNum, err := strconv.Atoi(page)
+	if err != nil {
+		pageNum = 1
+	}
+
+	pageSizeNum, err := strconv.Atoi(pageSize)
+	if err != nil {
+		pageSizeNum = 10
+	}
+
+	fields, totalCount, err := h.services.Field.List(pageNum, pageSizeNum)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve fields."})
 		return
 	}
 
+	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
+
 	utils.RenderWithLayout(c, "field/index.tmpl", gin.H{
-		"fields": fields,
+		"Fields":      fields,
+		"TotalCount":  totalCount,
+		"TotalPages":  totalPages,
+		"CurrentPage": pageNum,
+		"PageSize":    pageSizeNum,
 	}, http.StatusOK)
 }
 

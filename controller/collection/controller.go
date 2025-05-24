@@ -2,6 +2,7 @@ package collection
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/db"
@@ -31,16 +32,29 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *Controller) showCollections(c *gin.Context) {
-	var collections []model.Collection
-	if err := db.DB.Find(&collections).Error; err != nil {
-		utils.RenderWithLayout(c, "collection/index.tmpl", gin.H{
-			"error": "Failed to retrieve collections.",
-		}, http.StatusInternalServerError)
-		return
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("pageSize", "10")
+
+	pageNum, err := strconv.Atoi(page)
+	if err != nil {
+		pageNum = 1
 	}
 
+	pageSizeNum, err := strconv.Atoi(pageSize)
+	if err != nil {
+		pageSizeNum = 10
+	}
+
+	collections, totalCount, err := h.services.Collection.List(pageNum, pageSizeNum)
+
+	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
+
 	utils.RenderWithLayout(c, "collection/index.tmpl", gin.H{
-		"collections": collections,
+		"Collections": collections,
+		"TotalCount":  totalCount,
+		"TotalPages":  totalPages,
+		"CurrentPage": pageNum,
+		"PageSize":    pageSizeNum,
 	}, http.StatusOK)
 }
 

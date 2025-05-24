@@ -23,4 +23,14 @@
         </tbody>
     </table>
 
+    <div>
+		{{if gt .CurrentPage 1}}
+			<a href="?page={{sub .CurrentPage 1}}&pageSize={{.PageSize}}">Previous</a>
+		{{end}}
+		<span>Page {{.CurrentPage}} of {{.TotalPages}}</span>
+		{{if lt .CurrentPage .TotalPages}}
+			<a href="?page={{add .CurrentPage 1}}&pageSize={{.PageSize}}">Next page</a>
+		{{end}}
+	</div>
+
 {{end}}
