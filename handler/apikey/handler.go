@@ -24,6 +24,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	secure.GET("/", middleware.Roleauth(model.RoleAdmin), h.showApikeys)
 	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), h.showCreateApikey)
 	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), h.createApikey)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.showEditApikey)
 	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteApikey)
 }
 
@@ -47,6 +48,28 @@ func (h *Handler) createApikey(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/apikeys")
 }
 
-func (h *Handler) deleteApikey(c *gin.Context) {
+func (h *Handler) showEditApikey(c *gin.Context) {
+	id, ok := utils.StringToUint(c.Param("id"))
+	if !ok {
+		c.Redirect(http.StatusSeeOther, "/apikeys")
+	}
 
+	apikey, err := h.services.Apikey.FindByID(id)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/apikeys")
+	}
+
+	utils.RenderWithLayout(c, "/apikey/create_or_edit.tmpl", gin.H{
+		"Apikey": apikey,
+	}, http.StatusOK)
+}
+
+func (h *Handler) deleteApikey(c *gin.Context) {
+	id, ok := utils.StringToUint(c.Param("id"))
+	if !ok {
+		c.Redirect(http.StatusSeeOther, "/apikeys")
+	}
+
+	h.services.Apikey.DeleteByID(id)
+	c.Redirect(http.StatusSeeOther, "/apikeys")
 }
