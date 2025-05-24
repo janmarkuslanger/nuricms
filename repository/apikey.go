@@ -39,3 +39,11 @@ func (r *ApikeyRepository) FindByToken(token string) (*model.Apikey, error) {
 	}
 	return &apikey, nil
 }
+
+func (r *ApikeyRepository) FindByID(id uint) (*model.Apikey, error) {
+	var apikey model.Apikey
+	if err := r.db.Where("id = ?", id).First(&apikey).Error; err != nil {
+		return nil, err
+	}
+	return &apikey, nil
+}

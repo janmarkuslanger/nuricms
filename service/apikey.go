@@ -56,3 +56,16 @@ func (s *ApikeyService) Validate(token string) error {
 func (s *ApikeyService) List() ([]model.Apikey, error) {
 	return s.repos.Apikey.List()
 }
+
+func (s *ApikeyService) FindByID(id uint) (*model.Apikey, error) {
+	return s.repos.Apikey.FindByID(id)
+}
+
+func (s *ApikeyService) DeleteByID(id uint) error {
+	apikey, err := s.repos.Apikey.FindByID(id)
+	if err != nil {
+		return err
+	}
+
+	return s.repos.Apikey.Delete(apikey)
+}
