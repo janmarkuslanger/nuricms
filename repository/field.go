@@ -30,3 +30,25 @@ func (r *FieldRepository) FindDisplayFieldsByCollectionID(collectionID uint) ([]
 
 	return fields, nil
 }
+
+func (r *FieldRepository) List(page, pageSize int) ([]model.Field, int64, error) {
+	var fields []model.Field
+	var totalCount int64
+
+	err := r.db.Model(&model.Field{}).
+		Preload("Collection").
+		Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+
+	err = r.db.
+		Preload("Collection").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&fields).Error
+
+	return fields, totalCount, err
+}

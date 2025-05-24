@@ -44,12 +44,24 @@ func (r *WebhookRepository) FindByID(id uint) (*model.Webhook, error) {
 	return &webhook, err
 }
 
-func (r *WebhookRepository) List() ([]model.Webhook, error) {
+func (r *WebhookRepository) List(page, pageSize int) ([]model.Webhook, int64, error) {
 	var webhooks []model.Webhook
-	if err := r.db.Find(&webhooks).Error; err != nil {
-		return nil, err
+	var totalCount int64
+
+	err := r.db.Model(&model.Webhook{}).
+		Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
 	}
-	return webhooks, nil
+
+	offset := (page - 1) * pageSize
+
+	err = r.db.
+		Offset(offset).
+		Limit(pageSize).
+		Find(&webhooks).Error
+
+	return webhooks, totalCount, err
 }
 
 func (r *WebhookRepository) ListByEvent(event string) ([]model.Webhook, error) {

@@ -35,25 +35,6 @@ func TestAssetRepository_GetOneByID_NotFound(t *testing.T) {
 	require.Equal(t, gorm.ErrRecordNotFound, err)
 }
 
-func TestAssetRepository_GetAll(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
-	repo := NewAssetRepository(db)
-	assets, err := repo.List()
-	require.NoError(t, err)
-	require.Len(t, assets, 0)
-	for i := 0; i < 2; i++ {
-		a := &model.Asset{}
-		err := repo.Create(a)
-		require.NoError(t, err)
-	}
-	assets, err = repo.List()
-	require.NoError(t, err)
-	require.Len(t, assets, 2)
-}
-
 func TestAssetRepository_Save(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {

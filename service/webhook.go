@@ -46,8 +46,8 @@ func (s *WebhookService) Create(name string, url string, requestType model.Reque
 	return &webhook, err
 }
 
-func (s *WebhookService) List() ([]model.Webhook, error) {
-	return s.repos.Webhook.List()
+func (s *WebhookService) List(page, pageSize int) ([]model.Webhook, int64, error) {
+	return s.repos.Webhook.List(page, pageSize)
 }
 
 func (s *WebhookService) FindByID(id uint) (*model.Webhook, error) {

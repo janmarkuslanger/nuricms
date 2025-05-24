@@ -53,8 +53,8 @@ func (s *ApikeyService) Validate(token string) error {
 	return nil
 }
 
-func (s *ApikeyService) List() ([]model.Apikey, error) {
-	return s.repos.Apikey.List()
+func (s *ApikeyService) List(page, pageSize int) ([]model.Apikey, int64, error) {
+	return s.repos.Apikey.List(page, pageSize)
 }
 
 func (s *ApikeyService) FindByID(id uint) (*model.Apikey, error) {

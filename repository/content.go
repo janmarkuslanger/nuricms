@@ -51,10 +51,11 @@ func (r *ContentRepository) FindByCollectionID(collectionID uint, offset int, li
 	return contents, nil
 }
 
-func (r *ContentRepository) FindDisplayValueByCollectionID(collectionID uint) ([]model.Content, error) {
+func (r *ContentRepository) FindDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error) {
 	var contents []model.Content
+	var totalCount int64
 
-	err := r.db.
+	err := r.db.Model(&model.Content{}).
 		Where("collection_id = ?", collectionID).
 		Preload("ContentValues", func(db *gorm.DB) *gorm.DB {
 			return db.
@@ -62,9 +63,26 @@ func (r *ContentRepository) FindDisplayValueByCollectionID(collectionID uint) ([
 				Where("field.display_field = ?", true)
 		}).
 		Preload("ContentValues.Field").
+		Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+
+	err = r.db.
+		Where("collection_id = ?", collectionID).
+		Preload("ContentValues", func(db *gorm.DB) *gorm.DB {
+			return db.
+				Joins("Field").
+				Where("field.display_field = ?", true)
+		}).
+		Preload("ContentValues.Field").
+		Offset(offset).
+		Limit(pageSize).
 		Find(&contents).Error
 
-	return contents, err
+	return contents, totalCount, err
 }
 
 func (r *ContentRepository) ListWithDisplayContentValue() ([]model.Content, error) {

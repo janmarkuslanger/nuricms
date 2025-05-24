@@ -52,10 +52,22 @@ func (r *UserRepository) FindByID(id uint) (*model.User, error) {
 	return &user, err
 }
 
-func (r *UserRepository) List() ([]model.User, error) {
+func (r *UserRepository) List(page, pageSize int) ([]model.User, int64, error) {
 	var users []model.User
-	if err := r.db.Find(&users).Error; err != nil {
-		return nil, err
+	var totalCount int64
+
+	err := r.db.Model(&model.User{}).
+		Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
 	}
-	return users, nil
+
+	offset := (page - 1) * pageSize
+
+	err = r.db.
+		Offset(offset).
+		Limit(pageSize).
+		Find(&users).Error
+
+	return users, totalCount, err
 }

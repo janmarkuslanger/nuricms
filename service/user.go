@@ -19,8 +19,8 @@ func NewUserService(repos *repository.Set, jwtSecret []byte) *UserService {
 	return &UserService{repos: repos, jwtSecret: jwtSecret}
 }
 
-func (s *UserService) List() ([]model.User, error) {
-	return s.repos.User.List()
+func (s *UserService) List(page, pageSize int) ([]model.User, int64, error) {
+	return s.repos.User.List(page, pageSize)
 }
 
 func (s *UserService) DeleteByID(id uint) error {
