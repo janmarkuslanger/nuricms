@@ -1,5 +1,5 @@
 {{ define "content" }}
-    <h1>New Collection</h1>
+    <h1>New collection</h1>
     <form method="POST" action="{{ if .Collection }}/collections/edit/{{ .Collection.ID }}{{ else }}/collections/create{{ end }}">
         <label>Name:</label><br>
         <input type="text" name="name" {{ if .Collection.Name }}value="{{ .Collection.Name }}"{{ end }} ><br><br>
