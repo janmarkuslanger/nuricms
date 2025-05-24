@@ -35,6 +35,10 @@ func (r *CollectionRepository) FindByAlias(alias string) (*model.Collection, err
 	return &collection, nil
 }
 
+func (r *CollectionRepository) Create(collection *model.Collection) error {
+	return r.db.Create(collection).Error
+}
+
 func (r *CollectionRepository) List(page, pageSize int) ([]model.Collection, int64, error) {
 	var collections []model.Collection
 	var totalCount int64

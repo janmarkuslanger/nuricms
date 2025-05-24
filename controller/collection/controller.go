@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/db"
+	"github.com/janmarkuslanger/nuricms/dto"
 	"github.com/janmarkuslanger/nuricms/middleware"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/service"
@@ -74,13 +75,14 @@ func (h *Controller) createCollection(c *gin.Context) {
 		return
 	}
 
-	collection := model.Collection{
+	data := &dto.CollectionData{
 		Name:        name,
 		Alias:       alias,
 		Description: description,
 	}
 
-	if err := db.DB.Create(&collection).Error; err != nil {
+	_, err := h.services.Collection.Create(data)
+	if err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"error": "Failed to create collection.",
 		}, http.StatusInternalServerError)
