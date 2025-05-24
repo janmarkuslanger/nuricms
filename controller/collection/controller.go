@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/db"
+	"github.com/janmarkuslanger/nuricms/dto"
 	"github.com/janmarkuslanger/nuricms/middleware"
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/service"
@@ -74,15 +75,16 @@ func (h *Controller) createCollection(c *gin.Context) {
 		return
 	}
 
-	collection := model.Collection{
+	data := &dto.CollectionData{
 		Name:        name,
 		Alias:       alias,
 		Description: description,
 	}
 
-	if err := db.DB.Create(&collection).Error; err != nil {
+	_, err := h.services.Collection.Create(data)
+	if err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
-			"error": "Failed to create collection.",
+			"Error": "Failed to create collection.",
 		}, http.StatusInternalServerError)
 		return
 	}
@@ -95,7 +97,7 @@ func (h *Controller) showEditCollection(c *gin.Context) {
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
-			"error": "Collection not found.",
+			"Error": "Collection not found.",
 		}, http.StatusInternalServerError)
 		return
 	}
@@ -110,7 +112,7 @@ func (h *Controller) editCollection(c *gin.Context) {
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
-			"error": "Collection not found.",
+			"Error": "Collection not found.",
 		}, http.StatusNotFound)
 		return
 	}
@@ -121,7 +123,7 @@ func (h *Controller) editCollection(c *gin.Context) {
 
 	if name == "" || alias == "" {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
-			"error":      "Name and Alias are required fields.",
+			"Error":      "Name and Alias are required fields.",
 			"Collection": collection,
 		}, http.StatusBadRequest)
 		return
@@ -133,7 +135,7 @@ func (h *Controller) editCollection(c *gin.Context) {
 
 	if err := db.DB.Save(&collection).Error; err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
-			"error":      "Failed to update.",
+			"Error":      "Failed to update.",
 			"Collection": collection,
 		}, http.StatusInternalServerError)
 		return
