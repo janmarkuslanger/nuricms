@@ -11,7 +11,7 @@
             {{ range $i, $value := .Values }}
         
                 <div data-field-item>
-                    <select type="text" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
+                    <select class="select" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
                         {{ if not $field.IsRequired }}<option value=""></option>{{ end }}
                         {{ range $content }}
                             {{ $idStr := printf "%d" .ID }}
@@ -29,7 +29,7 @@
 
         {{ else }}
             <div data-field-item>
-                <select type="text" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
+                <select class="select" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
                     {{ if not $field.IsRequired }}<option value=""></option>{{ end }}
                     {{ range $content }}
                         <option value="{{ .ID }}">{{ .Collection.Name }}: {{ range .ContentValues }}{{.Value}} {{end}}</option>

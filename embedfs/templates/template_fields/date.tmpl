@@ -10,7 +10,7 @@
             {{ range $i, $value := .Values }}
         
                 <div data-field-item>
-                    <input type="date" data-field  name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }} value="{{ $value.Value }}" />
+                    <input class="input" type="date" data-field  name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }} value="{{ $value.Value }}" />
                     
                     {{ if $field.IsList }}
                     <button class="btn" type="button" data-action-add>Add</button>
@@ -22,7 +22,7 @@
 
         {{ else }}
             <div data-field-item>
-                <input type="date" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}/>
+                <input class="input" type="date" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}/>
                 
                 {{ if $field.IsList }}
                     <button class="btn" type="button" data-action-add>Add</button>
