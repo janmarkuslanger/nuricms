@@ -1,42 +1,59 @@
 {{ define "content" }}
-    <h1>New field</h1>
+
+    {{ if .Field }}<h1>Edit field</h1>{{ else }}<h1>New field</h1>{{ end }}
+    
     <form method="POST">
-        <label>Name:</label><br>
-        <input type="text" name="name" {{ if .Field.Name }}value="{{ .Field.Name }}"{{ end }} ><br><br>
 
-        <label>Alias:</label><br>
-        <input type="text" name="alias" {{ if .Field.Alias }}value="{{ .Field.Alias }}"{{ end }}><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Name:</legend>
+            <input class="input" type="text" name="name" {{ if .Field.Name }}value="{{ .Field.Name }}"{{ end }}>
+        </fieldset>
 
-        <label>Type:</label><br>
-        <select name="field_type">
-            {{ range .types }}
-                <option value="{{ . }}" {{ if eq . $.Field.FieldType }}selected{{ end }}>{{ . }} </option>
-            {{ end }}
-            
-        </select><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Alias:</legend>
+            <input class="input" type="text" name="alias" {{ if .Field.Alias }}value="{{ .Field.Alias }}"{{ end }}>
+        </fieldset>
 
-        <label>Collection:</label><br>
-        <select name="collection_id">
-            {{ range .collections }}
-                <option value="{{ .ID }}" {{ if eq .ID $.Field.CollectionID }}selected{{ end }}>{{ .Name }}</option>
-            {{ end }}
-        </select><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Type:</legend>
+            <select class="select" name="field_type">
+                {{ range .types }}
+                    <option value="{{ . }}" {{ if eq . $.Field.FieldType }}selected{{ end }}>{{ . }} </option>
+                {{ end }}
+                
+            </select>
+        </fieldset>
 
-        <label>Required:</label><br>
-        <input type="checkbox" name="is_required" {{ if .Field.IsRequired }}checked{{ end }}><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Collection:</legend>
+            <select class="select" name="collection_id">
+                {{ range .collections }}
+                    <option value="{{ .ID }}" {{ if eq .ID $.Field.CollectionID }}selected{{ end }}>{{ .Name }}</option>
+                {{ end }}
+            </select>
+        </fieldset>
 
-        <label>Is list:</label><br>
-        <input type="checkbox" name="is_list" {{ if .Field.IsList }}checked{{ end }}><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Required:</legend>
+            <input class="checkbox" type="checkbox" name="is_required" {{ if .Field.IsRequired }}checked{{ end }}>
+        </fieldset>
 
-        <label>Display field:</label><br>
-        <input type="checkbox" name="display_field" {{ if .Field.DisplayField }}checked{{ end }}><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Is list:</legend>
+            <input class="checkbox" type="checkbox" name="is_list" {{ if .Field.IsList }}checked{{ end }}>
+        </fieldset>
 
-        <button type="submit">{{ if .Field }}Update{{ else }}Create{{ end }}</button>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Display field:</legend>
+            <input class="checkbox" type="checkbox" name="display_field" {{ if .Field.DisplayField }}checked{{ end }}>
+        </fieldset>
+
+        <button class="btn my-4" type="submit">{{ if .Field }}Update{{ else }}Create{{ end }}</button>
     </form>
 
     {{ if .Field }}
         <form method="POST" action="/fields/delete/{{ .Field.ID }}" onsubmit="return confirm('Confirm deletion?');">
-            <button type="submit">Delete</button>
+            <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}
 

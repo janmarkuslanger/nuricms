@@ -11,7 +11,7 @@
             {{ range $i, $value := .Values }}
         
                 <div data-field-item>
-                    <select type="text" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
+                    <select class="select" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
                         {{ if not $field.IsRequired }}<option value=""></option>{{ end }}
                         {{ range $content }}
                             {{ $idStr := printf "%d" .ID }}
@@ -20,16 +20,16 @@
                     </select>
                     
                     {{ if $field.IsList }}
-                        <button type="button" data-action-add>Add</button>
-                        <button type="button" data-action-remove>Remove</button>
-                        <button type="button">=</button>
+                        <button class="btn" type="button" data-action-add>Add</button>
+                        <button class="btn" type="button" data-action-remove>Remove</button>
+                        <button class="btn" type="button">=</button>
                     {{ end }}
                 </div>
             {{ end }}
 
         {{ else }}
             <div data-field-item>
-                <select type="text" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
+                <select class="select" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}>
                     {{ if not $field.IsRequired }}<option value=""></option>{{ end }}
                     {{ range $content }}
                         <option value="{{ .ID }}">{{ .Collection.Name }}: {{ range .ContentValues }}{{.Value}} {{end}}</option>
@@ -37,9 +37,9 @@
                 </select>
                 
                 {{ if $field.IsList }}
-                    <button type="button" data-action-add>Add</button>
-                    <button type="button" data-action-remove>Remove</button>
-                    <button type="button">=</button>
+                    <button class="btn" type="button" data-action-add>Add</button>
+                    <button class="btn" type="button" data-action-remove>Remove</button>
+                    <button class="btn" type="button">=</button>
                 {{ end }}
             </div>
         {{ end }}

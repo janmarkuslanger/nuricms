@@ -1,23 +1,24 @@
 {{ define "content" }}
 
-    <h1>Create asset</h1>
+    {{ if .Asset }}<h1>Edit asset</h1>{{ else }}<h1>Create asset</h1>{{ end }}
 
     <form method="POST" enctype="multipart/form-data">
-        <div>
-            <label for="name">Name of the asset: </label><br>
-            <input type="text" id="name" name="name" required {{ if .Asset }}value="{{.Asset.Name}}"{{ end }}>
-        </div>
-        <div>
-            <label for="file">Pick file</label><br>
-            <input type="file" id="file" name="file" {{ if not .Asset }}required{{ end }}>
-        </div>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Name</legend>
+            <input class="input" type="text" id="name" name="name" required {{ if .Asset.Name }}value="{{.Asset.Name}}"{{ end }}>
+        </fieldset>
 
-        <button type="submit">Submit</button>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">File</legend>
+            <input class="file-input" type="file" id="file" name="file" {{ if not .Asset }}required{{ end }}>
+        </fieldset>
+
+        <button class="btn my-4" type="submit">Submit</button>
     </form>
 
     {{ if .Asset }}
         <form method="POST" action="/assets/delete/{{ .Asset.ID }}" onsubmit="return confirm('Confirm deletion?');">
-            <button type="submit">Delete</button>
+            <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}
 
