@@ -20,7 +20,7 @@
         <h2>Event Types</h2>
         {{ range .EventTypes }}
             <label>{{ . }}</label>
-            <input type="checkbox" name="{{ . }}" {{ if in (printf "%v" .) $eventTypeValues }}checked{{end}}><br><br>
+            <input class="checkbox" type="checkbox" name="{{ . }}" {{ if in (printf "%v" .) $eventTypeValues }}checked{{end}}><br><br>
         {{ end }}
 
 

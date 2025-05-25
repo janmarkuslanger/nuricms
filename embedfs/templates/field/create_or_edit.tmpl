@@ -23,13 +23,13 @@
         </select><br><br>
 
         <label>Required:</label><br>
-        <input type="checkbox" name="is_required" {{ if .Field.IsRequired }}checked{{ end }}><br><br>
+        <input class="checkbox" type="checkbox" name="is_required" {{ if .Field.IsRequired }}checked{{ end }}><br><br>
 
         <label>Is list:</label><br>
-        <input type="checkbox" name="is_list" {{ if .Field.IsList }}checked{{ end }}><br><br>
+        <input class="checkbox" type="checkbox" name="is_list" {{ if .Field.IsList }}checked{{ end }}><br><br>
 
         <label>Display field:</label><br>
-        <input type="checkbox" name="display_field" {{ if .Field.DisplayField }}checked{{ end }}><br><br>
+        <input class="checkbox" type="checkbox" name="display_field" {{ if .Field.DisplayField }}checked{{ end }}><br><br>
 
         <button class="btn" type="submit">{{ if .Field }}Update{{ else }}Create{{ end }}</button>
     </form>
