@@ -1,5 +1,6 @@
 import sys
 import re
+import subprocess
 
 def generate_svg(coverage_percentage):
     color = "red" if coverage_percentage < 80 else "yellow" if coverage_percentage < 90 else "green"
@@ -13,13 +14,18 @@ def generate_svg(coverage_percentage):
     return svg
 
 def get_coverage_percentage():
-    with open("coverage.out", "r") as file:
-        content = file.read()
-        match = re.search(r"coverage:\s*(\d+\.\d+)%", content)
-        if match:
-            return float(match.group(1))
-        else:
-            raise ValueError("Coverage percentage not found in coverage.out")
+    result = subprocess.run(
+        ["go", "tool", "cover", "-func=coverage.out"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    match = re.search(r"total:\s+(\d+\.\d+)%", result.stdout)
+    if match:
+        return float(match.group(1))
+    else:
+        raise ValueError("Coverage percentage not found in go tool cover output")
 
 if __name__ == "__main__":
     try:
