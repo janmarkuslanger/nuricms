@@ -4,23 +4,33 @@
     <h1>{{ if $webhook }}Edit webhook{{ else }}New webhook{{ end }}</h1>
 
     <form method="POST">
-        <label>Name:</label><br>
-        <input type="name" name="name" {{ if $webhook }}value="{{ $webhook.Name }}"{{ end }}><br><br>
 
-        <label>URL:</label><br>
-        <input type="url" name="url" {{ if $webhook }}value="{{ $webhook.Url }}"{{ end }}><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Name:</legend>
+            <input class="input" type="name" name="name" {{ if $webhook }}value="{{ $webhook.Name }}"{{ end }}>
+        </fieldset>
 
-        <label>Request Type:</label><br>
-        <select name="request_type">
-            {{ range .RequestTypes }}
-                <option value="{{ . }}" {{ if eq . $webhook.RequestType }}selected{{ end }}>{{ . }}</option>
-            {{ end }}
-        </select><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">URL:</legend>
+            <input class="input" type="url" name="url" {{ if $webhook }}value="{{ $webhook.Url }}"{{ end }}>
+        </fieldset>
 
-        <h2>Event Types</h2>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Request Type:</legend>
+            <select class="select" name="request_type">
+                {{ range .RequestTypes }}
+                    <option value="{{ . }}" {{ if eq . $webhook.RequestType }}selected{{ end }}>{{ . }}</option>
+                {{ end }}
+            </select>
+        </fieldset>
+
+        <h2 class="my-4">Event Types</h2>
+
         {{ range .EventTypes }}
-            <label>{{ . }}</label>
-            <input class="checkbox" type="checkbox" name="{{ . }}" {{ if in (printf "%v" .) $eventTypeValues }}checked{{end}}><br><br>
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">{{ . }}</legend>
+                <input class="checkbox" type="checkbox" name="{{ . }}" {{ if in (printf "%v" .) $eventTypeValues }}checked{{end}}>
+            </fieldset>
         {{ end }}
 
 

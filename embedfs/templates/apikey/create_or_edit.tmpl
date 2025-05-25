@@ -4,12 +4,13 @@
     <h1>Create apikey</h1>
 
     <form method="POST">
-        <div>
-            <label for="name">Name of the key: </label><br>
-            <input type="text" id="name" name="name" required>
-        </div>
+        
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Name of the key:</legend>
+            <input class="input" type="text" id="name" name="name" required>
+        </fieldset>
 
-        <button class="btn" type="submit">Submit</button>
+        <button class="btn my-4" type="submit">Submit</button>
     </form>
     {{ end }}
 

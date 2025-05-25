@@ -1,21 +1,29 @@
 {{ define "content" }}
     {{ $user := .User }}
-    <h1>New field</h1>
+    {{ if $user }}<h1>Edit^ user</h1>{{else}}<h1>New user</h1>{{end}}
+    
     <form method="POST">
-        <label>E-Mail:</label><br>
-        <input type="email" name="email" {{ if $user }}value="{{ $user.Email }}"{{ end }}><br><br>
 
-        <label>Password:</label><br>
-        <input type="password" name="password"><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">E-Mail:</legend>
+            <input class="input" type="email" name="email" {{ if $user.Email }}value="{{ $user.Email }}"{{ end }}>
+        </fieldset>
 
-        <label>Role:</label><br>
-        <select name="role">
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Password:</legend>
+            <input class="input" type="password" name="password">
+        </fieldset>
+
+        <fieldset class="fieldset">
+        <legend class="fieldset-legend">Role:</legend>
+        <select class="select" name="role">
             {{ range .Roles }}
                 <option value="{{ . }}" {{ if eq . $user.Role }}selected{{ end }}>{{ . }}</option>
             {{ end }}
         </select>
+        </fieldset>
 
-        <button class="btn" type="submit">{{ if $user }}Update{{ else }}Create{{ end }}</button>
+        <button class="btn my-4" type="submit">{{ if $user }}Update{{ else }}Create{{ end }}</button>
     </form>
 
     {{ if $user }}

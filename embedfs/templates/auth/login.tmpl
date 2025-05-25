@@ -1,12 +1,16 @@
 {{ define "content" }}
     <h1>Login</h1>
     <form method="POST">
-        <label>E-Mail:</label><br>
-        <input type="text" name="email" ><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">E-Mail:</legend>
+            <input class="input" type="text" name="email" >
+        </fieldset>
 
-        <label>Password:</label><br>
-        <input type="password" name="password"><br><br>
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Password:</legend>
+            <input class="input" type="password" name="password">
+        </fieldset>
 
-        <button class="btn" type="submit">Login</button>
+        <button class="btn my-4" type="submit">Login</button>
     </form>
 {{ end }}
