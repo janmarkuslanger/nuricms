@@ -56,4 +56,9 @@ Then run the following command to start the server:
 go run main.go
 ```
 
+If the server gets started and there is no user in the system there will be an admin account added:
+
+- E-Mail: admin@admin.com 
+- Password: mysecret
+
 The server will now run at `http://localhost:8080`. You can change the port by modifying the configuration.

@@ -43,6 +43,11 @@ func StartServer(config *ServerConfig) {
 		&model.Webhook{},
 	)
 
+	_, count, _ := services.User.List(1, 1)
+	if count == 0 {
+		services.User.Create("admin@admin.com", "mysecret", model.RoleAdmin)
+	}
+
 	modules := []core.Controller{
 		collection.NewController(services),
 		field.NewController(services),
