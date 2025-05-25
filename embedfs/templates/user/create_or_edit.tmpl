@@ -15,12 +15,12 @@
             {{ end }}
         </select>
 
-        <button type="submit">{{ if $user }}Update{{ else }}Create{{ end }}</button>
+        <button class="btn" type="submit">{{ if $user }}Update{{ else }}Create{{ end }}</button>
     </form>
 
     {{ if $user }}
         <form method="POST" action="/user/delete/{{ $user.ID }}" onsubmit="return confirm('Confirm deletion?');">
-            <button type="submit">Delete</button>
+            <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}
 

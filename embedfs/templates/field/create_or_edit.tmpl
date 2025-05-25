@@ -31,12 +31,12 @@
         <label>Display field:</label><br>
         <input type="checkbox" name="display_field" {{ if .Field.DisplayField }}checked{{ end }}><br><br>
 
-        <button type="submit">{{ if .Field }}Update{{ else }}Create{{ end }}</button>
+        <button class="btn" type="submit">{{ if .Field }}Update{{ else }}Create{{ end }}</button>
     </form>
 
     {{ if .Field }}
         <form method="POST" action="/fields/delete/{{ .Field.ID }}" onsubmit="return confirm('Confirm deletion?');">
-            <button type="submit">Delete</button>
+            <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}
 

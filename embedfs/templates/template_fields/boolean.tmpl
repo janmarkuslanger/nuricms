@@ -12,9 +12,9 @@
                 <div data-field-item>
                     <input type="checkbox" data-field  name="{{ $field.Alias }}" {{ if eq $value.Value "on" }}checked{{end}} {{ if $field.IsRequired }}required{{ end }} value="{{ $value.Value }}" />
                     {{ if $field.IsList }}
-                        <button type="button" data-action-add>Add</button>
-                        <button type="button" data-action-remove>Remove</button>
-                        <button type="button">=</button>
+                        <button class="btn" type="button" data-action-add>Add</button>
+                        <button class="btn" type="button" data-action-remove>Remove</button>
+                        <button class="btn" type="button">=</button>
                     {{ end }}
                 </div>
             {{ end }}
@@ -24,9 +24,9 @@
                 <input type="checkbox" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }}/>
                 
                 {{ if $field.IsList }}
-                    <button type="button" data-action-add>Add</button>
-                    <button type="button" data-action-remove>Remove</button>
-                    <button type="button">=</button>
+                    <button class="btn" type="button" data-action-add>Add</button>
+                    <button class="btn" type="button" data-action-remove>Remove</button>
+                    <button class="btn" type="button">=</button>
                 {{ end }}
             </div>
         {{ end }}

@@ -1,18 +1,20 @@
 {{ define "layout.tmpl" }}
 <!DOCTYPE html>
-<html>
+<html data-theme="coffee"></html>
 <head>
     <title>{{ block "title" . }}nuricms{{ end }}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
 </head>
-<body>
+<body class="h-screen">
 
     <header>
-        nuricms
+        <div class="container mx-auto flex items-center justify-between py-4">
+        <a href="/">nuricms</a>
         {{ if .IsLoggedIn }}
             <nav>
-                <ul>
-                    <li><a href="/">Home</a></li>
+                <ul class="menu menu-vertical lg:menu-horizontal bg-base-200 rounded-box">
                     <li><a href="/collections">Collections</a></li>
                     <li><a href="/fields">Fields</a></li>
                     <li><a href="/content/collections">Content</a></li>
@@ -23,9 +25,10 @@
                 </ul>
             </nav>
         {{ end }}
+        </div>
     </header>
-
-    <main>
+    
+    <main class="container mx-auto">
         {{ block "content" . }}{{ end }}
     </main>
 </body>

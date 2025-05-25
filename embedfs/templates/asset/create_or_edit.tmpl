@@ -12,12 +12,12 @@
             <input type="file" id="file" name="file" {{ if not .Asset }}required{{ end }}>
         </div>
 
-        <button type="submit">Submit</button>
+        <button class="btn" type="submit">Submit</button>
     </form>
 
     {{ if .Asset }}
         <form method="POST" action="/assets/delete/{{ .Asset.ID }}" onsubmit="return confirm('Confirm deletion?');">
-            <button type="submit">Delete</button>
+            <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}
 

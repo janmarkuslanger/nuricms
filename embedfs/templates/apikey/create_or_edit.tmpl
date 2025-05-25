@@ -9,14 +9,14 @@
             <input type="text" id="name" name="name" required>
         </div>
 
-        <button type="submit">Submit</button>
+        <button class="btn" type="submit">Submit</button>
     </form>
     {{ end }}
 
     {{ if .Apikey }}
         <h1>{{ .Apikey.Name }}</h1>
         <form method="POST" action="/apikeys/delete/{{ .Apikey.ID }}" onsubmit="return confirm('Confirm deletion?');">
-            <button type="submit">Delete</button>
+            <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}
 

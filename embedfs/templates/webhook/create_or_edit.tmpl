@@ -24,12 +24,12 @@
         {{ end }}
 
 
-        <button type="submit">{{ if $webhook }}Update{{ else }}Create{{ end }}</button>
+        <button class="btn" type="submit">{{ if $webhook }}Update{{ else }}Create{{ end }}</button>
     </form>
 
     {{ if $webhook }}
         <form method="POST" action="/webhooks/delete/{{ $webhook.ID }}" onsubmit="return confirm('Confirm deletion?');">
-            <button type="submit">Delete</button>
+            <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}
 

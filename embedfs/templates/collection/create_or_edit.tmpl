@@ -10,12 +10,12 @@
         <label>Description:</label><br>
         <textarea name="description">{{ if .Collection.Description }}{{ .Collection.Description }}{{ end }}</textarea><br><br>
 
-        <button type="submit">{{ if .Collection }}Update{{ else }}Create{{ end }}</button>
+        <button class="btn" type="submit">{{ if .Collection }}Update{{ else }}Create{{ end }}</button>
     </form>
 
     {{ if .Collection }}
         <form method="POST" action="/collections/delete/{{ .collection.ID }}" onsubmit="return confirm('Confirm deletion?');">
-            <button type="submit">Delete</button>
+            <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}
 
