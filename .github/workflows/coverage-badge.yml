@@ -35,3 +35,4 @@ jobs:
           author_email: github-actions[bot]@users.noreply.github.com
           message: "Update coverage badge"
           add: "coverage_badge.svg"
+          token: ${{ secrets.GITHUB_TOKEN }} 
