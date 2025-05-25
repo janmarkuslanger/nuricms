@@ -48,7 +48,7 @@ func (h *Controller) showAssets(c *gin.Context) {
 
 	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
 
-	utils.RenderWithLayout(c, "/asset/index.tmpl", gin.H{
+	utils.RenderWithLayout(c, "asset/index.tmpl", gin.H{
 		"Assets":      assets,
 		"TotalCount":  totalCount,
 		"TotalPages":  totalPages,
@@ -58,7 +58,7 @@ func (h *Controller) showAssets(c *gin.Context) {
 }
 
 func (h *Controller) showCreateAsset(c *gin.Context) {
-	utils.RenderWithLayout(c, "/asset/create_or_edit.tmpl", gin.H{}, http.StatusOK)
+	utils.RenderWithLayout(c, "asset/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
 func (h *Controller) deleteAsset(c *gin.Context) {
@@ -85,7 +85,7 @@ func (h *Controller) showEditAsset(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, "/assets")
 	}
 
-	utils.RenderWithLayout(c, "/asset/create_or_edit.tmpl", gin.H{
+	utils.RenderWithLayout(c, "asset/create_or_edit.tmpl", gin.H{
 		"Asset": asset,
 	}, http.StatusOK)
 }

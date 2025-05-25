@@ -51,7 +51,7 @@ func (h *Controller) showApikeys(c *gin.Context) {
 
 	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
 
-	utils.RenderWithLayout(c, "/apikey/index.tmpl", gin.H{
+	utils.RenderWithLayout(c, "apikey/index.tmpl", gin.H{
 		"Apikeys":     keys,
 		"TotalCount":  totalCount,
 		"TotalPages":  totalPages,
@@ -61,7 +61,7 @@ func (h *Controller) showApikeys(c *gin.Context) {
 }
 
 func (h *Controller) showCreateApikey(c *gin.Context) {
-	utils.RenderWithLayout(c, "/apikey/create_or_edit.tmpl", gin.H{}, http.StatusOK)
+	utils.RenderWithLayout(c, "apikey/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
 func (h *Controller) createApikey(c *gin.Context) {
@@ -84,7 +84,7 @@ func (h *Controller) showEditApikey(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
 	}
 
-	utils.RenderWithLayout(c, "/apikey/create_or_edit.tmpl", gin.H{
+	utils.RenderWithLayout(c, "apikey/create_or_edit.tmpl", gin.H{
 		"Apikey": apikey,
 	}, http.StatusOK)
 }
