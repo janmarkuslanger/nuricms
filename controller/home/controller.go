@@ -23,5 +23,5 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *Controller) home(c *gin.Context) {
-	utils.RenderWithLayout(c, "home.tmpl", gin.H{}, http.StatusOK)
+	utils.RenderWithLayout(c, "home/home.tmpl", gin.H{}, http.StatusOK)
 }
