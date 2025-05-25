@@ -21,8 +21,8 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Test & generate coverage
-        run: go test ./... -coverprofile=coverage.out
+      - name: Run tests & generate coverage
+        run: go test -covermode=count -coverprofile=coverage.out ./...
 
       - name: Generate coverage badge (SVG)
         run: |
