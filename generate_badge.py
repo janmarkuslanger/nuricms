@@ -15,7 +15,7 @@ def generate_svg(coverage_percentage):
 def get_coverage_percentage():
     with open("coverage.out", "r") as file:
         content = file.read()
-        match = re.search(r"\s*coverage:\s*(\d+\.\d+)%", content)
+        match = re.search(r"coverage:\s*(\d+\.\d+)%", content)
         if match:
             return float(match.group(1))
         else:
