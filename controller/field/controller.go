@@ -70,8 +70,8 @@ func (h *Controller) showCreateField(c *gin.Context) {
 	}
 
 	utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
-		"collections": collections,
-		"types": []model.FieldType{
+		"Collections": collections,
+		"Types": []model.FieldType{
 			model.FieldTypeText, model.FieldTypeNumber, model.FieldTypeBoolean,
 			model.FieldTypeDate, model.FieldTypeAsset, model.FieldTypeCollection,
 			model.FieldTypeTextarea, model.FieldTypeRichText,
@@ -93,9 +93,9 @@ func (h *Controller) showEditField(c *gin.Context) {
 	}
 
 	utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
-		"field":       field,
-		"collections": collections,
-		"types": []model.FieldType{
+		"Field":       field,
+		"Collections": collections,
+		"Types": []model.FieldType{
 			model.FieldTypeText, model.FieldTypeNumber, model.FieldTypeBoolean,
 			model.FieldTypeDate, model.FieldTypeAsset, model.FieldTypeCollection,
 			model.FieldTypeTextarea, model.FieldTypeRichText,
@@ -127,8 +127,8 @@ func (h *Controller) createField(c *gin.Context) {
 
 	if err := db.DB.Create(&field).Error; err != nil {
 		utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
-			"error": "Failed to create field.",
-			"field": field,
+			"Error": "Failed to create field.",
+			"Field": field,
 		}, http.StatusInternalServerError)
 		return
 	}
@@ -155,8 +155,8 @@ func (h *Controller) editField(c *gin.Context) {
 
 	if err := db.DB.Save(&field).Error; err != nil {
 		utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
-			"error": "Failed to update field.",
-			"field": field,
+			"Error": "Failed to update field.",
+			"Field": field,
 		}, http.StatusInternalServerError)
 		return
 	}
