@@ -17,7 +17,7 @@
         <fieldset class="fieldset">
             <legend class="fieldset-legend">Type:</legend>
             <select class="select" name="field_type">
-                {{ range .types }}
+                {{ range .Types }}
                     <option value="{{ . }}" {{ if eq . $.Field.FieldType }}selected{{ end }}>{{ . }} </option>
                 {{ end }}
                 
@@ -27,7 +27,7 @@
         <fieldset class="fieldset">
             <legend class="fieldset-legend">Collection:</legend>
             <select class="select" name="collection_id">
-                {{ range .collections }}
+                {{ range .Collections }}
                     <option value="{{ .ID }}" {{ if eq .ID $.Field.CollectionID }}selected{{ end }}>{{ .Name }}</option>
                 {{ end }}
             </select>
