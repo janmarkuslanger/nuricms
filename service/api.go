@@ -30,10 +30,11 @@ type ContentResponse struct {
 }
 
 type ContentItemResponse struct {
-	ID        uint           `json:"id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	Values    map[string]any `json:"values"`
+	ID         uint               `json:"id"`
+	CreatedAt  time.Time          `json:"created_at"`
+	UpdatedAt  time.Time          `json:"updated_at"`
+	Values     map[string]any     `json:"values"`
+	Collection CollectionResponse `json:"collection"`
 }
 
 type ContentValueResponse struct {
@@ -92,6 +93,11 @@ func (s *ApiService) transformContentRecursive(ce *model.Content) ContentItemRes
 		CreatedAt: ce.CreatedAt,
 		UpdatedAt: ce.UpdatedAt,
 		Values:    contentValues,
+		Collection: CollectionResponse{
+			ID:    ce.Collection.ID,
+			Name:  ce.Collection.Name,
+			Alias: ce.Collection.Alias,
+		},
 	}
 }
 
