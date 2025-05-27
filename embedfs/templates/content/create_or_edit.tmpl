@@ -4,14 +4,16 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
 
-    <h1>Content: {{ .Collection.Name }}</h1>
+    <h1 class="mb-4 text-4xl font-extrabold">Content: {{ .Collection.Name }}</h1>
 
     <form method="POST">
         {{ range .FieldsHtml}}
+            <div class="mb-4">
             {{ . }}
+            </div>
         {{ end }}
 
-        <button class="btn" type="submit">Submit</button>
+        <button class="btn my-4" type="submit">Submit</button>
     </form>
 
     {{ if .Content }}

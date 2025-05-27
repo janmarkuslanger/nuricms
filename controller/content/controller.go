@@ -74,7 +74,7 @@ func (h *Controller) showCreateContent(c *gin.Context) {
 		return
 	}
 
-	collection, err := h.services.Collection.GetByID(collectionID)
+	collection, err := h.services.Collection.FindByID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
@@ -291,7 +291,7 @@ func (h *Controller) showEditContent(c *gin.Context) {
 		return
 	}
 
-	collection, err := h.services.Collection.GetByID(collectionID)
+	collection, err := h.services.Collection.FindByID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
