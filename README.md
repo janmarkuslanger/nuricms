@@ -32,7 +32,6 @@ After adding NuriCMS as a dependency, you need to create a `main.go` file in you
 package main
 
 import (
-	"log"
 	"os"
 	"github.com/janmarkuslanger/nuricms"
 )
@@ -48,6 +47,16 @@ func main() {
 
 	nuricms.StartServer(config)
 }
+```
+
+The JWT_SECRET environment variable should be set:
+
+```bash
+# Set a basic JWT secret (for development purposes)
+export JWT_SECRET=anything
+
+# Generate a secure JWT secret (recommended for production)
+export JWT_SECRET=$(openssl rand -base64 32)
 ```
 
 Then run the following command to start the server:
