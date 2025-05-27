@@ -9,17 +9,6 @@ import (
 	"github.com/janmarkuslanger/nuricms/service"
 )
 
-type ContentValueResponse struct {
-	Field string `json:"field"`
-	Type  string `json:"type"`
-	Value any    `json:"value"`
-}
-
-type ContentResponse struct {
-	ID     uint                   `json:"id"`
-	Values []ContentValueResponse `json:"values"`
-}
-
 type Controller struct {
 	services *service.Set
 }
@@ -35,7 +24,6 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	api.GET("/collections/:alias/contents", h.listContents)
 }
 
-// GET /api/collections/:alias/contents?page=1
 func (h *Controller) listContents(c *gin.Context) {
 	alias := c.Param("alias")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -45,44 +33,10 @@ func (h *Controller) listContents(c *gin.Context) {
 	const perPage = 100
 	offset := (page - 1) * perPage
 
-	contents, err := h.services.Content.
-		ListByCollectionAlias(alias, offset, perPage)
+	out, err := h.services.Api.ListByCollectionAlias(alias, offset, perPage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-	}
-
-	var out []ContentResponse
-	for _, ct := range contents {
-		var cvres []ContentValueResponse
-		for _, cv := range ct.ContentValues {
-			var val any = cv.Value
-
-			switch cv.Field.FieldType {
-			case "Asset":
-				if id, err := strconv.ParseUint(cv.Value, 10, 32); err == nil {
-					if asset, err2 := h.services.Asset.FindByID(uint(id)); err2 == nil {
-						val = asset
-					}
-				}
-			case "Collection":
-				if id, err := strconv.ParseUint(cv.Value, 10, 32); err == nil {
-					if nested, err2 := h.services.Content.FindByID(uint(id)); err2 == nil {
-						val = nested
-					}
-				}
-			}
-
-			cvres = append(cvres, ContentValueResponse{
-				Field: cv.Field.Name,
-				Type:  string(cv.Field.FieldType),
-				Value: val,
-			})
-		}
-		out = append(out, ContentResponse{
-			ID:     ct.ID,
-			Values: cvres,
-		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{

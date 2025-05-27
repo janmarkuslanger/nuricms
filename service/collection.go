@@ -18,8 +18,12 @@ func (s *CollectionService) List(page, pageSize int) ([]model.Collection, int64,
 	return s.repos.Collection.List(page, pageSize)
 }
 
-func (s *CollectionService) GetByID(id uint) (*model.Collection, error) {
+func (s *CollectionService) FindByID(id uint) (*model.Collection, error) {
 	return s.repos.Collection.FindByID(id)
+}
+
+func (s *CollectionService) FindByAlias(alias string) (*model.Collection, error) {
+	return s.repos.Collection.FindByAlias(alias)
 }
 
 func (s *CollectionService) Create(data *dto.CollectionData) (*model.Collection, error) {

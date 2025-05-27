@@ -26,6 +26,7 @@ func (r *ContentRepository) FindByID(id uint) (model.Content, error) {
 		Where("id = ?", id).
 		Preload("ContentValues").
 		Preload("ContentValues.Field").
+		Preload("Collection").
 		Find(&content).Error
 	return content, err
 }

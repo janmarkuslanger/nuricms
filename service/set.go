@@ -16,6 +16,7 @@ type Set struct {
 	User         *UserService
 	Apikey       *ApikeyService
 	Webhook      *WebhookService
+	Api          *ApiService
 }
 
 func NewSet(r *repository.Set) *Set {
@@ -33,5 +34,6 @@ func NewSet(r *repository.Set) *Set {
 		User:         NewUserService(r, []byte(secret)),
 		Apikey:       NewApikeyService(r),
 		Webhook:      NewWebhookService(r),
+		Api:          NewApiService(r),
 	}
 }
