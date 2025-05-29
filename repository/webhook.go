@@ -81,5 +81,5 @@ func (r *WebhookRepository) ListByEvent(event string) ([]model.Webhook, error) {
 		}
 	}
 
-	return webhooks, nil
+	return webhooksByEvent, nil
 }
