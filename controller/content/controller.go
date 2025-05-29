@@ -148,6 +148,7 @@ func (h *Controller) createContent(c *gin.Context) {
 		return nil
 	})
 
+	h.services.Webhook.Dispatch(string(model.EventContentCreated), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
@@ -220,6 +221,7 @@ func (h *Controller) editContent(c *gin.Context) {
 		return
 	}
 
+	h.services.Webhook.Dispatch(string(model.EventContentUpdated), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
@@ -343,5 +345,6 @@ func (h *Controller) deleteContent(c *gin.Context) {
 		return
 	}
 
+	h.services.Webhook.Dispatch(string(model.EventContentDeleted), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
