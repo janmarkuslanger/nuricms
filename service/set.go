@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/janmarkuslanger/nuricms/plugin"
 	"github.com/janmarkuslanger/nuricms/repository"
 )
 
@@ -19,7 +20,7 @@ type Set struct {
 	Api          *ApiService
 }
 
-func NewSet(r *repository.Set) *Set {
+func NewSet(r *repository.Set, hr *plugin.HookRegistry) *Set {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		log.Fatal("JWT_SECRET must be set")
@@ -29,7 +30,7 @@ func NewSet(r *repository.Set) *Set {
 		Collection:   NewCollectionService(r),
 		Field:        NewFieldService(r),
 		Content:      NewContentService(r),
-		ContentValue: NewContentValueService(r),
+		ContentValue: NewContentValueService(r, hr),
 		Asset:        NewAssetService(r),
 		User:         NewUserService(r, []byte(secret)),
 		Apikey:       NewApikeyService(r),

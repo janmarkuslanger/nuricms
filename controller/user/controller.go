@@ -58,8 +58,8 @@ func (h *Controller) login(c *gin.Context) {
 		3600*24,
 		"/",
 		"",
-		true,
-		true,
+		gin.Mode() == gin.ReleaseMode,
+		gin.Mode() == gin.ReleaseMode,
 	)
 
 	c.Redirect(http.StatusSeeOther, "/")
