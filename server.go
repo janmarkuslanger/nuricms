@@ -14,12 +14,14 @@ import (
 	"github.com/janmarkuslanger/nuricms/core"
 	"github.com/janmarkuslanger/nuricms/db"
 	"github.com/janmarkuslanger/nuricms/model"
+	"github.com/janmarkuslanger/nuricms/plugin"
 	"github.com/janmarkuslanger/nuricms/repository"
 	"github.com/janmarkuslanger/nuricms/service"
 )
 
 type ServerConfig struct {
-	Port string
+	Port        string
+	HookPlugins []plugin.HookPlugin
 }
 
 func StartServer(config *ServerConfig) {
@@ -27,10 +29,16 @@ func StartServer(config *ServerConfig) {
 		config.Port = "8080"
 	}
 
+	hr := plugin.NewHookRegistry()
+
+	for _, p := range config.HookPlugins {
+		p.Register(hr)
+	}
+
 	router := gin.Default()
 	database := db.Init()
 	repos := repository.NewSet(database)
-	services := service.NewSet(repos)
+	services := service.NewSet(repos, hr)
 
 	db.DB.AutoMigrate(
 		&model.Collection{},

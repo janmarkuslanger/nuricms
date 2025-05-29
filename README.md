@@ -32,17 +32,15 @@ After adding NuriCMS as a dependency, you need to create a `main.go` file in you
 package main
 
 import (
-	"os"
 	"github.com/janmarkuslanger/nuricms"
+	"github.com/janmarkuslanger/nuricms/plugin"
 )
 
 func main() {
-	config := &nuricms.ServerConfig{
-		Port: os.Getenv("PORT"),
-	}
 
-	if config.Port == "" {
-		config.Port = "8080"
+	config := &nuricms.ServerConfig{
+		Port:        "8080",
+		HookPlugins: []plugin.HookPlugin{},
 	}
 
 	nuricms.StartServer(config)
@@ -71,3 +69,86 @@ If the server gets started and there is no user in the system there will be an a
 - Password: mysecret
 
 The server will now run at `http://localhost:8080`. You can change the port by modifying the configuration.
+
+## Plugin System
+
+`nuricms` provides a modular plugin system. Plugins can be passed to the CMS via the `ServerConfig` at startup and allow extending various parts of the system — such as hooks, routes, or UI components.
+
+### Usage
+
+Plugins are passed in during server initialization:
+
+```go
+config := &nuricms.ServerConfig{
+    Port: "8080",
+    HookPlugins: []nuricms.HookPlugin{
+        &MyCustomPlugin{},
+    },
+}
+
+nuricms.StartServer(config)
+```
+
+---
+
+### HookPlugin
+
+A `HookPlugin` allows you to register functions for specific system events (hooks), such as `"content:beforeSave"`. A hook plugin implements the following interface:
+
+```go
+type HookPlugin interface {
+    Name() string
+    Register(h *HookRegistry)
+}
+```
+
+### Example
+
+```go
+package plugins
+
+import (
+	"strings"
+
+	"github.com/janmarkuslanger/nuricms/model"
+	"github.com/janmarkuslanger/nuricms/plugin"
+)
+
+type SlugPlugin struct{}
+
+func (p *SlugPlugin) Name() string {
+	return "AutoSlug"
+}
+
+func (p *SlugPlugin) Register(h *plugin.HookRegistry) {
+	h.Register("contentValue:beforeSave", func(p any) error {
+		content := p.(*model.ContentValue)
+
+		if content.Field.Alias == "slug" {
+			content.Value = strings.ToLower(content.Value)
+		}
+
+		return nil
+	})
+}
+
+```
+
+Then register your plugin in your `main.go`:
+
+```go
+cfg := &nuricms.ServerConfig{
+    Port: "8080",
+    HookPlugins: []nuricms.HookPlugin{
+        &myplugin.SlugPlugin{},
+    },
+}
+
+nuricms.StartServer(cfg)
+```
+
+### Events 
+
+- contentValue:beforeSave 
+
+---

@@ -83,6 +83,7 @@ func (s *UserService) LoginUser(email, password string) (string, error) {
 		"role":  string(user.Role),
 		"exp":   time.Now().Add(24 * time.Hour).Unix(),
 	})
+
 	return token.SignedString(s.jwtSecret)
 }
 
