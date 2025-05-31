@@ -38,8 +38,9 @@ type ContentItemResponse struct {
 }
 
 type ContentValueResponse struct {
-	ID    uint `json:"id"`
-	Value any  `json:"value"`
+	ID        uint            `json:"id"`
+	Value     any             `json:"value"`
+	FieldType model.FieldType `json:"field_type"`
 }
 
 func (s *ApiService) listByCollectionAlias(alias string, offset int, limit int) ([]model.Content, error) {
@@ -75,16 +76,22 @@ func (s *ApiService) transformContentRecursive(ce *model.Content) ContentItemRes
 			val = cv.Value
 		}
 
+		cvr := ContentValueResponse{
+			ID:        cv.ID,
+			Value:     val,
+			FieldType: cv.Field.FieldType,
+		}
+
 		if cv.Field.IsList {
 			slice, ok := contentValues[alias].([]any)
 			if !ok {
 				slice = []any{}
 			}
-			slice = append(slice, val)
+			slice = append(slice, cvr)
 			contentValues[alias] = slice
 
 		} else {
-			contentValues[alias] = val
+			contentValues[alias] = cvr
 		}
 	}
 
