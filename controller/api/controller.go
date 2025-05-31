@@ -26,6 +26,7 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	)
 	api.GET("/collections/:alias/content", h.listContents)
 	api.GET("/content/:id", h.findContentById)
+	api.GET("/collections/:alias/content/filter", h.listContentsByFieldValue)
 }
 
 func (ct *Controller) findContentById(c *gin.Context) {
@@ -57,6 +58,40 @@ func (h *Controller) listContents(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dto.ApiResponse{
 		Data:    data,
+		Success: true,
+		Meta: &dto.MetaData{
+			Timestamp: time.Now().UTC(),
+		},
+		Pagination: &dto.Pagination{
+			PerPage: perPage,
+			Page:    page,
+		},
+	})
+}
+
+func (h *Controller) listContentsByFieldValue(c *gin.Context) {
+	alias := c.Param("alias")
+	fieldAlias := c.Query("field")
+	value := c.Query("value")
+	if fieldAlias == "" || value == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "field and value query parameters are required",
+			"meta":    &dto.MetaData{Timestamp: time.Now().UTC()},
+		})
+		return
+	}
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	const perPage = 100
+	offset := (page - 1) * perPage
+
+	items, _ := h.services.Api.FindContentByCollectionAndFieldValue(alias, fieldAlias, value, offset, perPage)
+
+	c.JSON(http.StatusOK, dto.ApiResponse{
+		Data:    items,
 		Success: true,
 		Meta: &dto.MetaData{
 			Timestamp: time.Now().UTC(),

@@ -119,3 +119,14 @@ func (s *ApiService) FindContentByID(id uint) (ContentItemResponse, error) {
 
 	return s.prepareContent(&content)
 }
+
+func (s *ApiService) FindContentByCollectionAndFieldValue(alias, fieldAlias, value string, offset, perPage int) ([]ContentItemResponse, error) {
+	collection, _ := s.repos.Collection.FindByAlias(alias)
+	contents, _, _ := s.repos.Content.FindByCollectionAndFieldValue(collection.ID, fieldAlias, value, offset, perPage)
+	var items []ContentItemResponse
+	for _, ce := range contents {
+		ci, _ := s.prepareContent(&ce)
+		items = append(items, ci)
+	}
+	return items, nil
+}
