@@ -9,6 +9,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/dto"
 	"github.com/janmarkuslanger/nuricms/middleware"
 	"github.com/janmarkuslanger/nuricms/service"
+	"github.com/janmarkuslanger/nuricms/utils"
 )
 
 type Controller struct {
@@ -23,7 +24,20 @@ func (h *Controller) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api",
 		middleware.ApikeyAuth(h.services.Apikey),
 	)
-	api.GET("/collections/:alias/contents", h.listContents)
+	api.GET("/collections/:alias/content", h.listContents)
+	api.GET("/content/:id", h.findContentById)
+}
+
+func (ct *Controller) findContentById(c *gin.Context) {
+	id, _ := utils.StringToUint(c.Param("id"))
+	data, _ := ct.services.Api.FindContentByID(id)
+	c.JSON(http.StatusOK, dto.ApiResponse{
+		Data:    data,
+		Success: true,
+		Meta: &dto.MetaData{
+			Timestamp: time.Now().UTC(),
+		},
+	})
 }
 
 func (h *Controller) listContents(c *gin.Context) {
