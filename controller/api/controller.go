@@ -20,13 +20,13 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (h *Controller) RegisterRoutes(r *gin.Engine) {
+func (ct *Controller) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api",
-		middleware.ApikeyAuth(h.services.Apikey),
+		middleware.ApikeyAuth(ct.services.Apikey),
 	)
-	api.GET("/collections/:alias/content", h.listContents)
-	api.GET("/content/:id", h.findContentById)
-	api.GET("/collections/:alias/content/filter", h.listContentsByFieldValue)
+	api.GET("/collections/:alias/content", ct.listContents)
+	api.GET("/content/:id", ct.findContentById)
+	api.GET("/collections/:alias/content/filter", ct.listContentsByFieldValue)
 }
 
 func (ct *Controller) findContentById(c *gin.Context) {
@@ -41,7 +41,7 @@ func (ct *Controller) findContentById(c *gin.Context) {
 	})
 }
 
-func (h *Controller) listContents(c *gin.Context) {
+func (ct *Controller) listContents(c *gin.Context) {
 	alias := c.Param("alias")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if page < 1 {
@@ -50,7 +50,7 @@ func (h *Controller) listContents(c *gin.Context) {
 	const perPage = 100
 	offset := (page - 1) * perPage
 
-	data, err := h.services.Api.FindContentByCollectionAlias(alias, offset, perPage)
+	data, err := ct.services.Api.FindContentByCollectionAlias(alias, offset, perPage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -69,7 +69,7 @@ func (h *Controller) listContents(c *gin.Context) {
 	})
 }
 
-func (h *Controller) listContentsByFieldValue(c *gin.Context) {
+func (ct *Controller) listContentsByFieldValue(c *gin.Context) {
 	alias := c.Param("alias")
 	fieldAlias := c.Query("field")
 	value := c.Query("value")
@@ -88,7 +88,7 @@ func (h *Controller) listContentsByFieldValue(c *gin.Context) {
 	const perPage = 100
 	offset := (page - 1) * perPage
 
-	items, _ := h.services.Api.FindContentByCollectionAndFieldValue(alias, fieldAlias, value, offset, perPage)
+	items, _ := ct.services.Api.FindContentByCollectionAndFieldValue(alias, fieldAlias, value, offset, perPage)
 
 	c.JSON(http.StatusOK, dto.ApiResponse{
 		Data:    items,

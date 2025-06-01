@@ -19,15 +19,15 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (h *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/assets", middleware.Userauth(h.services.User))
+func (ct *Controller) RegisterRoutes(r *gin.Engine) {
+	secure := r.Group("/assets", middleware.Userauth(ct.services.User))
 
-	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showAssets)
-	secure.GET("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCreateAsset)
-	secure.POST("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.createAsset)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showEditAsset)
-	secure.POST("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.editAsset)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteAsset)
+	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showAssets)
+	secure.GET("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showCreateAsset)
+	secure.POST("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.createAsset)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showEditAsset)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.editAsset)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), ct.deleteAsset)
 }
 
 func (h *Controller) showAssets(c *gin.Context) {
@@ -57,29 +57,29 @@ func (h *Controller) showAssets(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showCreateAsset(c *gin.Context) {
+func (ct *Controller) showCreateAsset(c *gin.Context) {
 	utils.RenderWithLayout(c, "asset/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
-func (h *Controller) deleteAsset(c *gin.Context) {
+func (ct *Controller) deleteAsset(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/assets")
 	}
 
-	h.services.Asset.DeleteByID(id)
+	ct.services.Asset.DeleteByID(id)
 	c.Redirect(http.StatusSeeOther, "/assets")
 }
 
-func (h *Controller) showEditAsset(c *gin.Context) {
+func (ct *Controller) showEditAsset(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/assets")
 	}
 
-	asset, err := h.services.Asset.FindByID(id)
+	asset, err := ct.services.Asset.FindByID(id)
 
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/assets")
@@ -90,7 +90,7 @@ func (h *Controller) showEditAsset(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) createAsset(c *gin.Context) {
+func (ct *Controller) createAsset(c *gin.Context) {
 	file, err := c.FormFile("file")
 
 	if err != nil {
@@ -98,13 +98,13 @@ func (h *Controller) createAsset(c *gin.Context) {
 	}
 
 	name := c.PostForm("name")
-	filePath, err := h.services.Asset.UploadFile(c, file)
+	filePath, err := ct.services.Asset.UploadFile(c, file)
 
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/assets")
 	}
 
-	h.services.Asset.Create(&model.Asset{
+	ct.services.Asset.Create(&model.Asset{
 		Path: filePath,
 		Name: name,
 	})
@@ -112,14 +112,14 @@ func (h *Controller) createAsset(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/assets")
 }
 
-func (h *Controller) editAsset(c *gin.Context) {
+func (ct *Controller) editAsset(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/assets")
 	}
 
-	asset, err := h.services.Asset.FindByID(id)
+	asset, err := ct.services.Asset.FindByID(id)
 
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/assets")
@@ -128,7 +128,7 @@ func (h *Controller) editAsset(c *gin.Context) {
 	file, err := c.FormFile("file")
 
 	if file != nil && err == nil {
-		path, err := h.services.Asset.UploadFile(c, file)
+		path, err := ct.services.Asset.UploadFile(c, file)
 		if err != nil {
 			c.Redirect(http.StatusSeeOther, "/assets")
 		}
@@ -139,7 +139,7 @@ func (h *Controller) editAsset(c *gin.Context) {
 	name := c.PostForm("name")
 	asset.Name = name
 
-	h.services.Asset.Save(asset)
+	ct.services.Asset.Save(asset)
 
 	c.Redirect(http.StatusSeeOther, "/assets")
 }

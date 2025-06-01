@@ -19,25 +19,25 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (h *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/user", middleware.Userauth(h.services.User))
+func (ct *Controller) RegisterRoutes(r *gin.Engine) {
+	secure := r.Group("/user", middleware.Userauth(ct.services.User))
 
-	r.GET("/login", h.showLogin)
-	r.POST("/login", h.login)
+	r.GET("/login", ct.showLogin)
+	r.POST("/login", ct.login)
 
-	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showUser)
-	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), h.showCreateUser)
-	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), h.createUser)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.showEditUser)
-	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.editUser)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteUser)
+	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showUser)
+	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), ct.showCreateUser)
+	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), ct.createUser)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.showEditUser)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.editUser)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), ct.deleteUser)
 }
 
-func (h *Controller) showLogin(c *gin.Context) {
+func (ct *Controller) showLogin(c *gin.Context) {
 	utils.RenderWithLayout(c, "auth/login.tmpl", gin.H{}, http.StatusOK)
 }
 
-func (h *Controller) login(c *gin.Context) {
+func (ct *Controller) login(c *gin.Context) {
 	email := c.PostForm("email")
 	password := c.PostForm("password")
 
@@ -46,7 +46,7 @@ func (h *Controller) login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.services.User.LoginUser(email, password)
+	token, err := ct.services.User.LoginUser(email, password)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/login")
 		return
@@ -65,7 +65,7 @@ func (h *Controller) login(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/")
 }
 
-func (h *Controller) showUser(c *gin.Context) {
+func (ct *Controller) showUser(c *gin.Context) {
 	page := c.DefaultQuery("page", "1")
 	pageSize := c.DefaultQuery("pageSize", "10")
 
@@ -79,7 +79,7 @@ func (h *Controller) showUser(c *gin.Context) {
 		pageSizeNum = 10
 	}
 
-	users, totalCount, err := h.services.User.List(pageNum, pageSizeNum)
+	users, totalCount, err := ct.services.User.List(pageNum, pageSizeNum)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users."})
 		return
@@ -97,20 +97,20 @@ func (h *Controller) showUser(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showCreateUser(c *gin.Context) {
+func (ct *Controller) showCreateUser(c *gin.Context) {
 	utils.RenderWithLayout(c, "user/create_or_edit.tmpl", gin.H{
 		"Roles": model.GetUserRoles(),
 	}, http.StatusOK)
 }
 
-func (h *Controller) showEditUser(c *gin.Context) {
+func (ct *Controller) showEditUser(c *gin.Context) {
 	userID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/user")
 		return
 	}
 
-	user, err := h.services.User.FindByID(userID)
+	user, err := ct.services.User.FindByID(userID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/user")
 	}
@@ -121,14 +121,14 @@ func (h *Controller) showEditUser(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) editUser(c *gin.Context) {
+func (ct *Controller) editUser(c *gin.Context) {
 	userID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/user")
 		return
 	}
 
-	user, err := h.services.User.FindByID(userID)
+	user, err := ct.services.User.FindByID(userID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/user")
 	}
@@ -144,16 +144,16 @@ func (h *Controller) editUser(c *gin.Context) {
 		user.Password = password
 	}
 
-	h.services.User.Save(user)
+	ct.services.User.Save(user)
 	c.Redirect(http.StatusSeeOther, "/user")
 }
 
-func (h *Controller) createUser(c *gin.Context) {
+func (ct *Controller) createUser(c *gin.Context) {
 	email := c.PostForm("email")
 	password := c.PostForm("email")
 	role := c.PostForm("role")
 
-	_, err := h.services.User.Create(email, password, model.Role(role))
+	_, err := ct.services.User.Create(email, password, model.Role(role))
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/user")
 		return
@@ -162,13 +162,13 @@ func (h *Controller) createUser(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/user")
 }
 
-func (h *Controller) deleteUser(c *gin.Context) {
+func (ct *Controller) deleteUser(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/user")
 	}
 
-	h.services.User.DeleteByID(id)
+	ct.services.User.DeleteByID(id)
 	c.Redirect(http.StatusSeeOther, "/user")
 }

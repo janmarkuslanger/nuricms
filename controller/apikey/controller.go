@@ -19,17 +19,17 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (h *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/apikeys", middleware.Userauth(h.services.User))
+func (ct *Controller) RegisterRoutes(r *gin.Engine) {
+	secure := r.Group("/apikeys", middleware.Userauth(ct.services.User))
 
-	secure.GET("/", middleware.Roleauth(model.RoleAdmin), h.showApikeys)
-	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), h.showCreateApikey)
-	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), h.createApikey)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.showEditApikey)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteApikey)
+	secure.GET("/", middleware.Roleauth(model.RoleAdmin), ct.showApikeys)
+	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), ct.showCreateApikey)
+	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), ct.createApikey)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.showEditApikey)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), ct.deleteApikey)
 }
 
-func (h *Controller) showApikeys(c *gin.Context) {
+func (ct *Controller) showApikeys(c *gin.Context) {
 	page := c.DefaultQuery("page", "1")
 	pageSize := c.DefaultQuery("pageSize", "10")
 
@@ -43,7 +43,7 @@ func (h *Controller) showApikeys(c *gin.Context) {
 		pageSizeNum = 10
 	}
 
-	keys, totalCount, err := h.services.Apikey.List(pageNum, pageSizeNum)
+	keys, totalCount, err := ct.services.Apikey.List(pageNum, pageSizeNum)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -60,26 +60,26 @@ func (h *Controller) showApikeys(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showCreateApikey(c *gin.Context) {
+func (ct *Controller) showCreateApikey(c *gin.Context) {
 	utils.RenderWithLayout(c, "apikey/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
-func (h *Controller) createApikey(c *gin.Context) {
+func (ct *Controller) createApikey(c *gin.Context) {
 	name := c.PostForm("name")
 	if name == "" {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
 	}
-	h.services.Apikey.Create(name, 0)
+	ct.services.Apikey.Create(name, 0)
 	c.Redirect(http.StatusSeeOther, "/apikeys")
 }
 
-func (h *Controller) showEditApikey(c *gin.Context) {
+func (ct *Controller) showEditApikey(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
 	}
 
-	apikey, err := h.services.Apikey.FindByID(id)
+	apikey, err := ct.services.Apikey.FindByID(id)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
 	}
@@ -89,12 +89,12 @@ func (h *Controller) showEditApikey(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) deleteApikey(c *gin.Context) {
+func (ct *Controller) deleteApikey(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
 	}
 
-	h.services.Apikey.DeleteByID(id)
+	ct.services.Apikey.DeleteByID(id)
 	c.Redirect(http.StatusSeeOther, "/apikeys")
 }

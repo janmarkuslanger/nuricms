@@ -20,18 +20,18 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (h *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/webhooks", middleware.Userauth(h.services.User))
+func (ct *Controller) RegisterRoutes(r *gin.Engine) {
+	secure := r.Group("/webhooks", middleware.Userauth(ct.services.User))
 
-	secure.GET("/", middleware.Roleauth(model.RoleAdmin), h.showWebhooks)
-	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), h.showCreateWebhook)
-	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), h.createWebhook)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.showEditWebhook)
-	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.editWebhook)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteWebhook)
+	secure.GET("/", middleware.Roleauth(model.RoleAdmin), ct.showWebhooks)
+	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), ct.showCreateWebhook)
+	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), ct.createWebhook)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.showEditWebhook)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.editWebhook)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), ct.deleteWebhook)
 }
 
-func (h *Controller) showWebhooks(c *gin.Context) {
+func (ct *Controller) showWebhooks(c *gin.Context) {
 	page := c.DefaultQuery("page", "1")
 	pageSize := c.DefaultQuery("pageSize", "10")
 
@@ -45,7 +45,7 @@ func (h *Controller) showWebhooks(c *gin.Context) {
 		pageSizeNum = 10
 	}
 
-	webhooks, totalCount, err := h.services.Webhook.List(pageNum, pageSizeNum)
+	webhooks, totalCount, err := ct.services.Webhook.List(pageNum, pageSizeNum)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve webhooks."})
 		return
@@ -62,14 +62,14 @@ func (h *Controller) showWebhooks(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showCreateWebhook(c *gin.Context) {
+func (ct *Controller) showCreateWebhook(c *gin.Context) {
 	utils.RenderWithLayout(c, "webhook/create_or_edit.tmpl", gin.H{
 		"RequestTypes": model.GetRequestTypes(),
 		"EventTypes":   model.GetWebhookEvents(),
 	}, http.StatusOK)
 }
 
-func (h *Controller) createWebhook(c *gin.Context) {
+func (ct *Controller) createWebhook(c *gin.Context) {
 	name := c.PostForm("name")
 	url := c.PostForm("url")
 	requestType := model.RequestType(c.PostForm("request_type"))
@@ -81,7 +81,7 @@ func (h *Controller) createWebhook(c *gin.Context) {
 		events[event] = isActive
 	}
 
-	_, err := h.services.Webhook.Create(name, url, requestType, events)
+	_, err := ct.services.Webhook.Create(name, url, requestType, events)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/webhooks")
 		return
@@ -90,13 +90,13 @@ func (h *Controller) createWebhook(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/webhooks")
 }
 
-func (h *Controller) showEditWebhook(c *gin.Context) {
+func (ct *Controller) showEditWebhook(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/webhooks")
 	}
 
-	webhook, err := h.services.Webhook.FindByID(id)
+	webhook, err := ct.services.Webhook.FindByID(id)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/webhooks")
 	}
@@ -109,13 +109,13 @@ func (h *Controller) showEditWebhook(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) editWebhook(c *gin.Context) {
+func (ct *Controller) editWebhook(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/webhooks")
 	}
 
-	webhook, err := h.services.Webhook.FindByID(id)
+	webhook, err := ct.services.Webhook.FindByID(id)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/webhooks")
 	}
@@ -138,7 +138,7 @@ func (h *Controller) editWebhook(c *gin.Context) {
 	webhook.RequestType = requestType
 	webhook.Events = eventString.String()
 
-	err = h.services.Webhook.Save(webhook)
+	err = ct.services.Webhook.Save(webhook)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/webhooks")
 		return
@@ -147,13 +147,13 @@ func (h *Controller) editWebhook(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/webhooks")
 }
 
-func (h *Controller) deleteWebhook(c *gin.Context) {
+func (ct *Controller) deleteWebhook(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/user")
 	}
 
-	h.services.Webhook.DeleteByID(id)
+	ct.services.Webhook.DeleteByID(id)
 	c.Redirect(http.StatusSeeOther, "/user")
 }
