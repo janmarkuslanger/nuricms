@@ -119,8 +119,10 @@ func (r *ContentRepository) FindByCollectionAndFieldValue(collectionID uint, fie
 	if totalCount == 0 {
 		return []model.Content{}, 0, nil
 	}
+
 	queryErr := r.db.
 		Model(&model.Content{}).
+		Distinct("contents.*").
 		Preload("ContentValues.Field").
 		Preload("ContentValues").
 		Joins("JOIN content_values cv ON cv.content_id = contents.id").
