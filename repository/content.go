@@ -101,3 +101,37 @@ func (r *ContentRepository) ListWithDisplayContentValue() ([]model.Content, erro
 
 	return contents, err
 }
+
+func (r *ContentRepository) FindByCollectionAndFieldValue(collectionID uint, fieldAlias, value string, offset, limit int) ([]model.Content, int, error) {
+	var contents []model.Content
+	var totalCount int64
+
+	countErr := r.db.
+		Model(&model.Content{}).
+		Joins("JOIN content_values cv ON cv.content_id = contents.id").
+		Joins("JOIN fields f ON f.id = cv.field_id").
+		Where("contents.collection_id = ?", collectionID).
+		Where("f.alias = ? AND cv.value = ?", fieldAlias, value).
+		Count(&totalCount).Error
+	if countErr != nil {
+		return nil, 0, countErr
+	}
+	if totalCount == 0 {
+		return []model.Content{}, 0, nil
+	}
+	queryErr := r.db.
+		Model(&model.Content{}).
+		Preload("ContentValues.Field").
+		Preload("ContentValues").
+		Joins("JOIN content_values cv ON cv.content_id = contents.id").
+		Joins("JOIN fields f ON f.id = cv.field_id").
+		Where("contents.collection_id = ?", collectionID).
+		Where("f.alias = ? AND cv.value = ?", fieldAlias, value).
+		Offset(offset).
+		Limit(limit).
+		Find(&contents).Error
+	if queryErr != nil {
+		return nil, 0, queryErr
+	}
+	return contents, int(totalCount), nil
+}

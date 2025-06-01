@@ -1,11 +1,11 @@
 package service
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/repository"
+	"github.com/janmarkuslanger/nuricms/utils"
 )
 
 type ApiService struct {
@@ -19,79 +19,60 @@ func NewApiService(repos *repository.Set) *ApiService {
 }
 
 type CollectionResponse struct {
-	ID    uint   `json:"id"`
-	Name  string `json:"name"`
-	Alias string `json:"alias"`
-}
-
-type ContentResponse struct {
-	Collection CollectionResponse    `json:"collection"`
-	Items      []ContentItemResponse `json:"items"`
+	ID    uint   `json:"id,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Alias string `json:"alias,omitempty"`
 }
 
 type ContentItemResponse struct {
-	ID         uint               `json:"id"`
-	CreatedAt  time.Time          `json:"created_at"`
-	UpdatedAt  time.Time          `json:"updated_at"`
-	Values     map[string]any     `json:"values"`
-	Collection CollectionResponse `json:"collection"`
+	ID        uint           `json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	Values    map[string]any `json:"values"`
 }
 
 type ContentValueResponse struct {
-	ID        uint            `json:"id"`
-	Value     any             `json:"value"`
-	FieldType model.FieldType `json:"field_type"`
+	ID         uint                `json:"id"`
+	Value      any                 `json:"value"`
+	FieldType  model.FieldType     `json:"field_type"`
+	Collection *CollectionResponse `json:"collection,omitempty"`
 }
 
-func (s *ApiService) listByCollectionAlias(alias string, offset int, limit int) ([]model.Content, error) {
-	var contents []model.Content
-
-	collection, err := s.repos.Collection.FindByAlias(alias)
-	if err != nil {
-		return contents, err
-	}
-
-	return s.repos.Content.FindByCollectionID(collection.ID, offset, limit)
-}
-
-func (s *ApiService) transformContentRecursive(ce *model.Content) ContentItemResponse {
-	contentValues := make(map[string]any)
+func (s *ApiService) prepareContent(ce *model.Content) (ContentItemResponse, error) {
+	values := make(map[string]any, len(ce.ContentValues))
 
 	for _, cv := range ce.ContentValues {
+
 		alias := cv.Field.Alias
-		var val any
-
-		switch cv.Field.FieldType {
-		case model.FieldTypeCollection:
-			id, _ := strconv.ParseUint(cv.Value, 10, 32)
-			cont, _ := s.repos.Content.FindByID(uint(id))
-			val = s.transformContentRecursive(&cont)
-
-		case model.FieldTypeAsset:
-			id, _ := strconv.ParseUint(cv.Value, 10, 32)
-			asset, _ := s.repos.Asset.FindByID(uint(id))
-			val = asset
-
-		default:
-			val = cv.Value
-		}
 
 		cvr := ContentValueResponse{
 			ID:        cv.ID,
-			Value:     val,
+			Value:     cv.Value,
 			FieldType: cv.Field.FieldType,
 		}
 
-		if cv.Field.IsList {
-			slice, ok := contentValues[alias].([]any)
-			if !ok {
-				slice = []any{}
+		if cv.Field.FieldType == model.FieldTypeCollection {
+			id, _ := utils.StringToUint(cv.Value)
+			con, err := s.repos.Content.FindByID(id)
+			if err == nil {
+				cvr.Collection = &CollectionResponse{
+					ID:    con.CollectionID,
+					Name:  con.Collection.Name,
+					Alias: con.Collection.Alias,
+				}
 			}
-			slice = append(slice, cvr)
-			contentValues[alias] = slice
+		}
+
+		if cv.Field.IsList {
+			items, ok := values[alias].([]any)
+			if !ok {
+				items = []any{}
+			}
+			items = append(items, cvr)
+			values[alias] = items
 
 		} else {
-			contentValues[alias] = cvr
+			values[alias] = cvr
 		}
 	}
 
@@ -99,43 +80,53 @@ func (s *ApiService) transformContentRecursive(ce *model.Content) ContentItemRes
 		ID:        ce.ID,
 		CreatedAt: ce.CreatedAt,
 		UpdatedAt: ce.UpdatedAt,
-		Values:    contentValues,
-		Collection: CollectionResponse{
-			ID:    ce.Collection.ID,
-			Name:  ce.Collection.Name,
-			Alias: ce.Collection.Alias,
-		},
-	}
+		Values:    values,
+	}, nil
 }
 
-func (s *ApiService) ListByCollectionAlias(alias string, offset int, perPage int) (ContentResponse, error) {
-	var out ContentResponse
+func (s *ApiService) FindContentByCollectionAlias(alias string, offset int, perPage int) ([]ContentItemResponse, error) {
+	var data []ContentItemResponse
 
-	col, err := s.repos.Collection.FindByAlias(alias)
-
+	collection, err := s.repos.Collection.FindByAlias(alias)
 	if err != nil {
-		return out, err
+		return data, err
 	}
 
-	content, err := s.listByCollectionAlias(alias, offset, perPage)
+	content, err := s.repos.Content.FindByCollectionID(collection.ID, offset, perPage)
 	if err != nil {
-		return out, err
+		return data, err
 	}
-
-	var contentItems []ContentItemResponse
 
 	for _, ce := range content {
-		contentItems = append(contentItems, s.transformContentRecursive(&ce))
+		ci, err := s.prepareContent(&ce)
+		if err != nil {
+			return data, nil
+		}
+
+		data = append(data, ci)
 	}
 
-	out = ContentResponse{
-		Collection: CollectionResponse{
-			ID:    col.ID,
-			Name:  col.Name,
-			Alias: col.Alias,
-		},
-		Items: contentItems,
+	return data, nil
+}
+
+func (s *ApiService) FindContentByID(id uint) (ContentItemResponse, error) {
+	var data ContentItemResponse
+
+	content, err := s.repos.Content.FindByID(id)
+	if err != nil {
+		return data, err
 	}
 
-	return out, nil
+	return s.prepareContent(&content)
+}
+
+func (s *ApiService) FindContentByCollectionAndFieldValue(alias, fieldAlias, value string, offset, perPage int) ([]ContentItemResponse, error) {
+	collection, _ := s.repos.Collection.FindByAlias(alias)
+	contents, _, _ := s.repos.Content.FindByCollectionAndFieldValue(collection.ID, fieldAlias, value, offset, perPage)
+	var items []ContentItemResponse
+	for _, ce := range contents {
+		ci, _ := s.prepareContent(&ce)
+		items = append(items, ci)
+	}
+	return items, nil
 }
