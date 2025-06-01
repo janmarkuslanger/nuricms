@@ -24,6 +24,12 @@ type CollectionResponse struct {
 	Alias string `json:"alias,omitempty"`
 }
 
+type AssetResponse struct {
+	ID   uint   `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+	Path string `json:"path,omitempty"`
+}
+
 type ContentItemResponse struct {
 	ID        uint           `json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
@@ -36,6 +42,7 @@ type ContentValueResponse struct {
 	Value      any                 `json:"value"`
 	FieldType  model.FieldType     `json:"field_type"`
 	Collection *CollectionResponse `json:"collection,omitempty"`
+	Asset      *AssetResponse      `json:"asset,omitempty"`
 }
 
 func (s *ApiService) prepareContent(ce *model.Content) (ContentItemResponse, error) {
@@ -59,6 +66,18 @@ func (s *ApiService) prepareContent(ce *model.Content) (ContentItemResponse, err
 					ID:    con.CollectionID,
 					Name:  con.Collection.Name,
 					Alias: con.Collection.Alias,
+				}
+			}
+		}
+
+		if cv.Field.FieldType == model.FieldTypeAsset {
+			id, _ := utils.StringToUint(cv.Value)
+			ass, err := s.repos.Asset.FindByID(id)
+			if err == nil {
+				cvr.Asset = &AssetResponse{
+					ID:   ass.ID,
+					Name: ass.Name,
+					Path: ass.Path,
 				}
 			}
 		}
