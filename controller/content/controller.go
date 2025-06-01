@@ -22,19 +22,19 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (h *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/content/collections", middleware.Userauth(h.services.User))
+func (ct *Controller) RegisterRoutes(r *gin.Engine) {
+	secure := r.Group("/content/collections", middleware.Userauth(ct.services.User))
 
-	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCollections)
-	secure.GET("/:id/show", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.listContent)
-	secure.GET("/:id/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCreateContent)
-	secure.POST("/:id/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.createContent)
-	secure.GET("/:id/edit/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showEditContent)
-	secure.POST("/:id/edit/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.editContent)
-	secure.POST("/:id/delete/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.deleteContent)
+	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showCollections)
+	secure.GET("/:id/show", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.listContent)
+	secure.GET("/:id/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showCreateContent)
+	secure.POST("/:id/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.createContent)
+	secure.GET("/:id/edit/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showEditContent)
+	secure.POST("/:id/edit/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.editContent)
+	secure.POST("/:id/delete/:contentID", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.deleteContent)
 }
 
-func (h *Controller) showCollections(c *gin.Context) {
+func (ct *Controller) showCollections(c *gin.Context) {
 	page := c.DefaultQuery("page", "1")
 	pageSize := c.DefaultQuery("pageSize", "10")
 
@@ -48,7 +48,7 @@ func (h *Controller) showCollections(c *gin.Context) {
 		pageSizeNum = 10
 	}
 
-	collections, totalCount, err := h.services.Collection.List(pageNum, pageSizeNum)
+	collections, totalCount, err := ct.services.Collection.List(pageNum, pageSizeNum)
 
 	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
 
@@ -61,27 +61,27 @@ func (h *Controller) showCollections(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showCreateContent(c *gin.Context) {
+func (ct *Controller) showCreateContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
-	fields, err := h.services.Field.GetByCollectionID(collectionID)
+	fields, err := ct.services.Field.GetByCollectionID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
 
-	collection, err := h.services.Collection.FindByID(collectionID)
+	collection, err := ct.services.Collection.FindByID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
 
-	contents, err := h.services.Content.GetContentsWithDisplayContentValue()
-	assets, _, err := h.services.Asset.List(1, 100000)
+	contents, err := ct.services.Content.GetContentsWithDisplayContentValue()
+	assets, _, err := ct.services.Asset.List(1, 100000)
 
 	fieldsContent := make([]FieldContent, 0)
 	for _, field := range fields {
@@ -98,7 +98,7 @@ func (h *Controller) showCreateContent(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) createContent(c *gin.Context) {
+func (ct *Controller) createContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -106,13 +106,13 @@ func (h *Controller) createContent(c *gin.Context) {
 	}
 
 	db.DB.Transaction(func(tx *gorm.DB) error {
-		fields, err := h.services.Field.GetByCollectionID(collectionID)
+		fields, err := ct.services.Field.GetByCollectionID(collectionID)
 		if err != nil {
 			return err
 		}
 
 		content := model.Content{CollectionID: collectionID}
-		newContent, err := h.services.Content.Create(&content)
+		newContent, err := ct.services.Content.Create(&content)
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func (h *Controller) createContent(c *gin.Context) {
 						FieldID:   field.ID,
 						Value:     val,
 					}
-					if err := h.services.ContentValue.Create(&cv); err != nil {
+					if err := ct.services.ContentValue.Create(&cv); err != nil {
 						return err
 					}
 				}
@@ -139,7 +139,7 @@ func (h *Controller) createContent(c *gin.Context) {
 					FieldID:   field.ID,
 					Value:     val,
 				}
-				if err := h.services.ContentValue.Create(&cv); err != nil {
+				if err := ct.services.ContentValue.Create(&cv); err != nil {
 					return err
 				}
 			}
@@ -148,11 +148,11 @@ func (h *Controller) createContent(c *gin.Context) {
 		return nil
 	})
 
-	h.services.Webhook.Dispatch(string(model.EventContentCreated), nil)
+	ct.services.Webhook.Dispatch(string(model.EventContentCreated), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
-func (h *Controller) editContent(c *gin.Context) {
+func (ct *Controller) editContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -161,13 +161,13 @@ func (h *Controller) editContent(c *gin.Context) {
 
 	id, err := strconv.Atoi(c.Param("contentID"))
 	if err != nil {
-		c.String(http.StatusBadRequest, "Ungültige Content-ID")
+		c.String(http.StatusBadRequest, "Invalid Content-ID")
 		return
 	}
 	contentID := uint(id)
 
 	err = db.DB.Transaction(func(tx *gorm.DB) error {
-		existingContent, err := h.services.Content.FindByID(contentID)
+		existingContent, err := ct.services.Content.FindByID(contentID)
 		if err != nil {
 			return err
 		}
@@ -180,7 +180,7 @@ func (h *Controller) editContent(c *gin.Context) {
 			return err
 		}
 
-		fields, err := h.services.Field.GetByCollectionID(collectionID)
+		fields, err := ct.services.Field.GetByCollectionID(collectionID)
 		if err != nil {
 			return err
 		}
@@ -221,11 +221,11 @@ func (h *Controller) editContent(c *gin.Context) {
 		return
 	}
 
-	h.services.Webhook.Dispatch(string(model.EventContentUpdated), nil)
+	ct.services.Webhook.Dispatch(string(model.EventContentUpdated), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
-func (h *Controller) listContent(c *gin.Context) {
+func (ct *Controller) listContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -245,7 +245,7 @@ func (h *Controller) listContent(c *gin.Context) {
 		pageSizeNum = 10
 	}
 
-	contents, totalCount, err := h.services.Content.GetDisplayValueByCollectionID(collectionID, pageNum, pageSizeNum)
+	contents, totalCount, err := ct.services.Content.GetDisplayValueByCollectionID(collectionID, pageNum, pageSizeNum)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -253,7 +253,7 @@ func (h *Controller) listContent(c *gin.Context) {
 
 	groups := ContentsToContentGroup(contents)
 
-	fields, err := h.services.Field.GetDisplayFieldsByCollectionID(collectionID)
+	fields, err := ct.services.Field.GetDisplayFieldsByCollectionID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -272,7 +272,7 @@ func (h *Controller) listContent(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showEditContent(c *gin.Context) {
+func (ct *Controller) showEditContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -287,20 +287,20 @@ func (h *Controller) showEditContent(c *gin.Context) {
 	}
 	contentID := uint(contID64)
 
-	contentEntry, err := h.services.Content.FindByID(contentID)
+	contentEntry, err := ct.services.Content.FindByID(contentID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
-	collection, err := h.services.Collection.FindByID(collectionID)
+	collection, err := ct.services.Collection.FindByID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
-	contents, err := h.services.Content.GetContentsWithDisplayContentValue()
-	assets, _, err := h.services.Asset.List(1, 100000)
+	contents, err := ct.services.Content.GetContentsWithDisplayContentValue()
+	assets, _, err := ct.services.Asset.List(1, 100000)
 
 	utils.RenderWithLayout(c, "content/create_or_edit.tmpl", gin.H{
 		"FieldsHtml": RenderFieldsByContent(contentEntry, *collection, contents, assets),
@@ -309,7 +309,7 @@ func (h *Controller) showEditContent(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) deleteContent(c *gin.Context) {
+func (ct *Controller) deleteContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
@@ -324,7 +324,7 @@ func (h *Controller) deleteContent(c *gin.Context) {
 	contentID := uint(id)
 
 	err = db.DB.Transaction(func(tx *gorm.DB) error {
-		content, err := h.services.Content.FindByID(contentID)
+		content, err := ct.services.Content.FindByID(contentID)
 		if err != nil {
 			return err
 		}
@@ -345,6 +345,6 @@ func (h *Controller) deleteContent(c *gin.Context) {
 		return
 	}
 
-	h.services.Webhook.Dispatch(string(model.EventContentDeleted), nil)
+	ct.services.Webhook.Dispatch(string(model.EventContentDeleted), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }

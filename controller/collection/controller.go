@@ -21,18 +21,18 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (h *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/collections", middleware.Userauth(h.services.User))
+func (ct *Controller) RegisterRoutes(r *gin.Engine) {
+	secure := r.Group("/collections", middleware.Userauth(ct.services.User))
 
-	secure.GET("/", middleware.Roleauth(model.RoleAdmin, model.RoleEditor), h.showCollections)
-	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), h.showCreateCollection)
-	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), h.createCollection)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.showEditCollection)
-	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), h.editCollection)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), h.deleteCollection)
+	secure.GET("/", middleware.Roleauth(model.RoleAdmin, model.RoleEditor), ct.showCollections)
+	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), ct.showCreateCollection)
+	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), ct.createCollection)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.showEditCollection)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.editCollection)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), ct.deleteCollection)
 }
 
-func (h *Controller) showCollections(c *gin.Context) {
+func (ct *Controller) showCollections(c *gin.Context) {
 	page := c.DefaultQuery("page", "1")
 	pageSize := c.DefaultQuery("pageSize", "10")
 
@@ -46,7 +46,7 @@ func (h *Controller) showCollections(c *gin.Context) {
 		pageSizeNum = 10
 	}
 
-	collections, totalCount, err := h.services.Collection.List(pageNum, pageSizeNum)
+	collections, totalCount, err := ct.services.Collection.List(pageNum, pageSizeNum)
 
 	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
 
@@ -59,11 +59,11 @@ func (h *Controller) showCollections(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showCreateCollection(c *gin.Context) {
+func (ct *Controller) showCreateCollection(c *gin.Context) {
 	utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{}, http.StatusOK)
 }
 
-func (h *Controller) createCollection(c *gin.Context) {
+func (ct *Controller) createCollection(c *gin.Context) {
 	name := c.PostForm("name")
 	alias := c.PostForm("alias")
 	description := c.PostForm("description")
@@ -81,7 +81,7 @@ func (h *Controller) createCollection(c *gin.Context) {
 		Description: description,
 	}
 
-	_, err := h.services.Collection.Create(data)
+	_, err := ct.services.Collection.Create(data)
 	if err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"Error": "Failed to create collection.",
@@ -92,7 +92,7 @@ func (h *Controller) createCollection(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/collections")
 }
 
-func (h *Controller) showEditCollection(c *gin.Context) {
+func (ct *Controller) showEditCollection(c *gin.Context) {
 	id := c.Param("id")
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {
@@ -107,7 +107,7 @@ func (h *Controller) showEditCollection(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) editCollection(c *gin.Context) {
+func (ct *Controller) editCollection(c *gin.Context) {
 	id := c.Param("id")
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {
@@ -144,7 +144,7 @@ func (h *Controller) editCollection(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/collections")
 }
 
-func (h *Controller) deleteCollection(c *gin.Context) {
+func (ct *Controller) deleteCollection(c *gin.Context) {
 	id := c.Param("id")
 	var collection model.Collection
 	if err := db.DB.First(&collection, id).Error; err != nil {

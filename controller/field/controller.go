@@ -20,18 +20,18 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (h *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/fields", middleware.Userauth(h.services.User))
+func (ct *Controller) RegisterRoutes(r *gin.Engine) {
+	secure := r.Group("/fields", middleware.Userauth(ct.services.User))
 
-	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.listFields)
-	secure.GET("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showCreateField)
-	secure.POST("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.createField)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.showEditField)
-	secure.POST("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.editField)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), h.deleteField)
+	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.listFields)
+	secure.GET("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showCreateField)
+	secure.POST("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.createField)
+	secure.GET("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showEditField)
+	secure.POST("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.editField)
+	secure.POST("/delete/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.deleteField)
 }
 
-func (h *Controller) listFields(c *gin.Context) {
+func (ct *Controller) listFields(c *gin.Context) {
 	page := c.DefaultQuery("page", "1")
 	pageSize := c.DefaultQuery("pageSize", "10")
 
@@ -45,7 +45,7 @@ func (h *Controller) listFields(c *gin.Context) {
 		pageSizeNum = 10
 	}
 
-	fields, totalCount, err := h.services.Field.List(pageNum, pageSizeNum)
+	fields, totalCount, err := ct.services.Field.List(pageNum, pageSizeNum)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve fields."})
 		return
@@ -62,7 +62,7 @@ func (h *Controller) listFields(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showCreateField(c *gin.Context) {
+func (ct *Controller) showCreateField(c *gin.Context) {
 	var collections []model.Collection
 	if err := db.DB.Find(&collections).Error; err != nil {
 		c.Redirect(http.StatusSeeOther, "/fields")
@@ -79,7 +79,7 @@ func (h *Controller) showCreateField(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) showEditField(c *gin.Context) {
+func (ct *Controller) showEditField(c *gin.Context) {
 	var field model.Field
 	if err := db.DB.Preload("Collection").First(&field, c.Param("id")).Error; err != nil {
 		c.Redirect(http.StatusSeeOther, "/fields")
@@ -103,7 +103,7 @@ func (h *Controller) showEditField(c *gin.Context) {
 	}, http.StatusOK)
 }
 
-func (h *Controller) createField(c *gin.Context) {
+func (ct *Controller) createField(c *gin.Context) {
 	name := c.PostForm("name")
 	alias := c.PostForm("alias")
 	collectionIDStr := c.PostForm("collection_id")
@@ -136,7 +136,7 @@ func (h *Controller) createField(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/fields")
 }
 
-func (h *Controller) editField(c *gin.Context) {
+func (ct *Controller) editField(c *gin.Context) {
 	id := c.Param("id")
 	var field model.Field
 	if err := db.DB.First(&field, id).Error; err != nil {
@@ -164,7 +164,7 @@ func (h *Controller) editField(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/fields")
 }
 
-func (h *Controller) deleteField(c *gin.Context) {
+func (ct *Controller) deleteField(c *gin.Context) {
 	id := c.Param("id")
 
 	var field model.Field
