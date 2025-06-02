@@ -4,10 +4,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/service"
 )
 
-func ApikeyAuth(keySvc *service.ApikeyService) gin.HandlerFunc {
+type validator interface {
+	Validate(token string) error
+}
+
+func ApikeyAuth(keySvc validator) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("X-API-Key")
 		if token == "" {
