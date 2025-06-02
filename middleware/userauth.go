@@ -6,10 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/model"
-	"github.com/janmarkuslanger/nuricms/service"
 )
 
-func Userauth(userService *service.UserService) gin.HandlerFunc {
+type jwtValidator interface {
+	ValidateJWT(token string) (uint, string, model.Role, error)
+}
+
+func Userauth(userService jwtValidator) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, err := c.Cookie("auth_token")
 		if err != nil {
