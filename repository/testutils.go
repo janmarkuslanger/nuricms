@@ -21,6 +21,7 @@ func CreateTestDB() (*gorm.DB, error) {
 		&model.Asset{},
 		&model.Webhook{},
 		&model.Apikey{},
+		&model.User{},
 	)
 	if err != nil {
 		return nil, err
