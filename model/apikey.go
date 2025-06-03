@@ -1,4 +1,3 @@
-// model/api_key.go
 package model
 
 import (

@@ -17,7 +17,6 @@ var funcMap = template.FuncMap{
 	"in":       func(s string, list []string) bool { return slices.Contains(list, s) },
 }
 
-// RenderWithLayout parsed hier pro Request alle Templates aus dem embed.FS
 func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, statusCode int) {
 	if _, ok := c.Get("userID"); ok {
 		data["IsLoggedIn"] = true
@@ -25,7 +24,6 @@ func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, status
 		data["IsLoggedIn"] = false
 	}
 
-	// Wir nutzen ParseFS statt ParseFiles und übergeben zuerst das embed.FS, dann die Muster
 	tmpl := template.Must(
 		template.New("layout.tmpl").
 			Funcs(funcMap).
