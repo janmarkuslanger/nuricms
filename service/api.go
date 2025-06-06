@@ -31,10 +31,11 @@ type AssetResponse struct {
 }
 
 type ContentItemResponse struct {
-	ID        uint           `json:"id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	Values    map[string]any `json:"values"`
+	ID         uint               `json:"id"`
+	CreatedAt  time.Time          `json:"created_at"`
+	UpdatedAt  time.Time          `json:"updated_at"`
+	Values     map[string]any     `json:"values"`
+	Collection CollectionResponse `json:"collection"`
 }
 
 type ContentValueResponse struct {
@@ -100,6 +101,11 @@ func (s *ApiService) prepareContent(ce *model.Content) (ContentItemResponse, err
 		CreatedAt: ce.CreatedAt,
 		UpdatedAt: ce.UpdatedAt,
 		Values:    values,
+		Collection: CollectionResponse{
+			Alias: ce.Collection.Alias,
+			ID:    ce.CollectionID,
+			Name:  ce.Collection.Name,
+		},
 	}, nil
 }
 
