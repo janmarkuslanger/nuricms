@@ -33,7 +33,7 @@ package main
 
 import (
 	"github.com/janmarkuslanger/nuricms"
-	"github.com/janmarkuslanger/nuricms/plugin"
+	"github.com/janmarkuslanger/nuricms/pkg/plugin"
 )
 
 func main() {
@@ -111,7 +111,7 @@ import (
 	"strings"
 
 	"github.com/janmarkuslanger/nuricms/model"
-	"github.com/janmarkuslanger/nuricms/plugin"
+	"github.com/janmarkuslanger/nuricms/pkg/plugin"
 )
 
 type SlugPlugin struct{}
