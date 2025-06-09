@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
-	"github.com/janmarkuslanger/nuricms/model"
 )
 
 type Controller struct {

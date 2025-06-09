@@ -110,7 +110,7 @@ package plugins
 import (
 	"strings"
 
-	"github.com/janmarkuslanger/nuricms/model"
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/pkg/plugin"
 )
 

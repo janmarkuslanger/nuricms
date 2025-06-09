@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
-	"github.com/janmarkuslanger/nuricms/model"
 	"golang.org/x/crypto/bcrypt"
 )
 

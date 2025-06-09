@@ -3,9 +3,9 @@ package service
 import (
 	"time"
 
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
-	"github.com/janmarkuslanger/nuricms/model"
 )
 
 type ApiService struct {

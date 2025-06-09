@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/janmarkuslanger/nuricms/internal/config"
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	utilstemplate "github.com/janmarkuslanger/nuricms/internal/template"
-	"github.com/janmarkuslanger/nuricms/model"
 )
 
 type FieldContent struct {

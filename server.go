@@ -13,9 +13,9 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/controller/webhook"
 	"github.com/janmarkuslanger/nuricms/internal/core"
 	"github.com/janmarkuslanger/nuricms/internal/db"
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/internal/service"
-	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/pkg/plugin"
 )
 

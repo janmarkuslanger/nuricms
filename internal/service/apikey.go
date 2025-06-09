@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
-	"github.com/janmarkuslanger/nuricms/model"
 )
 
 type ApikeyService struct {
