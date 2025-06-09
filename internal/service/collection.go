@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/janmarkuslanger/nuricms/internal/dto"
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
-	"github.com/janmarkuslanger/nuricms/model"
 )
 
 type CollectionService struct {

@@ -1,8 +1,8 @@
 package service
 
 import (
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
-	"github.com/janmarkuslanger/nuricms/model"
 	"github.com/janmarkuslanger/nuricms/pkg/plugin"
 )
 

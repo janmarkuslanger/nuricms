@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/model"
+	"github.com/janmarkuslanger/nuricms/internal/model"
 )
 
 type jwtValidator interface {
