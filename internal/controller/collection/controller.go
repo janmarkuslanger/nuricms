@@ -93,9 +93,18 @@ func (ct *Controller) createCollection(c *gin.Context) {
 }
 
 func (ct *Controller) showEditCollection(c *gin.Context) {
-	id := c.Param("id")
-	var collection model.Collection
-	if err := db.DB.First(&collection, id).Error; err != nil {
+	idStr := c.Param("id")
+
+	id, ok := utils.StringToUint(idStr)
+	if !ok {
+		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
+			"Error": "Collection not found.",
+		}, http.StatusInternalServerError)
+		return
+	}
+
+	collection, err := ct.services.Collection.FindByID(id)
+	if err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"Error": "Collection not found.",
 		}, http.StatusInternalServerError)
