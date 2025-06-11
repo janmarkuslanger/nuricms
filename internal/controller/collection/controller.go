@@ -117,36 +117,23 @@ func (ct *Controller) showEditCollection(c *gin.Context) {
 }
 
 func (ct *Controller) editCollection(c *gin.Context) {
-	id := c.Param("id")
-	var collection model.Collection
-	if err := db.DB.First(&collection, id).Error; err != nil {
+	id, ok := utils.StringToUint(c.Param("id"))
+	if !ok {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
 			"Error": "Collection not found.",
 		}, http.StatusNotFound)
 		return
 	}
 
-	name := c.PostForm("name")
-	alias := c.PostForm("alias")
-	description := c.PostForm("description")
-
-	if name == "" || alias == "" {
+	_, err := ct.services.Collection.UpdateByID(id, dto.CollectionData{
+		Name:        c.PostForm("name"),
+		Alias:       c.PostForm("alias"),
+		Description: c.PostForm("description"),
+	})
+	if err != nil {
 		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
-			"Error":      "Name and Alias are required fields.",
-			"Collection": collection,
-		}, http.StatusBadRequest)
-		return
-	}
-
-	collection.Name = name
-	collection.Alias = alias
-	collection.Description = description
-
-	if err := db.DB.Save(&collection).Error; err != nil {
-		utils.RenderWithLayout(c, "collection/create_or_edit.tmpl", gin.H{
-			"Error":      "Failed to update.",
-			"Collection": collection,
-		}, http.StatusInternalServerError)
+			"Error": "Collection could not be updated.",
+		}, http.StatusNotFound)
 		return
 	}
 

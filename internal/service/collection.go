@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
@@ -39,4 +41,26 @@ func (s *CollectionService) Create(data *dto.CollectionData) (*model.Collection,
 	}
 
 	return collection, nil
+}
+
+func (s *CollectionService) UpdateByID(collectionID uint, data dto.CollectionData) (*model.Collection, error) {
+	collection, err := s.FindByID(uint(collectionID))
+	if err != nil {
+		return nil, err
+	}
+
+	if data.Alias == "" {
+		return nil, errors.New("no alias given")
+	}
+
+	if data.Name == "" {
+		return nil, errors.New("no name given")
+	}
+
+	collection.Alias = data.Alias
+	collection.Name = data.Name
+	collection.Description = data.Description
+
+	err = s.repos.Collection.Save(collection)
+	return collection, err
 }
