@@ -52,3 +52,7 @@ func (r *FieldRepository) List(page, pageSize int) ([]model.Field, int64, error)
 
 	return fields, totalCount, err
 }
+
+func (r *FieldRepository) Create(field *model.Field) error {
+	return r.db.Create(field).Error
+}

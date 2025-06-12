@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/db"
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/service"
@@ -63,8 +64,8 @@ func (ct *Controller) listFields(c *gin.Context) {
 }
 
 func (ct *Controller) showCreateField(c *gin.Context) {
-	var collections []model.Collection
-	if err := db.DB.Find(&collections).Error; err != nil {
+	collections, _, err := ct.services.Collection.List(1, 999999999999999999)
+	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/fields")
 		return
 	}
@@ -86,8 +87,8 @@ func (ct *Controller) showEditField(c *gin.Context) {
 		return
 	}
 
-	var collections []model.Collection
-	if err := db.DB.Find(&collections).Error; err != nil {
+	collections, _, err := ct.services.Collection.List(1, 999999999999999999)
+	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/fields")
 		return
 	}
@@ -104,31 +105,18 @@ func (ct *Controller) showEditField(c *gin.Context) {
 }
 
 func (ct *Controller) createField(c *gin.Context) {
-	name := c.PostForm("name")
-	alias := c.PostForm("alias")
-	collectionIDStr := c.PostForm("collection_id")
-
-	if name == "" || alias == "" || collectionIDStr == "" {
-		c.Redirect(http.StatusSeeOther, "/fields/")
-		return
-	}
-
-	collectionID, _ := strconv.ParseUint(collectionIDStr, 10, 32)
-
-	field := model.Field{
-		Name:         name,
-		Alias:        alias,
-		CollectionID: uint(collectionID),
-		FieldType:    model.FieldType(c.PostForm("field_type")),
-		IsList:       c.PostForm("is_list") == "on",
-		IsRequired:   c.PostForm("is_required") == "on",
-		DisplayField: c.PostForm("display_field") == "on",
-	}
-
-	if err := db.DB.Create(&field).Error; err != nil {
+	_, err := ct.services.Field.Create(dto.FieldData{
+		Name:         c.PostForm("name"),
+		Alias:        c.PostForm("alias"),
+		CollectionID: c.PostForm("collection_id"),
+		FieldType:    c.PostForm("field_type"),
+		IsList:       c.PostForm("is_list"),
+		IsRequired:   c.PostForm("is_required"),
+		DisplayField: c.PostForm("display_field"),
+	})
+	if err != nil {
 		utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
 			"Error": "Failed to create field.",
-			"Field": field,
 		}, http.StatusInternalServerError)
 		return
 	}
