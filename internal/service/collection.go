@@ -43,6 +43,15 @@ func (s *CollectionService) Create(data *dto.CollectionData) (*model.Collection,
 	return collection, nil
 }
 
+func (s *CollectionService) DeleteByID(collectionID uint) error {
+	collection, err := s.FindByID(uint(collectionID))
+	if err != nil {
+		return err
+	}
+
+	return s.repos.Collection.Delete(collection)
+}
+
 func (s *CollectionService) UpdateByID(collectionID uint, data dto.CollectionData) (*model.Collection, error) {
 	collection, err := s.FindByID(uint(collectionID))
 	if err != nil {

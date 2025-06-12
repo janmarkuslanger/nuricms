@@ -39,6 +39,10 @@ func (r *CollectionRepository) Create(collection *model.Collection) error {
 	return r.db.Create(collection).Error
 }
 
+func (r *CollectionRepository) Delete(collection *model.Collection) error {
+	return r.db.Delete(collection).Error
+}
+
 func (r *CollectionRepository) Save(collection *model.Collection) error {
 	return r.db.Save(collection).Error
 }

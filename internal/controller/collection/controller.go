@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/internal/db"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
@@ -141,14 +140,13 @@ func (ct *Controller) editCollection(c *gin.Context) {
 }
 
 func (ct *Controller) deleteCollection(c *gin.Context) {
-	id := c.Param("id")
-	var collection model.Collection
-	if err := db.DB.First(&collection, id).Error; err != nil {
+	id, ok := utils.StringToUint(c.Param("id"))
+	if !ok {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
 
-	if err := db.DB.Delete(&collection).Error; err != nil {
+	if err := ct.services.Collection.DeleteByID(id); err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
