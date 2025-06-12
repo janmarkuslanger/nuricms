@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestFindByID_Success(t *testing.T) {
+func TestCollectionFindByID_Success(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
@@ -27,7 +27,7 @@ func TestFindByID_Success(t *testing.T) {
 	assert.Equal(t, "Test Collection", result.Name)
 }
 
-func TestFindByID_NotFound(t *testing.T) {
+func TestCollectionFindByID_NotFound(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
@@ -38,7 +38,7 @@ func TestFindByID_NotFound(t *testing.T) {
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-func TestFindByAlias_Success(t *testing.T) {
+func TestCollectionFindByAlias_Success(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
@@ -55,7 +55,7 @@ func TestFindByAlias_Success(t *testing.T) {
 	assert.Equal(t, "Alias Collection", result.Name)
 }
 
-func TestFindByAlias_NotFound(t *testing.T) {
+func TestCollectionFindByAlias_NotFound(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
@@ -66,7 +66,7 @@ func TestFindByAlias_NotFound(t *testing.T) {
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-func TestCreate_And_Save(t *testing.T) {
+func TestCollectionCreate_And_Save(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
@@ -85,7 +85,7 @@ func TestCreate_And_Save(t *testing.T) {
 	assert.Equal(t, "Updated Name", fetched.Name)
 }
 
-func TestDelete(t *testing.T) {
+func TestCollectionDelete(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
@@ -101,7 +101,7 @@ func TestDelete(t *testing.T) {
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-func TestList_Pagination(t *testing.T) {
+func TestCollectionList_Pagination(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
@@ -125,7 +125,7 @@ func TestList_Pagination(t *testing.T) {
 	assert.Equal(t, "Item 5", page3[0].Name)
 }
 
-func TestList_Empty(t *testing.T) {
+func TestCollectionList_Empty(t *testing.T) {
 	db, err := CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
