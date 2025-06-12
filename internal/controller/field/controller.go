@@ -125,23 +125,22 @@ func (ct *Controller) createField(c *gin.Context) {
 }
 
 func (ct *Controller) editField(c *gin.Context) {
-	id := c.Param("id")
-	var field model.Field
-	if err := db.DB.First(&field, id).Error; err != nil {
+	id, ok := utils.StringToUint(c.Param("id"))
+	if !ok {
 		c.Redirect(http.StatusSeeOther, "/fields")
 		return
 	}
 
-	field.Name = c.PostForm("name")
-	field.Alias = c.PostForm("alias")
-	collectionID, _ := strconv.ParseUint(c.PostForm("collection_id"), 10, 32)
-	field.CollectionID = uint(collectionID)
-	field.FieldType = model.FieldType(c.PostForm("field_type"))
-	field.IsList = c.PostForm("is_list") == "on"
-	field.IsRequired = c.PostForm("is_required") == "on"
-	field.DisplayField = c.PostForm("display_field") == "on"
-
-	if err := db.DB.Save(&field).Error; err != nil {
+	field, err := ct.services.Field.UpdateByID(id, dto.FieldData{
+		Name:         c.PostForm("name"),
+		Alias:        c.PostForm("alias"),
+		CollectionID: c.PostForm("collection_id"),
+		FieldType:    c.PostForm("field_type"),
+		IsList:       c.PostForm("is_list"),
+		IsRequired:   c.PostForm("is_required"),
+		DisplayField: c.PostForm("display_field"),
+	})
+	if err != nil {
 		utils.RenderWithLayout(c, "field/create_or_edit.tmpl", gin.H{
 			"Error": "Failed to update field.",
 			"Field": field,

@@ -29,6 +29,37 @@ func (s *FieldService) List(page, pageSize int) ([]model.Field, int64, error) {
 	return s.repos.Field.List(page, pageSize)
 }
 
+func (s *FieldService) UpdateByID(id uint, data dto.FieldData) (*model.Field, error) {
+	field, err := s.repos.Field.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	collectionID, ok := utils.StringToUint(data.CollectionID)
+	if !ok {
+		return nil, errors.New("cannot convert collection id")
+	}
+
+	if data.Name == "" {
+		return nil, errors.New("no name given")
+	}
+
+	if data.Alias == "" {
+		return nil, errors.New("no alias given")
+	}
+
+	field.Name = data.Name
+	field.Alias = data.Alias
+	field.CollectionID = collectionID
+	field.FieldType = model.FieldType(data.FieldType)
+	field.IsList = data.IsList == "on"
+	field.IsRequired = data.IsRequired == "on"
+	field.DisplayField = data.DisplayField == "on"
+
+	err = s.repos.Field.Save(field)
+	return field, err
+}
+
 func (s *FieldService) Create(data dto.FieldData) (*model.Field, error) {
 	collectionID, ok := utils.StringToUint(data.CollectionID)
 	if !ok {

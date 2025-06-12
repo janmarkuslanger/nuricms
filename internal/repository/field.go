@@ -31,6 +31,18 @@ func (r *FieldRepository) FindDisplayFieldsByCollectionID(collectionID uint) ([]
 	return fields, nil
 }
 
+func (r *FieldRepository) FindByID(id uint) (*model.Field, error) {
+	var field model.Field
+	if err := r.db.First(&field, id).Error; err != nil {
+		return nil, err
+	}
+	return &field, nil
+}
+
+func (r *FieldRepository) Save(field *model.Field) error {
+	return r.db.Save(field).Error
+}
+
 func (r *FieldRepository) List(page, pageSize int) ([]model.Field, int64, error) {
 	var fields []model.Field
 	var totalCount int64
