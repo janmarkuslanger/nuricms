@@ -1,18 +1,15 @@
 package content
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/internal/db"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
-	"gorm.io/gorm"
 )
 
 type Controller struct {
@@ -117,75 +114,22 @@ func (ct *Controller) createContent(c *gin.Context) {
 }
 
 func (ct *Controller) editContent(c *gin.Context) {
-	collectionID, ok := utils.StringToUint(c.Param("id"))
-	if !ok {
+	colID, okCol := utils.StringToUint(c.Param("id"))
+	conID, okCon := utils.StringToUint(c.Param("contentID"))
+	err := c.Request.ParseForm()
+	if !okCon || !okCol || err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
-	id, err := strconv.Atoi(c.Param("contentID"))
-	if err != nil {
-		c.String(http.StatusBadRequest, "Invalid Content-ID")
-		return
-	}
-	contentID := uint(id)
-
-	err = db.DB.Transaction(func(tx *gorm.DB) error {
-		existingContent, err := ct.services.Content.FindByID(contentID)
-		if err != nil {
-			return err
-		}
-
-		if existingContent.CollectionID != collectionID {
-			return fmt.Errorf("Content %d doesnt relate to Collection %d", contentID, collectionID)
-		}
-
-		if err := tx.Where("content_id = ?", contentID).Delete(&model.ContentValue{}).Error; err != nil {
-			return err
-		}
-
-		fields, err := ct.services.Field.FindByCollectionID(collectionID)
-		if err != nil {
-			return err
-		}
-
-		for _, field := range fields {
-			if field.IsList {
-				vals := c.PostFormArray(field.Alias)
-				for idx, val := range vals {
-					cv := model.ContentValue{
-						SortIndex: idx + 1,
-						ContentID: contentID,
-						FieldID:   field.ID,
-						Value:     val,
-					}
-					if err := tx.Create(&cv).Error; err != nil {
-						return err
-					}
-				}
-			} else {
-				val := c.PostForm(field.Alias)
-				cv := model.ContentValue{
-					SortIndex: 1,
-					ContentID: contentID,
-					FieldID:   field.ID,
-					Value:     val,
-				}
-				if err := tx.Create(&cv).Error; err != nil {
-					return err
-				}
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Error while updating: %v", err)
-		return
+	if _, err := ct.services.Content.EditWithValues(dto.ContentWithValues{
+		CollectionID: colID,
+		ContentID:    conID,
+		FormData:     c.Request.PostForm,
+	}); err != nil {
+		ct.services.Webhook.Dispatch(string(model.EventContentUpdated), nil)
 	}
 
-	ct.services.Webhook.Dispatch(string(model.EventContentUpdated), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
@@ -265,48 +209,22 @@ func (ct *Controller) showEditContent(c *gin.Context) {
 	assets, _, err := ct.services.Asset.List(1, 100000)
 
 	utils.RenderWithLayout(c, "content/create_or_edit.tmpl", gin.H{
-		"FieldsHtml": RenderFieldsByContent(contentEntry, *collection, contents, assets),
+		"FieldsHtml": RenderFieldsByContent(*contentEntry, *collection, contents, assets),
 		"Collection": collection,
 		"Content":    contentEntry,
 	}, http.StatusOK)
 }
 
 func (ct *Controller) deleteContent(c *gin.Context) {
-	collectionID, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.StringToUint(c.Param("contentID"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
-	id, err := strconv.Atoi(c.Param("contentID"))
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/content/collections")
-		return
-	}
-	contentID := uint(id)
-
-	err = db.DB.Transaction(func(tx *gorm.DB) error {
-		content, err := ct.services.Content.FindByID(contentID)
-		if err != nil {
-			return err
-		}
-		if content.CollectionID != collectionID {
-			return fmt.Errorf("Content %d doesnt relate to Collection %d", contentID, collectionID)
-		}
-		if err := tx.Where("content_id = ?", contentID).Delete(&model.ContentValue{}).Error; err != nil {
-			return err
-		}
-		if err := tx.Delete(&content).Error; err != nil {
-			return err
-		}
-		return nil
-	})
-
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Error while deleting: %v", err)
-		return
+	if err := ct.services.Content.DeleteByID(id); err != nil {
+		ct.services.Webhook.Dispatch(string(model.EventContentDeleted), nil)
 	}
 
-	ct.services.Webhook.Dispatch(string(model.EventContentDeleted), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }

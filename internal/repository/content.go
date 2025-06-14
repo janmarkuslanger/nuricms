@@ -17,7 +17,11 @@ func (r *ContentRepository) Create(content *model.Content) error {
 	return r.db.Create(&content).Error
 }
 
-func (r *ContentRepository) FindByID(id uint) (model.Content, error) {
+func (r *ContentRepository) DeleteByID(id uint) error {
+	return r.db.Delete(&model.Content{}, id).Error
+}
+
+func (r *ContentRepository) FindByID(id uint) (*model.Content, error) {
 	var content model.Content
 	err := r.db.
 		Where("id = ?", id).
@@ -25,7 +29,7 @@ func (r *ContentRepository) FindByID(id uint) (model.Content, error) {
 		Preload("ContentValues.Field").
 		Preload("Collection").
 		Find(&content).Error
-	return content, err
+	return &content, err
 }
 
 func (r *ContentRepository) FindByCollectionID(collectionID uint, offset int, limit int) ([]model.Content, error) {

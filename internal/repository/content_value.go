@@ -24,3 +24,10 @@ func (r *ContentValueRepository) Save(cv *model.ContentValue) error {
 func (r *ContentValueRepository) Delete(cv *model.ContentValue) error {
 	return r.db.Delete(&cv).Error
 }
+
+func (r *ContentValueRepository) FindByContentID(cID uint) ([]model.ContentValue, error) {
+	var cvs []model.ContentValue
+
+	err := r.db.Where("content_id = ?", cID).Find(&cvs).Error
+	return cvs, err
+}

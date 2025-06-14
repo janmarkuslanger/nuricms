@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/janmarkuslanger/nuricms/internal/db"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
@@ -20,7 +22,7 @@ func (s *ContentService) Create(c *model.Content) (*model.Content, error) {
 	return c, s.repos.Content.Create(c)
 }
 
-func (s *ContentService) FindByID(id uint) (model.Content, error) {
+func (s *ContentService) FindByID(id uint) (*model.Content, error) {
 	return s.repos.Content.FindByID(id)
 }
 
@@ -58,6 +60,80 @@ func (s *ContentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Con
 		content = model.Content{CollectionID: cwv.CollectionID}
 
 		err = s.repos.Content.Create(&content)
+		if err != nil {
+			return err
+		}
+
+		for _, f := range fields {
+			for i, v := range cwv.FormData[f.Alias] {
+				cv := model.ContentValue{
+					SortIndex: i + 1,
+					ContentID: content.ID,
+					FieldID:   f.ID,
+					Value:     v,
+				}
+
+				if err := s.repos.ContentValue.Create(&cv); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return &content, err
+}
+
+func (s *ContentService) DeleteByID(id uint) error {
+	return db.DB.Transaction(func(tx *gorm.DB) error {
+		err := s.repos.Content.DeleteByID(id)
+		if err != nil {
+			return err
+		}
+
+		err = s.DeleteContentValuesByID(id)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (s *ContentService) DeleteContentValuesByID(id uint) error {
+	values, err := s.repos.ContentValue.FindByContentID(id)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range values {
+		err = s.repos.ContentValue.Delete(&v)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *ContentService) EditWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
+	var content model.Content
+	err := db.DB.Transaction(func(tx *gorm.DB) error {
+		content, err := s.repos.Content.FindByID(cwv.ContentID)
+		if err != nil {
+			return err
+		}
+
+		if content.CollectionID != cwv.CollectionID {
+			return errors.New("content doesnt relate to Collection")
+		}
+
+		if err = s.DeleteContentValuesByID(content.ID); err != nil {
+			return err
+		}
+
+		fields, err := s.repos.Field.FindByCollectionID(cwv.CollectionID)
 		if err != nil {
 			return err
 		}

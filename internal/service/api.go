@@ -142,7 +142,7 @@ func (s *ApiService) FindContentByID(id uint) (ContentItemResponse, error) {
 		return data, err
 	}
 
-	return s.prepareContent(&content)
+	return s.prepareContent(content)
 }
 
 func (s *ApiService) FindContentByCollectionAndFieldValue(alias, fieldAlias, value string, offset, perPage int) ([]ContentItemResponse, error) {
