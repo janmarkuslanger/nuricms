@@ -38,7 +38,7 @@ func StartServer(config *ServerConfig) {
 	router := gin.Default()
 	database := db.Init()
 	repos := repository.NewSet(database)
-	services := service.NewSet(repos, hr)
+	services, _ := service.NewSet(repos, hr)
 
 	db.DB.AutoMigrate(
 		&model.Collection{},

@@ -1,7 +1,9 @@
+// service/set.go
+
 package service
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/janmarkuslanger/nuricms/internal/repository"
@@ -20,10 +22,10 @@ type Set struct {
 	Api          *ApiService
 }
 
-func NewSet(r *repository.Set, hr *plugin.HookRegistry) *Set {
+func NewSet(r *repository.Set, hr *plugin.HookRegistry) (*Set, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		log.Fatal("JWT_SECRET must be set")
+		return nil, fmt.Errorf("JWT_SECRET must be set")
 	}
 
 	return &Set{
@@ -36,5 +38,5 @@ func NewSet(r *repository.Set, hr *plugin.HookRegistry) *Set {
 		Apikey:       NewApikeyService(r),
 		Webhook:      NewWebhookService(r),
 		Api:          NewApiService(r),
-	}
+	}, nil
 }
