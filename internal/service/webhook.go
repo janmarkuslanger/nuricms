@@ -67,10 +67,6 @@ func (s *WebhookService) DeleteByID(id uint) error {
 	return s.repos.Webhook.Delete(webhook)
 }
 
-func (s *WebhookService) Delete(webhook *model.Webhook) error {
-	return s.repos.Webhook.Delete(webhook)
-}
-
 func (s *WebhookService) Dispatch(event string, payload any) {
 	hooks, err := s.repos.Webhook.ListByEvent(event)
 	if err != nil {
