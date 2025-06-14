@@ -32,14 +32,14 @@ func (s *ContentService) ListByCollectionAlias(alias string, offset int, limit i
 	return s.repos.Content.FindByCollectionID(collection.ID, offset, limit)
 }
 
-func (s *ContentService) GetByCollectionID(collectionID uint) ([]model.Content, error) {
+func (s *ContentService) FindByCollectionID(collectionID uint) ([]model.Content, error) {
 	return s.repos.Content.FindByCollectionID(collectionID, 0, 0)
 }
 
-func (s *ContentService) GetDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error) {
+func (s *ContentService) FindDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error) {
 	return s.repos.Content.FindDisplayValueByCollectionID(collectionID, page, pageSize)
 }
 
-func (s *ContentService) GetContentsWithDisplayContentValue() ([]model.Content, error) {
+func (s *ContentService) FindContentsWithDisplayContentValue() ([]model.Content, error) {
 	return s.repos.Content.ListWithDisplayContentValue()
 }

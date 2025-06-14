@@ -80,7 +80,7 @@ func (ct *Controller) showCreateContent(c *gin.Context) {
 		return
 	}
 
-	contents, err := ct.services.Content.GetContentsWithDisplayContentValue()
+	contents, err := ct.services.Content.FindContentsWithDisplayContentValue()
 	assets, _, err := ct.services.Asset.List(1, 100000)
 
 	fieldsContent := make([]FieldContent, 0)
@@ -245,7 +245,7 @@ func (ct *Controller) listContent(c *gin.Context) {
 		pageSizeNum = 10
 	}
 
-	contents, totalCount, err := ct.services.Content.GetDisplayValueByCollectionID(collectionID, pageNum, pageSizeNum)
+	contents, totalCount, err := ct.services.Content.FindDisplayValueByCollectionID(collectionID, pageNum, pageSizeNum)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -279,15 +279,13 @@ func (ct *Controller) showEditContent(c *gin.Context) {
 		return
 	}
 
-	contParam := c.Param("contentID")
-	contID64, err := strconv.ParseUint(contParam, 10, 0)
-	if err != nil {
+	cID, ok := utils.StringToUint(c.Param("contentID"))
+	if !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
-	contentID := uint(contID64)
 
-	contentEntry, err := ct.services.Content.FindByID(contentID)
+	contentEntry, err := ct.services.Content.FindByID(cID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
@@ -299,7 +297,7 @@ func (ct *Controller) showEditContent(c *gin.Context) {
 		return
 	}
 
-	contents, err := ct.services.Content.GetContentsWithDisplayContentValue()
+	contents, err := ct.services.Content.FindContentsWithDisplayContentValue()
 	assets, _, err := ct.services.Asset.List(1, 100000)
 
 	utils.RenderWithLayout(c, "content/create_or_edit.tmpl", gin.H{
