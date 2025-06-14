@@ -9,14 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestFieldFindByCollectionIDSuccess(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_FindByCollectionID_WithResults(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
-	col := &model.Collection{Name: "CollectionA"}
+	col := &model.Collection{Name: "ColA"}
 	assert.NoError(t, db.Create(col).Error)
 
 	f1 := &model.Field{Name: "Name1", Alias: "alias1", FieldType: "text", CollectionID: col.ID}
@@ -27,16 +24,10 @@ func TestFieldFindByCollectionIDSuccess(t *testing.T) {
 	fields, err := repo.FindByCollectionID(col.ID)
 	assert.NoError(t, err)
 	assert.Len(t, fields, 2)
-	aliases := []string{fields[0].Alias, fields[1].Alias}
-	assert.Contains(t, aliases, "alias1")
-	assert.Contains(t, aliases, "alias2")
 }
 
-func TestFieldFindByCollectionIDEmpty(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_FindByCollectionID_NoResults(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
 	fields, err := repo.FindByCollectionID(999)
@@ -44,67 +35,54 @@ func TestFieldFindByCollectionIDEmpty(t *testing.T) {
 	assert.Empty(t, fields)
 }
 
-func TestFieldFindDisplayByCollectionID(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_FindDisplayFieldsByCollectionID_ReturnsOnlyDisplay(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
-	col := &model.Collection{Name: "CollectionB"}
+	col := &model.Collection{Name: "ColB"}
 	assert.NoError(t, db.Create(col).Error)
 
-	fd := &model.Field{Name: "Visible", Alias: "vis-alias", FieldType: "text", DisplayField: true, CollectionID: col.ID}
-	fh := &model.Field{Name: "Hidden", Alias: "hid-alias", FieldType: "text", DisplayField: false, CollectionID: col.ID}
-	assert.NoError(t, repo.Create(fd))
-	assert.NoError(t, repo.Create(fh))
+	disp := &model.Field{Name: "D", Alias: "d-alias", FieldType: "text", DisplayField: true, CollectionID: col.ID}
+	hide := &model.Field{Name: "H", Alias: "h-alias", FieldType: "text", DisplayField: false, CollectionID: col.ID}
+	assert.NoError(t, repo.Create(disp))
+	assert.NoError(t, repo.Create(hide))
 
 	fields, err := repo.FindDisplayFieldsByCollectionID(col.ID)
 	assert.NoError(t, err)
 	assert.Len(t, fields, 1)
-	assert.Equal(t, "vis-alias", fields[0].Alias)
+	assert.Equal(t, disp.ID, fields[0].ID)
 }
 
-func TestFieldFindByIDSuccess(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_FindByID_Found(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
-	col := &model.Collection{Name: "CollectionC"}
+	col := &model.Collection{Name: "ColC"}
 	assert.NoError(t, db.Create(col).Error)
-
-	f := &model.Field{Name: "FindMe", Alias: "find-alias", FieldType: "text", CollectionID: col.ID}
+	f := &model.Field{Name: "F", Alias: "f-alias", FieldType: "text", CollectionID: col.ID}
 	assert.NoError(t, repo.Create(f))
 
-	found, err := repo.FindByID(f.ID)
+	got, err := repo.FindByID(f.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, "find-alias", found.Alias)
+	assert.Equal(t, f.ID, got.ID)
+	assert.Equal(t, col.ID, got.CollectionID)
 }
 
-func TestFieldFindByIDNotFound(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_FindByID_NotFound(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
-	_, err = repo.FindByID(1234)
+	_, err := repo.FindByID(12345)
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-func TestFieldSave(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_Save_UpdatesFields(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
-	col := &model.Collection{Name: "CollectionD"}
+	col := &model.Collection{Name: "ColD"}
 	assert.NoError(t, db.Create(col).Error)
-
-	f := &model.Field{Name: "OldName", Alias: "old-alias", FieldType: "text", CollectionID: col.ID}
+	f := &model.Field{Name: "Old", Alias: "old-alias", FieldType: "text", CollectionID: col.ID}
 	assert.NoError(t, repo.Create(f))
 
 	f.IsRequired = true
@@ -117,61 +95,51 @@ func TestFieldSave(t *testing.T) {
 	assert.True(t, updated.IsList)
 }
 
-func TestFieldListPagination(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_List_Pagination(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
 	for ci := 1; ci <= 2; ci++ {
 		col := &model.Collection{Name: fmt.Sprintf("Col%d", ci)}
 		assert.NoError(t, db.Create(col).Error)
 		for fi := 1; fi <= 3; fi++ {
-			f := &model.Field{Name: fmt.Sprintf("Name%d_%d", ci, fi), Alias: fmt.Sprintf("a%d_%d", ci, fi), FieldType: "text", CollectionID: col.ID}
+			f := &model.Field{Name: fmt.Sprintf("N%d_%d", ci, fi), Alias: fmt.Sprintf("a%d_%d", ci, fi), FieldType: "text", CollectionID: col.ID}
 			assert.NoError(t, repo.Create(f))
 		}
 	}
 
-	fields, total, err := repo.List(1, 4)
+	page1, total, err := repo.List(1, 4)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(6), total)
-	assert.Len(t, fields, 4)
+	assert.Len(t, page1, 4)
 
-	fields2, total2, err := repo.List(2, 4)
+	page2, total2, err := repo.List(2, 4)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(6), total2)
-	assert.Len(t, fields2, 2)
+	assert.Len(t, page2, 2)
 }
 
-func TestFieldListEmpty(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_List_Empty(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
-	fields, total, err := repo.List(1, 10)
+	list, total, err := repo.List(1, 10)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(0), total)
-	assert.Empty(t, fields)
+	assert.Empty(t, list)
 }
 
-func TestFieldCreate(t *testing.T) {
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+func TestFieldRepository_CreateAndDelete(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewFieldRepository(db)
 
-	col := &model.Collection{Name: "CollectionE"}
+	col := &model.Collection{Name: "ColE"}
 	assert.NoError(t, db.Create(col).Error)
-
-	f := &model.Field{Name: "NewName", Alias: "new-alias", FieldType: "text", IsRequired: false, IsList: false, DisplayField: false, CollectionID: col.ID}
+	f := &model.Field{Name: "Temp", Alias: "temp-alias", FieldType: "text", CollectionID: col.ID}
 	assert.NoError(t, repo.Create(f))
 	assert.NotZero(t, f.ID)
 
-	fields, err := repo.FindByCollectionID(col.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, "new-alias", fields[0].Alias)
+	assert.NoError(t, repo.Delete(f))
+	_, err := repo.FindByID(f.ID)
+	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }

@@ -17,12 +17,16 @@ func NewFieldService(repos *repository.Set) *FieldService {
 	return &FieldService{repos: repos}
 }
 
-func (s *FieldService) GetByCollectionID(collectionID uint) ([]model.Field, error) {
+func (s *FieldService) FindByCollectionID(collectionID uint) ([]model.Field, error) {
 	return s.repos.Field.FindByCollectionID(collectionID)
 }
 
-func (s *FieldService) GetDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {
+func (s *FieldService) FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {
 	return s.repos.Field.FindDisplayFieldsByCollectionID(collectionID)
+}
+
+func (s *FieldService) FindByID(id uint) (*model.Field, error) {
+	return s.repos.Field.FindByID(id)
 }
 
 func (s *FieldService) List(page, pageSize int) ([]model.Field, int64, error) {
@@ -86,4 +90,13 @@ func (s *FieldService) Create(data dto.FieldData) (*model.Field, error) {
 
 	err := s.repos.Field.Create(&field)
 	return &field, err
+}
+
+func (s *FieldService) DeleteByID(id uint) error {
+	field, err := s.repos.Field.FindByID(id)
+	if err != nil {
+		return err
+	}
+
+	return s.repos.Field.Delete(field)
 }

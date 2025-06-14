@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/internal/db"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
@@ -81,8 +80,14 @@ func (ct *Controller) showCreateField(c *gin.Context) {
 }
 
 func (ct *Controller) showEditField(c *gin.Context) {
-	var field model.Field
-	if err := db.DB.Preload("Collection").First(&field, c.Param("id")).Error; err != nil {
+	id, ok := utils.StringToUint(c.Param("id"))
+	if !ok {
+		c.Redirect(http.StatusSeeOther, "/fields")
+		return
+	}
+
+	field, err := ct.services.Field.FindByID(id)
+	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/fields")
 		return
 	}
@@ -152,18 +157,12 @@ func (ct *Controller) editField(c *gin.Context) {
 }
 
 func (ct *Controller) deleteField(c *gin.Context) {
-	id := c.Param("id")
-
-	var field model.Field
-	if err := db.DB.First(&field, id).Error; err != nil {
+	id, ok := utils.StringToUint(c.Param("id"))
+	if !ok {
 		c.Redirect(http.StatusSeeOther, "/fields")
 		return
 	}
 
-	if err := db.DB.Delete(&field).Error; err != nil {
-		c.Redirect(http.StatusSeeOther, "/fields")
-		return
-	}
-
+	ct.services.Field.DeleteByID(id)
 	c.Redirect(http.StatusSeeOther, "/fields")
 }

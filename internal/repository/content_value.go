@@ -13,12 +13,14 @@ func NewContentValueRepository(db *gorm.DB) *ContentValueRepository {
 	return &ContentValueRepository{db: db}
 }
 
-func (r *ContentValueRepository) Create(contentValue *model.ContentValue) error {
-	result := r.db.Create(&contentValue)
+func (r *ContentValueRepository) Create(cv *model.ContentValue) error {
+	return r.db.Create(&cv).Error
+}
 
-	if result.Error != nil {
-		return result.Error
-	}
+func (r *ContentValueRepository) Save(cv *model.ContentValue) error {
+	return r.db.Save(&cv).Error
+}
 
-	return nil
+func (r *ContentValueRepository) Delete(cv *model.ContentValue) error {
+	return r.db.Delete(&cv).Error
 }

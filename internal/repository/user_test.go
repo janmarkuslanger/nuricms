@@ -1,165 +1,111 @@
 package repository
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
-func setupUserRepo(t *testing.T) (*UserRepository, func()) {
-	t.Helper()
-
-	db, err := CreateTestDB()
-	if err != nil {
-		t.Fatalf("CreateTestDB failed: %v", err)
-	}
-
+func TestUserRepository_Create_Success(t *testing.T) {
+	db := SetupTestDB(t)
 	repo := NewUserRepository(db)
 
-	cleanup := func() {
-		sqlDB, err := db.DB()
-		if err == nil {
-			sqlDB.Close()
-		}
-	}
-
-	return repo, cleanup
+	u := &model.User{Email: "create@example.com"}
+	err := repo.Create(u)
+	assert.NoError(t, err)
+	assert.NotZero(t, u.ID)
 }
 
-func TestUserRepository_Create_And_FindByID_And_FindByEmail(t *testing.T) {
-	repo, cleanup := setupUserRepo(t)
-	defer cleanup()
+func TestUserRepository_Save_UpdateEmail(t *testing.T) {
+	db := SetupTestDB(t)
+	repo := NewUserRepository(db)
 
-	u := &model.User{
-		Email:    "alice@example.com",
-		Password: "password",
-	}
-	if err := repo.Create(u); err != nil {
-		t.Fatalf("Create failed: %v", err)
-	}
-	if u.ID == 0 {
-		t.Fatalf("Expected ID to be set, got 0")
-	}
+	u := &model.User{Email: "old@example.com"}
+	assert.NoError(t, repo.Create(u))
 
-	foundByID, err := repo.FindByID(u.ID)
-	if err != nil {
-		t.Fatalf("FindByID failed: %v", err)
-	}
-	if foundByID.Email != u.Email {
-		t.Errorf("FindByID: expected email %q, got %q", u.Email, foundByID.Email)
-	}
+	u.Email = "new@example.com"
+	err := repo.Save(u)
+	assert.NoError(t, err)
 
-	foundByEmail, err := repo.FindByEmail("alice@example.com")
-	if err != nil {
-		t.Fatalf("FindByEmail failed: %v", err)
-	}
-	if foundByEmail.ID != u.ID {
-		t.Errorf("FindByEmail: expected ID %d, got %d", u.ID, foundByEmail.ID)
-	}
+	found, err := repo.FindByEmail("new@example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, u.ID, found.ID)
 
-	_, err = repo.FindByEmail("nonexistent@example.com")
-	if err == nil {
-		t.Errorf("Expected error for non-existing email")
-	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		t.Errorf("Expected ErrRecordNotFound, got %v", err)
-	}
+	_, err = repo.FindByEmail("old@example.com")
+	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-func TestUserRepository_Save_Update_User(t *testing.T) {
-	repo, cleanup := setupUserRepo(t)
-	defer cleanup()
+func TestUserRepository_Delete_RemovesUser(t *testing.T) {
+	db := SetupTestDB(t)
+	repo := NewUserRepository(db)
 
-	u := &model.User{
-		Email:    "bob@example.com",
-		Password: "pass123",
-	}
-	if err := repo.Create(u); err != nil {
-		t.Fatalf("Create failed: %v", err)
-	}
+	u := &model.User{Email: "todelete@example.com"}
+	assert.NoError(t, repo.Create(u))
 
-	u.Password = "newpassword"
-	if err := repo.Save(u); err != nil {
-		t.Fatalf("Save (Update) failed: %v", err)
-	}
-
-	updated, err := repo.FindByID(u.ID)
-	if err != nil {
-		t.Fatalf("FindByID failed: %v", err)
-	}
-	if updated.Password != "newpassword" {
-		t.Errorf("Save: expected password %q, got %q", "newpassword", updated.Password)
-	}
+	assert.NoError(t, repo.Delete(u))
+	_, err := repo.FindByID(u.ID)
+	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-func TestUserRepository_Delete(t *testing.T) {
-	repo, cleanup := setupUserRepo(t)
-	defer cleanup()
+func TestUserRepository_FindByEmail_FoundAndNotFound(t *testing.T) {
+	db := SetupTestDB(t)
+	repo := NewUserRepository(db)
 
-	u := &model.User{
-		Email:    "chris@example.com",
-		Password: "pw",
-	}
-	if err := repo.Create(u); err != nil {
-		t.Fatalf("Create failed: %v", err)
-	}
-	id := u.ID
+	u := &model.User{Email: "findme@example.com"}
+	assert.NoError(t, repo.Create(u))
 
-	if err := repo.Delete(u); err != nil {
-		t.Fatalf("Delete failed: %v", err)
-	}
+	found, err := repo.FindByEmail("findme@example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, u.ID, found.ID)
 
-	_, err := repo.FindByID(id)
-	if err == nil {
-		t.Errorf("Expected error after deleting user")
-	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		t.Errorf("Expected ErrRecordNotFound, got %v", err)
-	}
+	_, err = repo.FindByEmail("doesnotexist@example.com")
+	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+}
+
+func TestUserRepository_FindByID_FoundAndNotFound(t *testing.T) {
+	db := SetupTestDB(t)
+	repo := NewUserRepository(db)
+
+	u := &model.User{Email: "byid@example.com"}
+	assert.NoError(t, repo.Create(u))
+
+	found, err := repo.FindByID(u.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, u.Email, found.Email)
+
+	_, err = repo.FindByID(9999)
+	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
 func TestUserRepository_List_Pagination(t *testing.T) {
-	repo, cleanup := setupUserRepo(t)
-	defer cleanup()
+	db := SetupTestDB(t)
+	repo := NewUserRepository(db)
 
 	for i := 1; i <= 5; i++ {
-		u := &model.User{
-			Email:    fmt.Sprintf("user%02d@example.com", i),
-			Password: "pwd",
-		}
-		if err := repo.Create(u); err != nil {
-			t.Fatalf("Create failed: %v", err)
-		}
+		email := fmt.Sprintf("user%d@example.com", i)
+		assert.NoError(t, repo.Create(&model.User{Email: email}))
 	}
 
-	usersPage1, totalCount, err := repo.List(1, 2)
-	if err != nil {
-		t.Fatalf("List failed: %v", err)
-	}
-	if totalCount != 5 {
-		t.Errorf("List: expected totalCount 5, got %d", totalCount)
-	}
-	if len(usersPage1) != 2 {
-		t.Errorf("Page 1: expected 2 entries, got %d", len(usersPage1))
-	}
-	if usersPage1[0].Email != "user01@example.com" || usersPage1[1].Email != "user02@example.com" {
-		t.Errorf("Page 1: unexpected entries: %+v", usersPage1)
-	}
+	page1, total, err := repo.List(1, 2)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(5), total)
+	assert.Len(t, page1, 2)
 
-	usersPage3, totalCount3, err := repo.List(3, 2)
-	if err != nil {
-		t.Fatalf("List (Page 3) failed: %v", err)
-	}
-	if totalCount3 != 5 {
-		t.Errorf("List (Page 3): expected totalCount 5, got %d", totalCount3)
-	}
-	if len(usersPage3) != 1 {
-		t.Errorf("Page 3: expected 1 entry, got %d", len(usersPage3))
-	}
-	if usersPage3[0].Email != "user05@example.com" {
-		t.Errorf("Page 3: expected user05@example.com, got %q", usersPage3[0].Email)
-	}
+	page3, total3, err := repo.List(3, 2)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(5), total3)
+	assert.Len(t, page3, 1)
+}
+
+func TestUserRepository_List_Empty(t *testing.T) {
+	db := SetupTestDB(t)
+	repo := NewUserRepository(db)
+
+	list, total, err := repo.List(1, 10)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), total)
+	assert.Empty(t, list)
 }

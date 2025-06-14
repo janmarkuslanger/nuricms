@@ -33,7 +33,7 @@ func (r *FieldRepository) FindDisplayFieldsByCollectionID(collectionID uint) ([]
 
 func (r *FieldRepository) FindByID(id uint) (*model.Field, error) {
 	var field model.Field
-	if err := r.db.First(&field, id).Error; err != nil {
+	if err := r.db.Preload("Collection").First(&field, id).Error; err != nil {
 		return nil, err
 	}
 	return &field, nil
@@ -67,4 +67,8 @@ func (r *FieldRepository) List(page, pageSize int) ([]model.Field, int64, error)
 
 func (r *FieldRepository) Create(field *model.Field) error {
 	return r.db.Create(field).Error
+}
+
+func (r *FieldRepository) Delete(field *model.Field) error {
+	return r.db.Delete(field).Error
 }

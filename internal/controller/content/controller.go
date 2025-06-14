@@ -68,7 +68,7 @@ func (ct *Controller) showCreateContent(c *gin.Context) {
 		return
 	}
 
-	fields, err := ct.services.Field.GetByCollectionID(collectionID)
+	fields, err := ct.services.Field.FindByCollectionID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/collections")
 		return
@@ -106,7 +106,7 @@ func (ct *Controller) createContent(c *gin.Context) {
 	}
 
 	db.DB.Transaction(func(tx *gorm.DB) error {
-		fields, err := ct.services.Field.GetByCollectionID(collectionID)
+		fields, err := ct.services.Field.FindByCollectionID(collectionID)
 		if err != nil {
 			return err
 		}
@@ -180,7 +180,7 @@ func (ct *Controller) editContent(c *gin.Context) {
 			return err
 		}
 
-		fields, err := ct.services.Field.GetByCollectionID(collectionID)
+		fields, err := ct.services.Field.FindByCollectionID(collectionID)
 		if err != nil {
 			return err
 		}
@@ -253,7 +253,7 @@ func (ct *Controller) listContent(c *gin.Context) {
 
 	groups := ContentsToContentGroup(contents)
 
-	fields, err := ct.services.Field.GetDisplayFieldsByCollectionID(collectionID)
+	fields, err := ct.services.Field.FindDisplayFieldsByCollectionID(collectionID)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
