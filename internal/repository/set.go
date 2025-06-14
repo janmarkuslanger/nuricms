@@ -6,13 +6,13 @@ import (
 
 type Set struct {
 	Content      ContentRepo
-	Field        *FieldRepository
+	Field        FieldRepo
 	Collection   CollectionRepo
-	ContentValue *ContentValueRepository
+	ContentValue ContentValueRepo
 	Asset        AssetRepo
-	User         *UserRepository
+	User         UserRepo
 	Apikey       ApikeyRepo
-	Webhook      *WebhookRepository
+	Webhook      WebhookRepo
 }
 
 func NewSet(db *gorm.DB) *Set {

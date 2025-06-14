@@ -2,32 +2,32 @@ package repository
 
 import (
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/repository/base"
 	"gorm.io/gorm"
 )
 
-type ContentValueRepository struct {
+type ContentValueRepo interface {
+	base.CRUDRepository[model.ContentValue]
+	FindByContentID(cID uint) ([]model.ContentValue, error)
+}
+
+type contentValueRepository struct {
+	*base.BaseRepository[model.ContentValue]
 	db *gorm.DB
 }
 
-func NewContentValueRepository(db *gorm.DB) *ContentValueRepository {
-	return &ContentValueRepository{db: db}
+func NewContentValueRepository(db *gorm.DB) ContentValueRepo {
+	return &contentValueRepository{
+		BaseRepository: base.NewBaseRepository[model.ContentValue](db),
+		db:             db,
+	}
 }
 
-func (r *ContentValueRepository) Create(cv *model.ContentValue) error {
-	return r.db.Create(&cv).Error
-}
-
-func (r *ContentValueRepository) Save(cv *model.ContentValue) error {
-	return r.db.Save(&cv).Error
-}
-
-func (r *ContentValueRepository) Delete(cv *model.ContentValue) error {
-	return r.db.Delete(&cv).Error
-}
-
-func (r *ContentValueRepository) FindByContentID(cID uint) ([]model.ContentValue, error) {
+func (r *contentValueRepository) FindByContentID(cID uint) ([]model.ContentValue, error) {
 	var cvs []model.ContentValue
-
-	err := r.db.Where("content_id = ?", cID).Find(&cvs).Error
+	err := r.db.
+		Where("content_id = ?", cID).
+		Find(&cvs).
+		Error
 	return cvs, err
 }
