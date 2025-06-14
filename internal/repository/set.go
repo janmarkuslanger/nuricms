@@ -5,7 +5,7 @@ import (
 )
 
 type Set struct {
-	Content      *ContentRepository
+	Content      ContentRepo
 	Field        *FieldRepository
 	Collection   CollectionRepo
 	ContentValue *ContentValueRepository
