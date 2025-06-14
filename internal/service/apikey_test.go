@@ -44,7 +44,7 @@ func (m *mockApikeyRepo) List(page, pageSize int, opts ...base.QueryOption) ([]m
 	return args.Get(0).([]model.Apikey), args.Get(1).(int64), args.Error(2)
 }
 
-func newTestService(repo repository.ApikeyRepo) *ApikeyService {
+func newTestService(repo repository.ApikeyRepo) ApikeyService {
 	set := &repository.Set{Apikey: repo}
 	return NewApikeyService(set)
 }

@@ -10,17 +10,25 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 )
 
-type ApikeyService struct {
+type ApikeyService interface {
+	List(page, pageSize int) ([]model.Apikey, int64, error)
+	Create(name string, ttl time.Duration) (string, error)
+	FindByID(id uint) (*model.Apikey, error)
+	DeleteByID(id uint) error
+	Validate(token string) error
+}
+
+type apikeyService struct {
 	repos *repository.Set
 }
 
-func NewApikeyService(repos *repository.Set) *ApikeyService {
-	return &ApikeyService{
+func NewApikeyService(repos *repository.Set) *apikeyService {
+	return &apikeyService{
 		repos: repos,
 	}
 }
 
-func (s *ApikeyService) Create(name string, ttl time.Duration) (token string, err error) {
+func (s *apikeyService) Create(name string, ttl time.Duration) (token string, err error) {
 	b := make([]byte, 32)
 	if _, err = rand.Read(b); err != nil {
 		return "", err
@@ -42,7 +50,7 @@ func (s *ApikeyService) Create(name string, ttl time.Duration) (token string, er
 	return token, nil
 }
 
-func (s *ApikeyService) Validate(token string) error {
+func (s *apikeyService) Validate(token string) error {
 	apikey, err := s.repos.Apikey.FindByToken(token)
 	if err != nil {
 		return errors.New("invalid api key")
@@ -53,15 +61,15 @@ func (s *ApikeyService) Validate(token string) error {
 	return nil
 }
 
-func (s *ApikeyService) List(page, pageSize int) ([]model.Apikey, int64, error) {
+func (s *apikeyService) List(page, pageSize int) ([]model.Apikey, int64, error) {
 	return s.repos.Apikey.List(page, pageSize)
 }
 
-func (s *ApikeyService) FindByID(id uint) (*model.Apikey, error) {
+func (s *apikeyService) FindByID(id uint) (*model.Apikey, error) {
 	return s.repos.Apikey.FindByID(id)
 }
 
-func (s *ApikeyService) DeleteByID(id uint) error {
+func (s *apikeyService) DeleteByID(id uint) error {
 	apikey, err := s.repos.Apikey.FindByID(id)
 	if err != nil {
 		return err

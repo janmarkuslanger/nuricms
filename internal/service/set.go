@@ -17,7 +17,7 @@ type Set struct {
 	ContentValue *ContentValueService
 	Asset        *AssetService
 	User         *UserService
-	Apikey       *ApikeyService
+	Apikey       ApikeyService
 	Webhook      *WebhookService
 	Api          *ApiService
 }
