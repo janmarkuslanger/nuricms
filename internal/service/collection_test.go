@@ -52,10 +52,9 @@ func (m *mockCollectionRepo) FindByAlias(alias string) (*model.Collection, error
 func newTestCollectionService(repo repository.CollectionRepo) *CollectionService {
 	return NewCollectionService(&repository.Set{Collection: repo})
 }
-
 func TestCollectionService_List(t *testing.T) {
 	repo := new(mockCollectionRepo)
-	svc := newTestCollectionService(repo)
+	svc := NewCollectionService(&repository.Set{Collection: repo})
 
 	sample := []model.Collection{{Model: gorm.Model{ID: 1}}}
 	repo.On("List", 2, 5).Return(sample, int64(1), nil)
@@ -68,12 +67,14 @@ func TestCollectionService_List(t *testing.T) {
 
 func TestCollectionService_List_Error(t *testing.T) {
 	repo := new(mockCollectionRepo)
-	svc := newTestCollectionService(repo)
+	svc := NewCollectionService(&repository.Set{Collection: repo})
 
-	repo.On("List", 1, 1).Return(nil, int64(0), errors.New("fail"))
+	repo.On("List", 1, 1).Return([]model.Collection{}, int64(0), errors.New("fail"))
 
-	_, _, err := svc.List(1, 1)
+	list, total, err := svc.List(1, 1)
 	assert.EqualError(t, err, "fail")
+	assert.Equal(t, int64(0), total)
+	assert.Empty(t, list)
 }
 
 func TestCollectionService_FindByID(t *testing.T) {
