@@ -2,64 +2,34 @@ package repository
 
 import (
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/repository/base"
 	"gorm.io/gorm"
 )
 
-type CollectionRepository struct {
+type CollectionRepo interface {
+	base.CRUDRepository[model.Collection]
+	FindByAlias(alias string) (*model.Collection, error)
+}
+
+type collectionRepository struct {
+	*base.BaseRepository[model.Collection]
 	db *gorm.DB
 }
 
-func NewCollectionRepository(db *gorm.DB) *CollectionRepository {
-	return &CollectionRepository{db: db}
-}
-
-func (r *CollectionRepository) FindByID(id uint) (*model.Collection, error) {
-	var collection model.Collection
-	if err := r.db.Preload("Fields").First(&collection, id).Error; err != nil {
-		return nil, err
+func NewCollectionRepository(db *gorm.DB) CollectionRepo {
+	return &collectionRepository{
+		BaseRepository: base.NewBaseRepository[model.Collection](db),
+		db:             db,
 	}
-	return &collection, nil
 }
 
-func (r *CollectionRepository) FindByAlias(alias string) (*model.Collection, error) {
-	var collection model.Collection
-
-	err := r.db.
-		Preload("Fields").
-		Where("alias = ?", alias).
-		First(&collection).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &collection, nil
+func (r *collectionRepository) FindByAlias(alias string) (*model.Collection, error) {
+	var c model.Collection
+	err := r.db.Preload("Fields").Where("alias = ?", alias).First(&c).Error
+	return &c, err
 }
 
-func (r *CollectionRepository) Create(collection *model.Collection) error {
-	return r.db.Create(collection).Error
-}
-
-func (r *CollectionRepository) Delete(collection *model.Collection) error {
-	return r.db.Delete(collection).Error
-}
-
-func (r *CollectionRepository) Save(collection *model.Collection) error {
-	return r.db.Save(collection).Error
-}
-
-func (r *CollectionRepository) List(page, pageSize int) ([]model.Collection, int64, error) {
-	var collections []model.Collection
-	var totalCount int64
-
-	if err := r.db.Model(&model.Collection{}).Count(&totalCount).Error; err != nil {
-		return nil, 0, err
-	}
-
-	offset := (page - 1) * pageSize
-
-	if err := r.db.Offset(offset).Limit(pageSize).Find(&collections).Error; err != nil {
-		return nil, 0, err
-	}
-
-	return collections, totalCount, nil
+func (r *collectionRepository) FindByID(id uint, opts ...base.QueryOption) (*model.Collection, error) {
+	opts = append([]base.QueryOption{base.Preload("Fields")}, opts...)
+	return r.BaseRepository.FindByID(id, opts...)
 }

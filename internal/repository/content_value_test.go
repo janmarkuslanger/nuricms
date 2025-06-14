@@ -5,60 +5,31 @@ import (
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
-func TestContentValueRepository_Create_Success(t *testing.T) {
+func TestContentValueRepository_FindByContentID(t *testing.T) {
 	db := SetupTestDB(t)
 	repo := NewContentValueRepository(db)
-
-	content := &model.Content{}
-	assert.NoError(t, db.Create(content).Error)
-	field := &model.Field{Name: "F", Alias: "f", FieldType: "text", CollectionID: 1}
-	assert.NoError(t, db.Create(field).Error)
-
-	cv := &model.ContentValue{ContentID: content.ID, FieldID: field.ID, Value: "initial"}
-	err := repo.Create(cv)
-	assert.NoError(t, err)
-	assert.NotZero(t, cv.ID)
-}
-
-func TestContentValueRepository_Save_UpdatesValue(t *testing.T) {
-	db := SetupTestDB(t)
-	repo := NewContentValueRepository(db)
-
-	content := &model.Content{}
-	assert.NoError(t, db.Create(content).Error)
-	field := &model.Field{Name: "F2", Alias: "f2", FieldType: "text", CollectionID: 1}
-	assert.NoError(t, db.Create(field).Error)
-
-	cv := &model.ContentValue{ContentID: content.ID, FieldID: field.ID, Value: "old"}
-	assert.NoError(t, repo.Create(cv))
-
-	cv.Value = "updated"
-	err := repo.Save(cv)
-	assert.NoError(t, err)
-
-	var fetched model.ContentValue
-	assert.NoError(t, db.First(&fetched, cv.ID).Error)
-	assert.Equal(t, "updated", fetched.Value)
-}
-
-func TestContentValueRepository_Delete_RemovesRecord(t *testing.T) {
-	db := SetupTestDB(t)
-	repo := NewContentValueRepository(db)
-
-	content := &model.Content{}
-	assert.NoError(t, db.Create(content).Error)
-	field := &model.Field{Name: "F3", Alias: "f3", FieldType: "text", CollectionID: 1}
-	assert.NoError(t, db.Create(field).Error)
-
-	cv := &model.ContentValue{ContentID: content.ID, FieldID: field.ID, Value: "toDelete"}
-	assert.NoError(t, repo.Create(cv))
-
-	err := repo.Delete(cv)
-	assert.NoError(t, err)
-
-	_, err = db.First(&model.ContentValue{}, cv.ID).Error, gorm.ErrRecordNotFound
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	col := &model.Collection{Name: "col"}
+	db.Create(col)
+	f := &model.Field{Name: "F", Alias: "f", FieldType: "text", CollectionID: col.ID}
+	db.Create(f)
+	c1 := &model.Content{CollectionID: col.ID}
+	db.Create(c1)
+	c2 := &model.Content{CollectionID: col.ID}
+	db.Create(c2)
+	for i := 0; i < 3; i++ {
+		cv := &model.ContentValue{ContentID: c1.ID, FieldID: f.ID, Value: "v1"}
+		repo.Create(cv)
+	}
+	for i := 0; i < 2; i++ {
+		cv := &model.ContentValue{ContentID: c2.ID, FieldID: f.ID, Value: "v2"}
+		repo.Create(cv)
+	}
+	list1, err1 := repo.FindByContentID(c1.ID)
+	assert.NoError(t, err1)
+	assert.Len(t, list1, 3)
+	list2, err2 := repo.FindByContentID(c2.ID)
+	assert.NoError(t, err2)
+	assert.Len(t, list2, 2)
 }
