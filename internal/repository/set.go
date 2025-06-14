@@ -11,7 +11,7 @@ type Set struct {
 	ContentValue *ContentValueRepository
 	Asset        *AssetRepository
 	User         *UserRepository
-	Apikey       *ApikeyRepository
+	Apikey       ApikeyRepo
 	Webhook      *WebhookRepository
 }
 

@@ -5,6 +5,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type ApikeyRepo interface {
+	Create(key *model.Apikey) error
+	List(page, pageSize int) ([]model.Apikey, int64, error)
+	Delete(apikey *model.Apikey) error
+	FindByToken(token string) (*model.Apikey, error)
+	FindByID(id uint) (*model.Apikey, error)
+}
+
 type ApikeyRepository struct {
 	db *gorm.DB
 }
