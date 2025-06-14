@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
 func TestUserRepository_FindByEmail_Success(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewUserRepository(db)
 	u := &model.User{Email: "test@example.com"}
 	assert.NoError(t, repo.Create(u))
@@ -19,7 +20,7 @@ func TestUserRepository_FindByEmail_Success(t *testing.T) {
 }
 
 func TestUserRepository_FindByEmail_NotFound(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewUserRepository(db)
 	_, err := repo.FindByEmail("missing@example.com")
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)

@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFieldRepository_FindByCollectionID(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewFieldRepository(db)
 	col := &model.Collection{Name: "C1"}
 	assert.NoError(t, db.Create(col).Error)
@@ -25,7 +26,7 @@ func TestFieldRepository_FindByCollectionID(t *testing.T) {
 }
 
 func TestFieldRepository_FindDisplayFieldsByCollectionID(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewFieldRepository(db)
 	col := &model.Collection{Name: "C2"}
 	assert.NoError(t, db.Create(col).Error)

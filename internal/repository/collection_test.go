@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
 func TestCollectionFindByID_Success(t *testing.T) {
-	db, err := CreateTestDB()
+	db, err := testutils.CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
 	}
@@ -26,7 +27,7 @@ func TestCollectionFindByID_Success(t *testing.T) {
 }
 
 func TestCollectionFindByID_NotFound(t *testing.T) {
-	db, err := CreateTestDB()
+	db, err := testutils.CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
 	}
@@ -37,7 +38,7 @@ func TestCollectionFindByID_NotFound(t *testing.T) {
 }
 
 func TestCollectionFindByAlias_Success(t *testing.T) {
-	db, err := CreateTestDB()
+	db, err := testutils.CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
 	}
@@ -54,7 +55,7 @@ func TestCollectionFindByAlias_Success(t *testing.T) {
 }
 
 func TestCollectionFindByAlias_NotFound(t *testing.T) {
-	db, err := CreateTestDB()
+	db, err := testutils.CreateTestDB()
 	if err != nil {
 		t.Fatalf("failed to create database: %v", err)
 	}

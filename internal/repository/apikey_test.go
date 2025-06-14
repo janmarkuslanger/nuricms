@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
 func TestApikeyRepository_FindByToken_Success(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewApikeyRepository(db)
 	future := time.Now().Add(time.Hour)
 	exp := &model.Apikey{Name: "KeyA", Token: "tokenA", ExpiresAt: &future}
@@ -21,7 +22,7 @@ func TestApikeyRepository_FindByToken_Success(t *testing.T) {
 }
 
 func TestApikeyRepository_FindByToken_NotFound(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewApikeyRepository(db)
 	_, err := repo.FindByToken("doesnotexist")
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)

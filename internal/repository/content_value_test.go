@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestContentValueRepository_FindByContentID(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewContentValueRepository(db)
 	col := &model.Collection{Name: "col"}
 	db.Create(col)

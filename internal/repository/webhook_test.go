@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWebhookRepository_ListByEvent(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewWebhookRepository(db)
 	w1 := &model.Webhook{Url: "u1", Events: "a,b"}
 	w2 := &model.Webhook{Url: "u2", Events: "b"}
@@ -26,7 +27,7 @@ func TestWebhookRepository_ListByEvent(t *testing.T) {
 }
 
 func TestWebhookRepository_ListByEvent_None(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewWebhookRepository(db)
 	w := &model.Webhook{Url: "u", Events: "x,y"}
 	assert.NoError(t, repo.Create(w))

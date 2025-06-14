@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
 func TestContentRepository_DeleteByID(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewContentRepository(db)
 	col := &model.Collection{Name: "col"}
 	db.Create(col)
@@ -22,7 +23,7 @@ func TestContentRepository_DeleteByID(t *testing.T) {
 }
 
 func TestContentRepository_FindByCollectionID(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewContentRepository(db)
 	col := &model.Collection{Name: "col"}
 	db.Create(col)
@@ -42,7 +43,7 @@ func TestContentRepository_FindByCollectionID(t *testing.T) {
 }
 
 func TestContentRepository_FindDisplayValueByCollectionID(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewContentRepository(db)
 	col := &model.Collection{Name: "col"}
 	db.Create(col)
@@ -75,7 +76,7 @@ func TestContentRepository_FindDisplayValueByCollectionID(t *testing.T) {
 }
 
 func TestContentRepository_ListWithDisplayContentValue(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewContentRepository(db)
 	col := &model.Collection{Name: "col"}
 	db.Create(col)
@@ -100,7 +101,7 @@ func TestContentRepository_ListWithDisplayContentValue(t *testing.T) {
 }
 
 func TestContentRepository_FindByCollectionAndFieldValue(t *testing.T) {
-	db := SetupTestDB(t)
+	db := testutils.SetupTestDB(t)
 	repo := NewContentRepository(db)
 	col := &model.Collection{Name: "col"}
 	db.Create(col)
