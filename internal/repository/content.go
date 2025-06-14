@@ -13,11 +13,8 @@ func NewContentRepository(db *gorm.DB) *ContentRepository {
 	return &ContentRepository{db: db}
 }
 
-func (r *ContentRepository) Create(content *model.Content) (model.Content, error) {
-	if err := r.db.Create(&content).Error; err != nil {
-		return *content, err
-	}
-	return *content, nil
+func (r *ContentRepository) Create(content *model.Content) error {
+	return r.db.Create(&content).Error
 }
 
 func (r *ContentRepository) FindByID(id uint) (model.Content, error) {

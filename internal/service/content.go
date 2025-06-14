@@ -1,8 +1,11 @@
 package service
 
 import (
+	"github.com/janmarkuslanger/nuricms/internal/db"
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
+	"gorm.io/gorm"
 )
 
 type ContentService struct {
@@ -13,8 +16,8 @@ func NewContentService(repos *repository.Set) *ContentService {
 	return &ContentService{repos: repos}
 }
 
-func (s *ContentService) Create(c *model.Content) (model.Content, error) {
-	return s.repos.Content.Create(c)
+func (s *ContentService) Create(c *model.Content) (*model.Content, error) {
+	return c, s.repos.Content.Create(c)
 }
 
 func (s *ContentService) FindByID(id uint) (model.Content, error) {
@@ -42,4 +45,40 @@ func (s *ContentService) FindDisplayValueByCollectionID(collectionID uint, page,
 
 func (s *ContentService) FindContentsWithDisplayContentValue() ([]model.Content, error) {
 	return s.repos.Content.ListWithDisplayContentValue()
+}
+
+func (s *ContentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
+	var content model.Content
+	err := db.DB.Transaction(func(tx *gorm.DB) error {
+		fields, err := s.repos.Field.FindByCollectionID(cwv.CollectionID)
+		if err != nil {
+			return err
+		}
+
+		content = model.Content{CollectionID: cwv.CollectionID}
+
+		err = s.repos.Content.Create(&content)
+		if err != nil {
+			return err
+		}
+
+		for _, f := range fields {
+			for i, v := range cwv.FormData[f.Alias] {
+				cv := model.ContentValue{
+					SortIndex: i + 1,
+					ContentID: content.ID,
+					FieldID:   f.ID,
+					Value:     v,
+				}
+
+				if err := s.repos.ContentValue.Create(&cv); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return &content, err
 }

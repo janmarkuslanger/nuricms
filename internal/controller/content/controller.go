@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/db"
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/service"
@@ -100,55 +101,18 @@ func (ct *Controller) showCreateContent(c *gin.Context) {
 
 func (ct *Controller) createContent(c *gin.Context) {
 	collectionID, ok := utils.StringToUint(c.Param("id"))
-	if !ok {
+	if err := c.Request.ParseForm(); err != nil || !ok {
 		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
-	db.DB.Transaction(func(tx *gorm.DB) error {
-		fields, err := ct.services.Field.FindByCollectionID(collectionID)
-		if err != nil {
-			return err
-		}
+	if _, err := ct.services.Content.CreateWithValues(dto.ContentWithValues{
+		CollectionID: collectionID,
+		FormData:     c.Request.PostForm,
+	}); err == nil {
+		ct.services.Webhook.Dispatch(string(model.EventContentCreated), nil)
+	}
 
-		content := model.Content{CollectionID: collectionID}
-		newContent, err := ct.services.Content.Create(&content)
-		if err != nil {
-			return err
-		}
-
-		for _, field := range fields {
-			if field.IsList {
-				vals := c.PostFormArray(field.Alias)
-				for idx, val := range vals {
-					cv := model.ContentValue{
-						SortIndex: idx + 1,
-						ContentID: newContent.ID,
-						FieldID:   field.ID,
-						Value:     val,
-					}
-					if err := ct.services.ContentValue.Create(&cv); err != nil {
-						return err
-					}
-				}
-			} else {
-				val := c.PostForm(field.Alias)
-				cv := model.ContentValue{
-					SortIndex: 1,
-					ContentID: newContent.ID,
-					FieldID:   field.ID,
-					Value:     val,
-				}
-				if err := ct.services.ContentValue.Create(&cv); err != nil {
-					return err
-				}
-			}
-		}
-
-		return nil
-	})
-
-	ct.services.Webhook.Dispatch(string(model.EventContentCreated), nil)
 	c.Redirect(http.StatusSeeOther, "/content/collections")
 }
 
