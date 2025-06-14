@@ -2,12 +2,20 @@ package utils
 
 import (
 	"html/template"
+	"io/fs"
 	"net/http"
+
 	"slices"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/embedfs"
 )
+
+var templatesFS fs.FS = embedfs.TemplatesFS
+
+func SetTemplatesFS(f fs.FS) {
+	templatesFS = f
+}
 
 var funcMap = template.FuncMap{
 	"safeHTML": func(s string) template.HTML { return template.HTML(s) },
@@ -24,17 +32,21 @@ func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, status
 		data["IsLoggedIn"] = false
 	}
 
-	tmpl := template.Must(
-		template.New("layout.tmpl").
-			Funcs(funcMap).
-			ParseFS(
-				embedfs.TemplatesFS,
-				"templates/base/layout.tmpl",
-				"templates/"+contentTemplate,
-			),
-	)
+	tmpl, err := template.New("layout.tmpl").
+		Funcs(funcMap).
+		ParseFS(
+			templatesFS,
+			"templates/base/layout.tmpl",
+			"templates/"+contentTemplate,
+		)
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Template parse error: %v", err)
+		return
+	}
 
 	c.Status(statusCode)
+
 	if err := tmpl.ExecuteTemplate(c.Writer, "layout.tmpl", data); err != nil {
 		c.String(http.StatusInternalServerError, "Template error: %v", err)
 	}
