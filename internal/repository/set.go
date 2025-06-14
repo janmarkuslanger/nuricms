@@ -7,9 +7,9 @@ import (
 type Set struct {
 	Content      *ContentRepository
 	Field        *FieldRepository
-	Collection   *CollectionRepository
+	Collection   CollectionRepo
 	ContentValue *ContentValueRepository
-	Asset        *AssetRepository
+	Asset        AssetRepo
 	User         *UserRepository
 	Apikey       ApikeyRepo
 	Webhook      *WebhookRepository
