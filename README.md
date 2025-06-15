@@ -4,6 +4,10 @@
 
 ---
 
+<img src="demo.png" alt="Dashboard Screenshot" width="800"/>
+
+---
+
 ![Coverage Badge](coverage_badge.svg)
 
 ---
