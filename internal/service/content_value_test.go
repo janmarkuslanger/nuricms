@@ -37,7 +37,7 @@ func (m *mockContentValueRepo) List(page, pageSize int, opts ...base.QueryOption
 	return nil, 0, nil
 }
 
-func newTestContentValueService(repo *mockContentValueRepo, hr *plugin.HookRegistry) *ContentValueService {
+func newTestContentValueService(repo *mockContentValueRepo, hr *plugin.HookRegistry) ContentValueService {
 	return NewContentValueService(&repository.Set{ContentValue: repo}, hr)
 }
 

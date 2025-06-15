@@ -10,23 +10,36 @@ import (
 	"gorm.io/gorm"
 )
 
-type ContentService struct {
+type ContentService interface {
+	DeleteContentValuesByID(id uint) error
+	EditWithValues(cwv dto.ContentWithValues) (*model.Content, error)
+	DeleteByID(id uint) error
+	CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error)
+	FindContentsWithDisplayContentValue() ([]model.Content, error)
+	FindDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error)
+	FindByCollectionID(collectionID uint) ([]model.Content, error)
+	ListByCollectionAlias(alias string, offset int, limit int) ([]model.Content, error)
+	FindByID(id uint) (*model.Content, error)
+	Create(c *model.Content) (*model.Content, error)
+}
+
+type contentService struct {
 	repos *repository.Set
 }
 
-func NewContentService(repos *repository.Set) *ContentService {
-	return &ContentService{repos: repos}
+func NewContentService(repos *repository.Set) *contentService {
+	return &contentService{repos: repos}
 }
 
-func (s *ContentService) Create(c *model.Content) (*model.Content, error) {
+func (s *contentService) Create(c *model.Content) (*model.Content, error) {
 	return c, s.repos.Content.Create(c)
 }
 
-func (s *ContentService) FindByID(id uint) (*model.Content, error) {
+func (s *contentService) FindByID(id uint) (*model.Content, error) {
 	return s.repos.Content.FindByID(id)
 }
 
-func (s *ContentService) ListByCollectionAlias(alias string, offset int, limit int) ([]model.Content, error) {
+func (s *contentService) ListByCollectionAlias(alias string, offset int, limit int) ([]model.Content, error) {
 	var contents []model.Content
 
 	collection, err := s.repos.Collection.FindByAlias(alias)
@@ -37,19 +50,19 @@ func (s *ContentService) ListByCollectionAlias(alias string, offset int, limit i
 	return s.repos.Content.FindByCollectionID(collection.ID, offset, limit)
 }
 
-func (s *ContentService) FindByCollectionID(collectionID uint) ([]model.Content, error) {
+func (s *contentService) FindByCollectionID(collectionID uint) ([]model.Content, error) {
 	return s.repos.Content.FindByCollectionID(collectionID, 0, 0)
 }
 
-func (s *ContentService) FindDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error) {
+func (s *contentService) FindDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error) {
 	return s.repos.Content.FindDisplayValueByCollectionID(collectionID, page, pageSize)
 }
 
-func (s *ContentService) FindContentsWithDisplayContentValue() ([]model.Content, error) {
+func (s *contentService) FindContentsWithDisplayContentValue() ([]model.Content, error) {
 	return s.repos.Content.ListWithDisplayContentValue()
 }
 
-func (s *ContentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
+func (s *contentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
 	var content model.Content
 	err := db.DB.Transaction(func(tx *gorm.DB) error {
 		fields, err := s.repos.Field.FindByCollectionID(cwv.CollectionID)
@@ -85,7 +98,7 @@ func (s *ContentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Con
 	return &content, err
 }
 
-func (s *ContentService) DeleteByID(id uint) error {
+func (s *contentService) DeleteByID(id uint) error {
 	return db.DB.Transaction(func(tx *gorm.DB) error {
 		err := s.repos.Content.DeleteByID(id)
 		if err != nil {
@@ -101,7 +114,7 @@ func (s *ContentService) DeleteByID(id uint) error {
 	})
 }
 
-func (s *ContentService) DeleteContentValuesByID(id uint) error {
+func (s *contentService) DeleteContentValuesByID(id uint) error {
 	values, err := s.repos.ContentValue.FindByContentID(id)
 	if err != nil {
 		return err
@@ -117,7 +130,7 @@ func (s *ContentService) DeleteContentValuesByID(id uint) error {
 	return nil
 }
 
-func (s *ContentService) EditWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
+func (s *contentService) EditWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
 	var content model.Content
 	err := db.DB.Transaction(func(tx *gorm.DB) error {
 		content, err := s.repos.Content.FindByID(cwv.ContentID)

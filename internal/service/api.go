@@ -8,12 +8,19 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/utils"
 )
 
-type ApiService struct {
+type ApiService interface {
+	FindContentByCollectionAlias(alias string, offset int, perPage int) ([]ContentItemResponse, error)
+	FindContentByID(id uint) (ContentItemResponse, error)
+	FindContentByCollectionAndFieldValue(alias, fieldAlias, value string, offset, perPage int) ([]ContentItemResponse, error)
+	PrepareContent(ce *model.Content) (ContentItemResponse, error)
+}
+
+type apiService struct {
 	repos *repository.Set
 }
 
-func NewApiService(repos *repository.Set) *ApiService {
-	return &ApiService{
+func NewApiService(repos *repository.Set) ApiService {
+	return &apiService{
 		repos: repos,
 	}
 }
@@ -46,7 +53,7 @@ type ContentValueResponse struct {
 	Asset      *AssetResponse      `json:"asset,omitempty"`
 }
 
-func (s *ApiService) prepareContent(ce *model.Content) (ContentItemResponse, error) {
+func (s *apiService) PrepareContent(ce *model.Content) (ContentItemResponse, error) {
 	values := make(map[string]any, len(ce.ContentValues))
 
 	for _, cv := range ce.ContentValues {
@@ -109,7 +116,7 @@ func (s *ApiService) prepareContent(ce *model.Content) (ContentItemResponse, err
 	}, nil
 }
 
-func (s *ApiService) FindContentByCollectionAlias(alias string, offset int, perPage int) ([]ContentItemResponse, error) {
+func (s *apiService) FindContentByCollectionAlias(alias string, offset int, perPage int) ([]ContentItemResponse, error) {
 	var data []ContentItemResponse
 
 	collection, err := s.repos.Collection.FindByAlias(alias)
@@ -123,7 +130,7 @@ func (s *ApiService) FindContentByCollectionAlias(alias string, offset int, perP
 	}
 
 	for _, ce := range content {
-		ci, err := s.prepareContent(&ce)
+		ci, err := s.PrepareContent(&ce)
 		if err != nil {
 			return data, nil
 		}
@@ -134,7 +141,7 @@ func (s *ApiService) FindContentByCollectionAlias(alias string, offset int, perP
 	return data, nil
 }
 
-func (s *ApiService) FindContentByID(id uint) (ContentItemResponse, error) {
+func (s *apiService) FindContentByID(id uint) (ContentItemResponse, error) {
 	var data ContentItemResponse
 
 	content, err := s.repos.Content.FindByID(id)
@@ -142,15 +149,15 @@ func (s *ApiService) FindContentByID(id uint) (ContentItemResponse, error) {
 		return data, err
 	}
 
-	return s.prepareContent(content)
+	return s.PrepareContent(content)
 }
 
-func (s *ApiService) FindContentByCollectionAndFieldValue(alias, fieldAlias, value string, offset, perPage int) ([]ContentItemResponse, error) {
+func (s *apiService) FindContentByCollectionAndFieldValue(alias, fieldAlias, value string, offset, perPage int) ([]ContentItemResponse, error) {
 	collection, _ := s.repos.Collection.FindByAlias(alias)
 	contents, _, _ := s.repos.Content.FindByCollectionAndFieldValue(collection.ID, fieldAlias, value, offset, perPage)
 	var items []ContentItemResponse
 	for _, ce := range contents {
-		ci, _ := s.prepareContent(&ce)
+		ci, _ := s.PrepareContent(&ce)
 		items = append(items, ci)
 	}
 	return items, nil

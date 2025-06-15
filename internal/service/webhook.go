@@ -12,19 +12,28 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 )
 
-type WebhookService struct {
+type WebhookService interface {
+	Create(name string, url string, requestType model.RequestType, events map[model.EventType]bool) (*model.Webhook, error)
+	List(page, pageSize int) ([]model.Webhook, int64, error)
+	FindByID(id uint) (*model.Webhook, error)
+	Save(webhook *model.Webhook) error
+	DeleteByID(id uint) error
+	Dispatch(event string, payload any)
+}
+
+type webhookService struct {
 	repos      *repository.Set
 	httpClient *http.Client
 }
 
-func NewWebhookService(repos *repository.Set) *WebhookService {
-	return &WebhookService{
+func NewWebhookService(repos *repository.Set) WebhookService {
+	return &webhookService{
 		repos:      repos,
 		httpClient: &http.Client{Timeout: 5 * time.Second},
 	}
 }
 
-func (s *WebhookService) Create(name string, url string, requestType model.RequestType, events map[model.EventType]bool) (*model.Webhook, error) {
+func (s *webhookService) Create(name string, url string, requestType model.RequestType, events map[model.EventType]bool) (*model.Webhook, error) {
 	var eventString strings.Builder
 	for k, v := range events {
 		if !v {
@@ -46,19 +55,19 @@ func (s *WebhookService) Create(name string, url string, requestType model.Reque
 	return &webhook, err
 }
 
-func (s *WebhookService) List(page, pageSize int) ([]model.Webhook, int64, error) {
+func (s *webhookService) List(page, pageSize int) ([]model.Webhook, int64, error) {
 	return s.repos.Webhook.List(page, pageSize)
 }
 
-func (s *WebhookService) FindByID(id uint) (*model.Webhook, error) {
+func (s *webhookService) FindByID(id uint) (*model.Webhook, error) {
 	return s.repos.Webhook.FindByID(id)
 }
 
-func (s *WebhookService) Save(webhook *model.Webhook) error {
+func (s *webhookService) Save(webhook *model.Webhook) error {
 	return s.repos.Webhook.Save(webhook)
 }
 
-func (s *WebhookService) DeleteByID(id uint) error {
+func (s *webhookService) DeleteByID(id uint) error {
 	webhook, err := s.FindByID(id)
 	if err != nil {
 		return err
@@ -67,7 +76,7 @@ func (s *WebhookService) DeleteByID(id uint) error {
 	return s.repos.Webhook.Delete(webhook)
 }
 
-func (s *WebhookService) Dispatch(event string, payload any) {
+func (s *webhookService) Dispatch(event string, payload any) {
 	hooks, err := s.repos.Webhook.ListByEvent(event)
 	if err != nil {
 		fmt.Println("Webhook find error:", err)

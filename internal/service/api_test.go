@@ -55,7 +55,7 @@ func TestApiService_prepareContent_SimpleAndListCollectionAsset(t *testing.T) {
 
 	ce.ContentValues = []model.ContentValue{cv1, cv2, cv3, cv4, cv5}
 
-	resp, err := s.prepareContent(ce)
+	resp, err := s.PrepareContent(ce)
 	assert.NoError(t, err)
 	assert.Equal(t, ce.ID, resp.ID)
 	assert.Equal(t, now.Unix(), resp.CreatedAt.Unix())

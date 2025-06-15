@@ -11,15 +11,15 @@ import (
 )
 
 type Set struct {
-	Collection   *CollectionService
-	Field        *FieldService
-	Content      *ContentService
-	ContentValue *ContentValueService
-	Asset        *AssetService
-	User         *UserService
+	Collection   CollectionService
+	Field        FieldService
+	Content      ContentService
+	ContentValue ContentValueService
+	Asset        AssetService
+	User         UserService
 	Apikey       ApikeyService
-	Webhook      *WebhookService
-	Api          *ApiService
+	Webhook      WebhookService
+	Api          ApiService
 }
 
 func NewSet(r *repository.Set, hr *plugin.HookRegistry) (*Set, error) {

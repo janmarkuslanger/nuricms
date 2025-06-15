@@ -8,27 +8,36 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 )
 
-type CollectionService struct {
+type CollectionService interface {
+	UpdateByID(collectionID uint, data dto.CollectionData) (*model.Collection, error)
+	DeleteByID(collectionID uint) error
+	Create(data *dto.CollectionData) (*model.Collection, error)
+	FindByAlias(alias string) (*model.Collection, error)
+	FindByID(id uint) (*model.Collection, error)
+	List(page, pageSize int) ([]model.Collection, int64, error)
+}
+
+type collectionService struct {
 	repos *repository.Set
 }
 
-func NewCollectionService(repos *repository.Set) *CollectionService {
-	return &CollectionService{repos: repos}
+func NewCollectionService(repos *repository.Set) CollectionService {
+	return &collectionService{repos: repos}
 }
 
-func (s *CollectionService) List(page, pageSize int) ([]model.Collection, int64, error) {
+func (s *collectionService) List(page, pageSize int) ([]model.Collection, int64, error) {
 	return s.repos.Collection.List(page, pageSize)
 }
 
-func (s *CollectionService) FindByID(id uint) (*model.Collection, error) {
+func (s *collectionService) FindByID(id uint) (*model.Collection, error) {
 	return s.repos.Collection.FindByID(id)
 }
 
-func (s *CollectionService) FindByAlias(alias string) (*model.Collection, error) {
+func (s *collectionService) FindByAlias(alias string) (*model.Collection, error) {
 	return s.repos.Collection.FindByAlias(alias)
 }
 
-func (s *CollectionService) Create(data *dto.CollectionData) (*model.Collection, error) {
+func (s *collectionService) Create(data *dto.CollectionData) (*model.Collection, error) {
 	collection := &model.Collection{
 		Name:        data.Name,
 		Alias:       data.Alias,
@@ -43,7 +52,7 @@ func (s *CollectionService) Create(data *dto.CollectionData) (*model.Collection,
 	return collection, nil
 }
 
-func (s *CollectionService) DeleteByID(collectionID uint) error {
+func (s *collectionService) DeleteByID(collectionID uint) error {
 	collection, err := s.FindByID(uint(collectionID))
 	if err != nil {
 		return err
@@ -52,7 +61,7 @@ func (s *CollectionService) DeleteByID(collectionID uint) error {
 	return s.repos.Collection.Delete(collection)
 }
 
-func (s *CollectionService) UpdateByID(collectionID uint, data dto.CollectionData) (*model.Collection, error) {
+func (s *collectionService) UpdateByID(collectionID uint, data dto.CollectionData) (*model.Collection, error) {
 	collection, err := s.FindByID(uint(collectionID))
 	if err != nil {
 		return nil, err

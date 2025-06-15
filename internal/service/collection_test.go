@@ -49,7 +49,7 @@ func (m *mockCollectionRepo) FindByAlias(alias string) (*model.Collection, error
 	return nil, args.Error(1)
 }
 
-func newTestCollectionService(repo repository.CollectionRepo) *CollectionService {
+func newTestCollectionService(repo repository.CollectionRepo) CollectionService {
 	return NewCollectionService(&repository.Set{Collection: repo})
 }
 func TestCollectionService_List(t *testing.T) {

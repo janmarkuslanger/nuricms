@@ -9,31 +9,41 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/utils"
 )
 
-type FieldService struct {
+type FieldService interface {
+	DeleteByID(id uint) error
+	FindByCollectionID(collectionID uint) ([]model.Field, error)
+	FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error)
+	FindByID(id uint) (*model.Field, error)
+	List(page, pageSize int) ([]model.Field, int64, error)
+	Create(data dto.FieldData) (*model.Field, error)
+	UpdateByID(id uint, data dto.FieldData) (*model.Field, error)
+}
+
+type fieldService struct {
 	repos *repository.Set
 }
 
-func NewFieldService(repos *repository.Set) *FieldService {
-	return &FieldService{repos: repos}
+func NewFieldService(repos *repository.Set) FieldService {
+	return &fieldService{repos: repos}
 }
 
-func (s *FieldService) FindByCollectionID(collectionID uint) ([]model.Field, error) {
+func (s *fieldService) FindByCollectionID(collectionID uint) ([]model.Field, error) {
 	return s.repos.Field.FindByCollectionID(collectionID)
 }
 
-func (s *FieldService) FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {
+func (s *fieldService) FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {
 	return s.repos.Field.FindDisplayFieldsByCollectionID(collectionID)
 }
 
-func (s *FieldService) FindByID(id uint) (*model.Field, error) {
+func (s *fieldService) FindByID(id uint) (*model.Field, error) {
 	return s.repos.Field.FindByID(id)
 }
 
-func (s *FieldService) List(page, pageSize int) ([]model.Field, int64, error) {
+func (s *fieldService) List(page, pageSize int) ([]model.Field, int64, error) {
 	return s.repos.Field.List(page, pageSize)
 }
 
-func (s *FieldService) UpdateByID(id uint, data dto.FieldData) (*model.Field, error) {
+func (s *fieldService) UpdateByID(id uint, data dto.FieldData) (*model.Field, error) {
 	field, err := s.repos.Field.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -64,7 +74,7 @@ func (s *FieldService) UpdateByID(id uint, data dto.FieldData) (*model.Field, er
 	return field, err
 }
 
-func (s *FieldService) Create(data dto.FieldData) (*model.Field, error) {
+func (s *fieldService) Create(data dto.FieldData) (*model.Field, error) {
 	collectionID, ok := utils.StringToUint(data.CollectionID)
 	if !ok {
 		return nil, errors.New("cannot convert collection id")
@@ -92,7 +102,7 @@ func (s *FieldService) Create(data dto.FieldData) (*model.Field, error) {
 	return &field, err
 }
 
-func (s *FieldService) DeleteByID(id uint) error {
+func (s *fieldService) DeleteByID(id uint) error {
 	field, err := s.repos.Field.FindByID(id)
 	if err != nil {
 		return err

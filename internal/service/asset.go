@@ -10,17 +10,26 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 )
 
-type AssetService struct {
+type AssetService interface {
+	List(page, pageSize int) ([]model.Asset, int64, error)
+	DeleteByID(id uint) error
+	Save(asset *model.Asset) error
+	Create(asset *model.Asset) error
+	UploadFile(c *gin.Context, file *multipart.FileHeader) (string, error)
+	FindByID(id uint) (*model.Asset, error)
+}
+
+type assetService struct {
 	repos *repository.Set
 }
 
-func NewAssetService(repos *repository.Set) *AssetService {
-	return &AssetService{
+func NewAssetService(repos *repository.Set) AssetService {
+	return &assetService{
 		repos: repos,
 	}
 }
 
-func (s *AssetService) UploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
+func (s *assetService) UploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 	savePath := filepath.Join("public", "assets", file.Filename)
 	if err := c.SaveUploadedFile(file, savePath); err != nil {
 		return savePath, err
@@ -29,19 +38,19 @@ func (s *AssetService) UploadFile(c *gin.Context, file *multipart.FileHeader) (s
 	return savePath, nil
 }
 
-func (s *AssetService) Create(asset *model.Asset) error {
+func (s *assetService) Create(asset *model.Asset) error {
 	return s.repos.Asset.Create(asset)
 }
 
-func (s *AssetService) Save(asset *model.Asset) error {
+func (s *assetService) Save(asset *model.Asset) error {
 	return s.repos.Asset.Save(asset)
 }
 
-func (s *AssetService) FindByID(id uint) (*model.Asset, error) {
+func (s *assetService) FindByID(id uint) (*model.Asset, error) {
 	return s.repos.Asset.FindByID(id)
 }
 
-func (s *AssetService) DeleteByID(id uint) error {
+func (s *assetService) DeleteByID(id uint) error {
 	asset, err := s.repos.Asset.FindByID(id)
 
 	if err != nil {
@@ -58,6 +67,6 @@ func (s *AssetService) DeleteByID(id uint) error {
 	return err
 }
 
-func (s *AssetService) List(page, pageSize int) ([]model.Asset, int64, error) {
+func (s *assetService) List(page, pageSize int) ([]model.Asset, int64, error) {
 	return s.repos.Asset.List(page, pageSize)
 }
