@@ -25,7 +25,7 @@ var funcMap = template.FuncMap{
 	"in":       func(s string, list []string) bool { return slices.Contains(list, s) },
 }
 
-func RenderWithLayout(c *gin.Context, contentTemplate string, data gin.H, statusCode int) {
+var RenderWithLayout = func(c *gin.Context, contentTemplate string, data gin.H, statusCode int) {
 	if _, ok := c.Get("userID"); ok {
 		data["IsLoggedIn"] = true
 	} else {
