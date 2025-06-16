@@ -14,6 +14,10 @@ func MakeGETContext(path string) (*gin.Context, *httptest.ResponseRecorder) {
 	return c, w
 }
 
+func SetParam(c *gin.Context, key, value string) {
+	c.Params = append(c.Params, gin.Param{Key: key, Value: value})
+}
+
 func StubRenderWithLayout() func() {
 	orig := utils.RenderWithLayout
 	utils.RenderWithLayout = func(c *gin.Context, contentTemplate string, data gin.H, statusCode int) {

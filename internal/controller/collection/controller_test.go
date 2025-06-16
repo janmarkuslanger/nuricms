@@ -1,4 +1,4 @@
-package apikey
+package collection
 
 import (
 	"errors"
@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createMockController(svc service.ApikeyService) *Controller {
+func createMockController(svc service.CollectionService) *Controller {
 	gin.SetMode(gin.TestMode)
-	svcSet := &service.Set{Apikey: svc}
+	svcSet := &service.Set{Collection: svc}
 	return NewController(svcSet)
 }
 
