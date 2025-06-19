@@ -25,5 +25,5 @@ jobs:
       - name: Build
         run: go build ./...
 
-      - name: Test & generate coverage
+      - name: Test
         run: go test ./...
