@@ -92,3 +92,40 @@ func TestApiController_CreateApiKey_EmptyName(t *testing.T) {
 	assert.Equal(t, "/apikeys/create", w.Header().Get("Location"))
 	svc.AssertExpectations(t)
 }
+
+func TestShowEditApikey_InvalidParam(t *testing.T) {
+	svc := new(testutils.MockApikeyService)
+	ct := createMockController(svc)
+	c, w := testutils.MakeGETContext("/apikeys/edit/abc")
+	testutils.SetParam(c, "id", "abc")
+	ct.showEditApikey(c)
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	assert.Equal(t, "/apikeys", w.Header().Get("Location"))
+}
+
+func TestShowEditApikey_NotFound(t *testing.T) {
+	svc := new(testutils.MockApikeyService)
+	svc.On("FindByID", uint(5)).Return((*model.Apikey)(nil), errors.New("not found"))
+	ct := createMockController(svc)
+	c, w := testutils.MakeGETContext("/apikeys/edit/5")
+	testutils.SetParam(c, "id", "5")
+	ct.showEditApikey(c)
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	assert.Equal(t, "/apikeys", w.Header().Get("Location"))
+	svc.AssertExpectations(t)
+}
+
+func TestShowEditApikey_Success(t *testing.T) {
+	svc := new(testutils.MockApikeyService)
+	ap := &model.Apikey{Name: "Key", Token: "tok"}
+	svc.On("FindByID", uint(1)).Return(ap, nil)
+	ct := createMockController(svc)
+	teardown := testutils.StubRenderWithLayout()
+	defer teardown()
+	c, w := testutils.MakeGETContext("/apikeys/edit/1")
+	testutils.SetParam(c, "id", "1")
+	ct.showEditApikey(c)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "RENDERED:apikey/create_or_edit.tmpl")
+	svc.AssertExpectations(t)
+}
