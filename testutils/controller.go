@@ -1,7 +1,10 @@
 package testutils
 
 import (
+	"fmt"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
@@ -11,6 +14,19 @@ func MakeGETContext(path string) (*gin.Context, *httptest.ResponseRecorder) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest("GET", path, nil)
+	return c, w
+}
+
+func MakePOSTContext(path string, formData gin.H) (*gin.Context, *httptest.ResponseRecorder) {
+	body := url.Values{}
+	for key, value := range formData {
+		body.Set(key, fmt.Sprintf("%v", value))
+	}
+	req := httptest.NewRequest("POST", path, strings.NewReader(body.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
 	return c, w
 }
 

@@ -3,7 +3,7 @@ package repository
 import (
 	"testing"
 
-	"github.com/janmarkuslanger/nuricms/internal/testutils"
+	"github.com/janmarkuslanger/nuricms/testutils"
 	"github.com/stretchr/testify/assert"
 )
 

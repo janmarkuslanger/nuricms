@@ -13,7 +13,7 @@ import (
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
-	"github.com/janmarkuslanger/nuricms/internal/testutils"
+	"github.com/janmarkuslanger/nuricms/testutils"
 )
 
 func TestWebhookService_Create_List_Find_Save_Delete(t *testing.T) {

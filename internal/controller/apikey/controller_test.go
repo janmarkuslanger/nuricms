@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/service"
-	"github.com/janmarkuslanger/nuricms/internal/testutils"
+	"github.com/janmarkuslanger/nuricms/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,3 +57,34 @@ func TestApiController_ShowEditApiKeys_Success(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "RENDERED:apikey/create_or_edit.tmpl")
 	svc.AssertExpectations(t)
 }
+
+// func TestApiController_CreateApiKey_Success(t *testing.T) {
+// 	svc := new(testutils.MockApikeyService)
+// 	svc.On("Create", "TestKey", uint(0)).Return(nil)
+// 	ct := createMockController(svc)
+
+// 	c, w := testutils.MakePOSTContext("/apikeys/create", gin.H{
+// 		"name": "TestKey",
+// 	})
+
+// 	ct.createApikey(c)
+
+// 	assert.Equal(t, http.StatusSeeOther, w.Code)
+// 	assert.Equal(t, "/apikeys", w.Header().Get("Location"))
+// 	svc.AssertExpectations(t)
+// }
+
+// func TestApiController_CreateApiKey_EmptyName(t *testing.T) {
+// 	svc := new(testutils.MockApikeyService)
+// 	ct := createMockController(svc)
+
+// 	c, w := testutils.MakePOSTContext("/apikeys/create", gin.H{
+// 		"name": "",
+// 	})
+
+// 	ct.createApikey(c)
+
+// 	assert.Equal(t, http.StatusSeeOther, w.Code)
+// 	assert.Equal(t, "/apikeys", w.Header().Get("Location"))
+// 	svc.AssertExpectations(t)
+// }

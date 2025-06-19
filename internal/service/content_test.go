@@ -7,7 +7,7 @@ import (
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
-	"github.com/janmarkuslanger/nuricms/internal/testutils"
+	"github.com/janmarkuslanger/nuricms/testutils"
 )
 
 func TestContentService_CreateAndFindByID(t *testing.T) {
