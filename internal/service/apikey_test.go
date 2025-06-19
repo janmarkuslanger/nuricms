@@ -57,7 +57,7 @@ func TestApikeyService_Create_Success(t *testing.T) {
 			return a.Name == "test" && len(a.Token) == 64
 		})).
 		Return(nil)
-	token, err := svc.Create("test", 0)
+	token, err := svc.CreateToken("test", 0)
 	assert.NoError(t, err)
 	assert.Len(t, token, 64)
 	repo.AssertExpectations(t)
@@ -67,7 +67,7 @@ func TestApikeyService_Create_FailureOnRepo(t *testing.T) {
 	repo := new(mockApikeyRepo)
 	svc := newTestService(repo)
 	repo.On("Create", mock.Anything).Return(errors.New("db error"))
-	token, err := svc.Create("xyz", time.Minute)
+	token, err := svc.CreateToken("xyz", time.Minute)
 	assert.Empty(t, token)
 	assert.EqualError(t, err, "db error")
 }

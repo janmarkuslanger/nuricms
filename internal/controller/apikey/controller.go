@@ -66,10 +66,11 @@ func (ct *Controller) showCreateApikey(c *gin.Context) {
 
 func (ct *Controller) createApikey(c *gin.Context) {
 	name := c.PostForm("name")
-	if name == "" {
-		c.Redirect(http.StatusSeeOther, "/apikeys")
+	_, err := ct.services.Apikey.CreateToken(name, 0)
+	if err != nil {
+		c.Redirect(http.StatusSeeOther, "/apikeys/create")
+		return
 	}
-	ct.services.Apikey.Create(name, 0)
 	c.Redirect(http.StatusSeeOther, "/apikeys")
 }
 
@@ -77,11 +78,13 @@ func (ct *Controller) showEditApikey(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
+		return
 	}
 
 	apikey, err := ct.services.Apikey.FindByID(id)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
+		return
 	}
 
 	utils.RenderWithLayout(c, "apikey/create_or_edit.tmpl", gin.H{
@@ -93,6 +96,7 @@ func (ct *Controller) deleteApikey(c *gin.Context) {
 	id, ok := utils.StringToUint(c.Param("id"))
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/apikeys")
+		return
 	}
 
 	ct.services.Apikey.DeleteByID(id)

@@ -12,7 +12,7 @@ import (
 
 type ApikeyService interface {
 	List(page, pageSize int) ([]model.Apikey, int64, error)
-	Create(name string, ttl time.Duration) (string, error)
+	CreateToken(name string, ttl time.Duration) (string, error)
 	FindByID(id uint) (*model.Apikey, error)
 	DeleteByID(id uint) error
 	Validate(token string) error
@@ -28,7 +28,11 @@ func NewApikeyService(repos *repository.Set) *apikeyService {
 	}
 }
 
-func (s *apikeyService) Create(name string, ttl time.Duration) (token string, err error) {
+func (s *apikeyService) CreateToken(name string, ttl time.Duration) (token string, err error) {
+	if name == "" {
+		return "", errors.New("no name given")
+	}
+
 	b := make([]byte, 32)
 	if _, err = rand.Read(b); err != nil {
 		return "", err

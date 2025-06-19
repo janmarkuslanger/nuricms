@@ -13,7 +13,7 @@ func (m *MockApikeyService) List(page, pageSize int) ([]model.Apikey, int64, err
 	args := m.Called(page, pageSize)
 	return args.Get(0).([]model.Apikey), args.Get(1).(int64), args.Error(2)
 }
-func (m *MockApikeyService) Create(name string, ttl time.Duration) (string, error) {
+func (m *MockApikeyService) CreateToken(name string, ttl time.Duration) (string, error) {
 	args := m.Called(name, ttl)
 	return args.String(0), args.Error(1)
 }

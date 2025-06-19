@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/model"
@@ -58,33 +59,36 @@ func TestApiController_ShowEditApiKeys_Success(t *testing.T) {
 	svc.AssertExpectations(t)
 }
 
-// func TestApiController_CreateApiKey_Success(t *testing.T) {
-// 	svc := new(testutils.MockApikeyService)
-// 	svc.On("Create", "TestKey", uint(0)).Return(nil)
-// 	ct := createMockController(svc)
+func TestApiController_CreateApiKey_Success(t *testing.T) {
+	svc := new(testutils.MockApikeyService)
+	svc.On("CreateToken", "TestKey", time.Duration(0)).Return("hello_world", nil)
+	ct := createMockController(svc)
+	teardown := testutils.StubRenderWithLayout()
+	defer teardown()
 
-// 	c, w := testutils.MakePOSTContext("/apikeys/create", gin.H{
-// 		"name": "TestKey",
-// 	})
+	c, w := testutils.MakePOSTContext("/apikeys/create", gin.H{
+		"name": "TestKey",
+	})
+	ct.createApikey(c)
 
-// 	ct.createApikey(c)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "/apikeys", w.Header().Get("Location"))
+	svc.AssertExpectations(t)
+}
 
-// 	assert.Equal(t, http.StatusSeeOther, w.Code)
-// 	assert.Equal(t, "/apikeys", w.Header().Get("Location"))
-// 	svc.AssertExpectations(t)
-// }
+func TestApiController_CreateApiKey_EmptyName(t *testing.T) {
+	svc := new(testutils.MockApikeyService)
+	svc.On("CreateToken", "", time.Duration(0)).Return("", errors.New("Is error"))
+	ct := createMockController(svc)
+	teardown := testutils.StubRenderWithLayout()
+	defer teardown()
 
-// func TestApiController_CreateApiKey_EmptyName(t *testing.T) {
-// 	svc := new(testutils.MockApikeyService)
-// 	ct := createMockController(svc)
+	c, w := testutils.MakePOSTContext("/apikeys/create", gin.H{
+		"name": "",
+	})
+	ct.createApikey(c)
 
-// 	c, w := testutils.MakePOSTContext("/apikeys/create", gin.H{
-// 		"name": "",
-// 	})
-
-// 	ct.createApikey(c)
-
-// 	assert.Equal(t, http.StatusSeeOther, w.Code)
-// 	assert.Equal(t, "/apikeys", w.Header().Get("Location"))
-// 	svc.AssertExpectations(t)
-// }
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "/apikeys/create", w.Header().Get("Location"))
+	svc.AssertExpectations(t)
+}
