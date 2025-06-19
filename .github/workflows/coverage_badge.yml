@@ -22,7 +22,7 @@ jobs:
         run: go mod download
 
       - name: Run tests & generate coverage
-        run:  go test -covermode=count -coverprofile=coverage.out ./pkg/... ./internal/... ./cmd/...
+        run:  go test -covermode=count -coverprofile=coverage.out ./...
 
       - name: Generate coverage badge (SVG)
         run: |
