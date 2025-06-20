@@ -199,3 +199,36 @@ func (m *MockUserService) ValidateJWT(tokenStr string) (uint, string, model.Role
 	args := m.Called(tokenStr)
 	return args.Get(0).(uint), args.String(1), args.Get(2).(model.Role), args.Error(3)
 }
+
+type MockWebhookService struct {
+	mock.Mock
+}
+
+func (m *MockWebhookService) Create(name string, url string, requestType model.RequestType, events map[model.EventType]bool) (*model.Webhook, error) {
+	args := m.Called(name, url, requestType, events)
+	return args.Get(0).(*model.Webhook), args.Error(1)
+}
+
+func (m *MockWebhookService) List(page, pageSize int) ([]model.Webhook, int64, error) {
+	args := m.Called(page, pageSize)
+	return args.Get(0).([]model.Webhook), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockWebhookService) FindByID(id uint) (*model.Webhook, error) {
+	args := m.Called(id)
+	return args.Get(0).(*model.Webhook), args.Error(1)
+}
+
+func (m *MockWebhookService) Save(webhook *model.Webhook) error {
+	args := m.Called(webhook)
+	return args.Error(0)
+}
+
+func (m *MockWebhookService) DeleteByID(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *MockWebhookService) Dispatch(event string, payload any) {
+	m.Called(event, payload)
+}
