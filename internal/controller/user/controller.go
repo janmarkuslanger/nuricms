@@ -150,7 +150,7 @@ func (ct *Controller) editUser(c *gin.Context) {
 
 func (ct *Controller) createUser(c *gin.Context) {
 	email := c.PostForm("email")
-	password := c.PostForm("email")
+	password := c.PostForm("password")
 	role := c.PostForm("role")
 
 	_, err := ct.services.User.Create(email, password, model.Role(role))

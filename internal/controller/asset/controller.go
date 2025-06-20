@@ -66,6 +66,7 @@ func (ct *Controller) deleteAsset(c *gin.Context) {
 
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/assets")
+		return
 	}
 
 	ct.services.Asset.DeleteByID(id)
@@ -77,12 +78,14 @@ func (ct *Controller) showEditAsset(c *gin.Context) {
 
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/assets")
+		return
 	}
 
 	asset, err := ct.services.Asset.FindByID(id)
 
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/assets")
+		return
 	}
 
 	utils.RenderWithLayout(c, "asset/create_or_edit.tmpl", gin.H{
@@ -95,6 +98,7 @@ func (ct *Controller) createAsset(c *gin.Context) {
 
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/assets")
+		return
 	}
 
 	name := c.PostForm("name")
@@ -102,6 +106,7 @@ func (ct *Controller) createAsset(c *gin.Context) {
 
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/assets")
+		return
 	}
 
 	ct.services.Asset.Create(&model.Asset{
@@ -117,12 +122,14 @@ func (ct *Controller) editAsset(c *gin.Context) {
 
 	if !ok {
 		c.Redirect(http.StatusSeeOther, "/assets")
+		return
 	}
 
 	asset, err := ct.services.Asset.FindByID(id)
 
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/assets")
+		return
 	}
 
 	file, err := c.FormFile("file")
@@ -131,6 +138,7 @@ func (ct *Controller) editAsset(c *gin.Context) {
 		path, err := ct.services.Asset.UploadFile(c, file)
 		if err != nil {
 			c.Redirect(http.StatusSeeOther, "/assets")
+			return
 		}
 
 		asset.Path = path
