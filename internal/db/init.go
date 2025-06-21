@@ -1,20 +1,23 @@
 package db
 
 import (
-	"gorm.io/driver/sqlite"
+	"errors"
+
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
-func Init() *gorm.DB {
-	var err error
-	db, err := gorm.Open(sqlite.Open("nuricms.db"), &gorm.Config{})
+func Init(dl gorm.Dialector) (*gorm.DB, error) {
+	if dl == nil {
+		return nil, errors.New("no database dialector provided")
+	}
 
+	db, err := gorm.Open(dl, &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		return nil, err
 	}
 
 	DB = db
-	return db
+	return db, nil
 }

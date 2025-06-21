@@ -17,6 +17,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/pkg/plugin"
+	"gorm.io/driver/sqlite"
 )
 
 type ServerConfig struct {
@@ -36,7 +37,11 @@ func StartServer(config *ServerConfig) {
 	}
 
 	router := gin.Default()
-	database := db.Init()
+	database, err := db.Init(sqlite.Open("nuricms.db"))
+	if err != nil {
+		panic("failed to init db")
+	}
+
 	repos := repository.NewSet(database)
 	services, _ := service.NewSet(repos, hr)
 
