@@ -23,6 +23,7 @@ func TestInit_WithSQLiteMemory(t *testing.T) {
 
 func TestInit_InvalidDriver_Panics(t *testing.T) {
 	db, err := Init(nil)
+
 	assert.Error(t, err)
 	assert.Nil(t, db)
 }
