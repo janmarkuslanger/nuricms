@@ -2,9 +2,6 @@
 
 **nuricms is a api first content management system written in go.**
 
-
-![Coverage Badge](coverage_badge.svg)
-
 ---
 
 <img src="demo.png" alt="Dashboard Screenshot" width="800"/>
