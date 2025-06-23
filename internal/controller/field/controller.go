@@ -68,9 +68,8 @@ func (ct *Controller) showCreateField(c *gin.Context) {
 }
 
 func (ct *Controller) showEditField(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/fields", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/fields")
 		return
 	}
 
@@ -118,9 +117,8 @@ func (ct *Controller) createField(c *gin.Context) {
 }
 
 func (ct *Controller) editField(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/fields", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/fields")
 		return
 	}
 
@@ -145,9 +143,8 @@ func (ct *Controller) editField(c *gin.Context) {
 }
 
 func (ct *Controller) deleteField(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/fields", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/fields")
 		return
 	}
 

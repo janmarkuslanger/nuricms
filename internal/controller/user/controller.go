@@ -92,13 +92,12 @@ func (ct *Controller) showCreateUser(c *gin.Context) {
 }
 
 func (ct *Controller) showEditUser(c *gin.Context) {
-	userID, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/user", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/user")
 		return
 	}
 
-	user, err := ct.services.User.FindByID(userID)
+	user, err := ct.services.User.FindByID(id)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/user")
 	}
@@ -110,13 +109,12 @@ func (ct *Controller) showEditUser(c *gin.Context) {
 }
 
 func (ct *Controller) editUser(c *gin.Context) {
-	userID, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/user", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/user")
 		return
 	}
 
-	user, err := ct.services.User.FindByID(userID)
+	user, err := ct.services.User.FindByID(id)
 	if err != nil {
 		c.Redirect(http.StatusSeeOther, "/user")
 	}
@@ -151,10 +149,9 @@ func (ct *Controller) createUser(c *gin.Context) {
 }
 
 func (ct *Controller) deleteUser(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
-
+	id, ok := utils.GetParamOrRedirect(c, "/user", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/user")
+		return
 	}
 
 	ct.services.User.DeleteByID(id)

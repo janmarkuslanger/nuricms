@@ -128,9 +128,8 @@ func (ct *Controller) editCollection(c *gin.Context) {
 }
 
 func (ct *Controller) deleteCollection(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/collections", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/collections")
 		return
 	}
 

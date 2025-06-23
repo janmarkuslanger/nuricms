@@ -79,9 +79,9 @@ func (ct *Controller) createWebhook(c *gin.Context) {
 }
 
 func (ct *Controller) showEditWebhook(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/webhooks", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/webhooks")
+		return
 	}
 
 	webhook, err := ct.services.Webhook.FindByID(id)
@@ -98,9 +98,9 @@ func (ct *Controller) showEditWebhook(c *gin.Context) {
 }
 
 func (ct *Controller) editWebhook(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/webhooks", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/webhooks")
+		return
 	}
 
 	webhook, err := ct.services.Webhook.FindByID(id)
@@ -136,10 +136,9 @@ func (ct *Controller) editWebhook(c *gin.Context) {
 }
 
 func (ct *Controller) deleteWebhook(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
-
+	id, ok := utils.GetParamOrRedirect(c, "/webhooks", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/user")
+		return
 	}
 
 	ct.services.Webhook.DeleteByID(id)

@@ -48,9 +48,8 @@ func (ct *Controller) showCollections(c *gin.Context) {
 }
 
 func (ct *Controller) showCreateContent(c *gin.Context) {
-	collectionID, ok := utils.StringToUint(c.Param("id"))
+	collectionID, ok := utils.GetParamOrRedirect(c, "/content/collections", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
@@ -122,9 +121,8 @@ func (ct *Controller) editContent(c *gin.Context) {
 }
 
 func (ct *Controller) listContent(c *gin.Context) {
-	collectionID, ok := utils.StringToUint(c.Param("id"))
+	collectionID, ok := utils.GetParamOrRedirect(c, "/content/collections", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
@@ -169,9 +167,8 @@ func (ct *Controller) listContent(c *gin.Context) {
 }
 
 func (ct *Controller) showEditContent(c *gin.Context) {
-	collectionID, ok := utils.StringToUint(c.Param("id"))
+	collectionID, ok := utils.GetParamOrRedirect(c, "/content/collections", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 
@@ -208,9 +205,8 @@ func (ct *Controller) showEditContent(c *gin.Context) {
 }
 
 func (ct *Controller) deleteContent(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("contentID"))
+	id, ok := utils.GetParamOrRedirect(c, "/content/collections", "contentID")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/content/collections")
 		return
 	}
 

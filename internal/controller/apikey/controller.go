@@ -63,9 +63,8 @@ func (ct *Controller) createApikey(c *gin.Context) {
 }
 
 func (ct *Controller) showEditApikey(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/apikeys", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/apikeys")
 		return
 	}
 
@@ -81,9 +80,8 @@ func (ct *Controller) showEditApikey(c *gin.Context) {
 }
 
 func (ct *Controller) deleteApikey(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
+	id, ok := utils.GetParamOrRedirect(c, "/apikeys", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/apikeys")
 		return
 	}
 

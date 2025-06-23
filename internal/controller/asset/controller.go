@@ -50,10 +50,8 @@ func (ct *Controller) showCreateAsset(c *gin.Context) {
 }
 
 func (ct *Controller) deleteAsset(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
-
+	id, ok := utils.GetParamOrRedirect(c, "/assets", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/assets")
 		return
 	}
 
@@ -62,10 +60,8 @@ func (ct *Controller) deleteAsset(c *gin.Context) {
 }
 
 func (ct *Controller) showEditAsset(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
-
+	id, ok := utils.GetParamOrRedirect(c, "/assets", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/assets")
 		return
 	}
 
@@ -106,10 +102,8 @@ func (ct *Controller) createAsset(c *gin.Context) {
 }
 
 func (ct *Controller) editAsset(c *gin.Context) {
-	id, ok := utils.StringToUint(c.Param("id"))
-
+	id, ok := utils.GetParamOrRedirect(c, "/assets", "id")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/assets")
 		return
 	}
 
