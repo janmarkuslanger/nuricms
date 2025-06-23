@@ -210,7 +210,7 @@ func (ct *Controller) deleteContent(c *gin.Context) {
 		return
 	}
 
-	if err := ct.services.Content.DeleteByID(id); err != nil {
+	if err := ct.services.Content.DeleteByID(id); err == nil {
 		ct.services.Webhook.Dispatch(string(model.EventContentDeleted), nil)
 	}
 

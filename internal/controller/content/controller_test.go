@@ -102,7 +102,6 @@ func TestDeleteContent_ErrorFromService(t *testing.T) {
 	mockWebhook := new(testutils.MockWebhookService)
 
 	mockContent.On("DeleteByID", uint(123)).Return(errors.New("fail"))
-	mockWebhook.On("Dispatch", string(model.EventContentDeleted), nil).Return()
 
 	ct := createMockController(&service.Set{
 		Content: mockContent,
