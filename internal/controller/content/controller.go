@@ -113,7 +113,7 @@ func (ct *Controller) editContent(c *gin.Context) {
 		CollectionID: colID,
 		ContentID:    conID,
 		FormData:     c.Request.PostForm,
-	}); err != nil {
+	}); err == nil {
 		ct.services.Webhook.Dispatch(string(model.EventContentUpdated), nil)
 	}
 

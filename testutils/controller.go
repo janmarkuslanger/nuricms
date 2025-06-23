@@ -1,7 +1,6 @@
 package testutils
 
 import (
-	"bytes"
 	"fmt"
 	"net/http/httptest"
 	"net/url"
@@ -32,14 +31,18 @@ func MakePOSTContext(path string, formData gin.H) (*gin.Context, *httptest.Respo
 }
 
 func MakeBrokenPOSTContext(path string) (*gin.Context, *httptest.ResponseRecorder) {
-	body := bytes.NewBufferString("this=is&not=valid&url=encoded=data")
-
-	req := httptest.NewRequest("POST", path, body)
+	req := httptest.NewRequest("POST", path, &brokenReader{})
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
 	return c, w
+}
+
+type brokenReader struct{}
+
+func (b *brokenReader) Read(p []byte) (int, error) {
+	return 0, fmt.Errorf("broken reader")
 }
 
 func SetParam(c *gin.Context, key, value string) {

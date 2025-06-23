@@ -118,3 +118,45 @@ func TestDeleteContent_ErrorFromService(t *testing.T) {
 	mockContent.AssertExpectations(t)
 	mockWebhook.AssertExpectations(t)
 }
+
+func TestEditContent_Success(t *testing.T) {
+	mockContent := new(testutils.MockContentService)
+	mockWebhook := new(testutils.MockWebhookService)
+	ct := createMockController(&service.Set{
+		Content: mockContent,
+		Webhook: mockWebhook,
+	})
+
+	form := gin.H{"title": "Updated Title"}
+	c, w := testutils.MakePOSTContext("/content/collections/1/edit/1", form)
+	testutils.SetParam(c, "id", "1")
+	testutils.SetParam(c, "contentID", "1")
+
+	mockContent.On("EditWithValues", mock.Anything).Return(&model.Content{}, nil)
+	mockWebhook.On("Dispatch", string(model.EventContentUpdated), nil).Return()
+
+	ct.editContent(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "/content/collections", w.Header().Get("Location"))
+	mockContent.AssertExpectations(t)
+	mockWebhook.AssertExpectations(t)
+}
+
+func TestEditContent_BadForm(t *testing.T) {
+	mockContent := new(testutils.MockContentService)
+	mockWebhook := new(testutils.MockWebhookService)
+	ct := createMockController(&service.Set{
+		Content: mockContent,
+		Webhook: mockWebhook,
+	})
+
+	c, w := testutils.MakeBrokenPOSTContext("/content/collections/1/edit/1")
+	testutils.SetParam(c, "id", "1")
+	testutils.SetParam(c, "contentID", "1")
+
+	ct.editContent(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "/content/collections", w.Header().Get("Location"))
+}
