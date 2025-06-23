@@ -1,6 +1,7 @@
 package content
 
 import (
+	"fmt"
 	"html/template"
 	"path/filepath"
 
@@ -16,35 +17,48 @@ type FieldContent struct {
 	Assets  []model.Asset
 }
 
+func renderField(content FieldContent) (template.HTML, error) {
+	var html template.HTML
+	templateName := config.FieldTemplates[string(content.Field.FieldType)]
+	templatePath := filepath.Join("templates", templateName+".tmpl")
+	templateContent, err := utilstemplate.RenderTemplate(templatePath, content)
+	if err != nil {
+		return html, err
+	}
+
+	return template.HTML(templateContent), nil
+}
+
 func RenderFields(fields []FieldContent) []template.HTML {
 	var htmlFields []template.HTML
 
 	for _, field := range fields {
-		templateName := config.FieldTemplates[string(field.Field.FieldType)]
-		templatePath := filepath.Join("templates", templateName+".tmpl")
-		templateContent, err := utilstemplate.RenderTemplate(templatePath, field)
-
+		html, err := renderField(field)
 		if err == nil {
-			safeHtml := template.HTML(templateContent)
-			htmlFields = append(htmlFields, safeHtml)
+			htmlFields = append(htmlFields, html)
 		}
 	}
 
 	return htmlFields
 }
 
-// TODO: too much args
-func ContentToFieldContent(content model.Content, collection model.Collection, contents []model.Content, assets []model.Asset) map[string]FieldContent {
+type DataContext struct {
+	collection model.Collection
+	contents   []model.Content
+	assets     []model.Asset
+}
+
+func ContentToFieldContent(content model.Content, ctx DataContext) map[string]FieldContent {
 	fields := make(map[string]FieldContent)
 
-	for _, field := range collection.Fields {
+	for _, field := range ctx.collection.Fields {
 		values := make([]model.ContentValue, 0)
 
 		fields[field.Alias] = FieldContent{
 			Field:   field,
 			Values:  values,
-			Content: contents,
-			Assets:  assets,
+			Content: ctx.contents,
+			Assets:  ctx.assets,
 		}
 	}
 
@@ -62,23 +76,19 @@ func ContentToFieldContent(content model.Content, collection model.Collection, c
 	return fields
 }
 
-// TODO: too much args
-func RenderFieldsByContent(content model.Content, collection model.Collection, contents []model.Content, assets []model.Asset) []template.HTML {
+func RenderFieldsByContent(content model.Content, ctx DataContext) []template.HTML {
 	var htmlFields []template.HTML
 
-	fields := ContentToFieldContent(content, collection, contents, assets)
+	fields := ContentToFieldContent(content, ctx)
 
 	for _, field := range fields {
-		templateName := config.FieldTemplates[string(field.Field.FieldType)]
-		templatePath := filepath.Join("templates", templateName+".tmpl")
-
-		templateContent, err := utilstemplate.RenderTemplate(templatePath, field)
+		html, err := renderField(field)
 		if err != nil {
+			fmt.Print("error render field: ", field)
 			continue
 		}
 
-		safeHtml := template.HTML(templateContent)
-		htmlFields = append(htmlFields, safeHtml)
+		htmlFields = append(htmlFields, html)
 	}
 
 	return htmlFields

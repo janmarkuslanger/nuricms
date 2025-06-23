@@ -209,7 +209,11 @@ func (ct *Controller) showEditContent(c *gin.Context) {
 	assets, _, err := ct.services.Asset.List(1, 100000)
 
 	utils.RenderWithLayout(c, "content/create_or_edit.tmpl", gin.H{
-		"FieldsHtml": RenderFieldsByContent(*contentEntry, *collection, contents, assets),
+		"FieldsHtml": RenderFieldsByContent(*contentEntry, DataContext{
+			collection: *collection,
+			contents:   contents,
+			assets:     assets,
+		}),
 		"Collection": collection,
 		"Content":    contentEntry,
 	}, http.StatusOK)
