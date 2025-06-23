@@ -2,7 +2,6 @@ package field
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
@@ -32,33 +31,22 @@ func (ct *Controller) RegisterRoutes(r *gin.Engine) {
 }
 
 func (ct *Controller) listFields(c *gin.Context) {
-	page := c.DefaultQuery("page", "1")
-	pageSize := c.DefaultQuery("pageSize", "10")
+	page, pageSize := utils.ParsePagination(c)
 
-	pageNum, err := strconv.Atoi(page)
-	if err != nil {
-		pageNum = 1
-	}
-
-	pageSizeNum, err := strconv.Atoi(pageSize)
-	if err != nil {
-		pageSizeNum = 10
-	}
-
-	fields, totalCount, err := ct.services.Field.List(pageNum, pageSizeNum)
+	fields, totalCount, err := ct.services.Field.List(page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve fields."})
 		return
 	}
 
-	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
+	totalPages := (totalCount + int64(pageSize) - 1) / int64(pageSize)
 
 	utils.RenderWithLayout(c, "field/index.tmpl", gin.H{
 		"Fields":      fields,
 		"TotalCount":  totalCount,
 		"TotalPages":  totalPages,
-		"CurrentPage": pageNum,
-		"PageSize":    pageSizeNum,
+		"CurrentPage": page,
+		"PageSize":    pageSize,
 	}, http.StatusOK)
 }
 

@@ -33,29 +33,17 @@ func (ct *Controller) RegisterRoutes(r *gin.Engine) {
 }
 
 func (ct *Controller) showCollections(c *gin.Context) {
-	page := c.DefaultQuery("page", "1")
-	pageSize := c.DefaultQuery("pageSize", "10")
+	page, pageSize := utils.ParsePagination(c)
+	collections, totalCount, _ := ct.services.Collection.List(page, pageSize)
 
-	pageNum, err := strconv.Atoi(page)
-	if err != nil {
-		pageNum = 1
-	}
-
-	pageSizeNum, err := strconv.Atoi(pageSize)
-	if err != nil {
-		pageSizeNum = 10
-	}
-
-	collections, totalCount, err := ct.services.Collection.List(pageNum, pageSizeNum)
-
-	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
+	totalPages := (totalCount + int64(pageSize) - 1) / int64(pageSize)
 
 	utils.RenderWithLayout(c, "content/collections.tmpl", gin.H{
 		"Collections": collections,
 		"TotalCount":  totalCount,
 		"TotalPages":  totalPages,
-		"CurrentPage": pageNum,
-		"PageSize":    pageSizeNum,
+		"CurrentPage": page,
+		"PageSize":    pageSize,
 	}, http.StatusOK)
 }
 

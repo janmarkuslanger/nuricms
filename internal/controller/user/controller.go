@@ -2,7 +2,6 @@ package user
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
@@ -66,34 +65,23 @@ func (ct *Controller) login(c *gin.Context) {
 }
 
 func (ct *Controller) showUser(c *gin.Context) {
-	page := c.DefaultQuery("page", "1")
-	pageSize := c.DefaultQuery("pageSize", "10")
+	page, pageSize := utils.ParsePagination(c)
 
-	pageNum, err := strconv.Atoi(page)
-	if err != nil {
-		pageNum = 1
-	}
-
-	pageSizeNum, err := strconv.Atoi(pageSize)
-	if err != nil {
-		pageSizeNum = 10
-	}
-
-	users, totalCount, err := ct.services.User.List(pageNum, pageSizeNum)
+	users, totalCount, err := ct.services.User.List(page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users."})
 		return
 	}
 
-	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
+	totalPages := (totalCount + int64(pageSize) - 1) / int64(pageSize)
 
 	utils.RenderWithLayout(c, "user/index.tmpl", gin.H{
 		"Roles":       model.GetUserRoles(),
 		"User":        users,
 		"TotalCount":  totalCount,
 		"TotalPages":  totalPages,
-		"CurrentPage": pageNum,
-		"PageSize":    pageSizeNum,
+		"CurrentPage": page,
+		"PageSize":    pageSize,
 	}, http.StatusOK)
 }
 
