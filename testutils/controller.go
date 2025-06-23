@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"bytes"
 	"fmt"
 	"net/http/httptest"
 	"net/url"
@@ -23,6 +24,17 @@ func MakePOSTContext(path string, formData gin.H) (*gin.Context, *httptest.Respo
 		body.Set(key, fmt.Sprintf("%v", value))
 	}
 	req := httptest.NewRequest("POST", path, strings.NewReader(body.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	return c, w
+}
+
+func MakeBrokenPOSTContext(path string) (*gin.Context, *httptest.ResponseRecorder) {
+	body := bytes.NewBufferString("this=is&not=valid&url=encoded=data")
+
+	req := httptest.NewRequest("POST", path, body)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)

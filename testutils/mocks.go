@@ -232,3 +232,69 @@ func (m *MockWebhookService) DeleteByID(id uint) error {
 func (m *MockWebhookService) Dispatch(event string, payload any) {
 	m.Called(event, payload)
 }
+
+type MockContentService struct {
+	mock.Mock
+}
+
+func (m *MockContentService) DeleteContentValuesByID(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *MockContentService) EditWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
+	args := m.Called(cwv)
+	if obj := args.Get(0); obj != nil {
+		return obj.(*model.Content), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *MockContentService) DeleteByID(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *MockContentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
+	args := m.Called(cwv)
+	if obj := args.Get(0); obj != nil {
+		return obj.(*model.Content), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *MockContentService) FindContentsWithDisplayContentValue() ([]model.Content, error) {
+	args := m.Called()
+	return args.Get(0).([]model.Content), args.Error(1)
+}
+
+func (m *MockContentService) FindDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error) {
+	args := m.Called(collectionID, page, pageSize)
+	return args.Get(0).([]model.Content), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockContentService) FindByCollectionID(collectionID uint) ([]model.Content, error) {
+	args := m.Called(collectionID)
+	return args.Get(0).([]model.Content), args.Error(1)
+}
+
+func (m *MockContentService) ListByCollectionAlias(alias string, offset int, limit int) ([]model.Content, error) {
+	args := m.Called(alias, offset, limit)
+	return args.Get(0).([]model.Content), args.Error(1)
+}
+
+func (m *MockContentService) FindByID(id uint) (*model.Content, error) {
+	args := m.Called(id)
+	if obj := args.Get(0); obj != nil {
+		return obj.(*model.Content), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *MockContentService) Create(c *model.Content) (*model.Content, error) {
+	args := m.Called(c)
+	if obj := args.Get(0); obj != nil {
+		return obj.(*model.Content), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
