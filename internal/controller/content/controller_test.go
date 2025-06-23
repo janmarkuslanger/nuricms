@@ -1,5 +1,3 @@
-// Filename: internal/controller/content/controller_test.go
-
 package content
 
 import (
