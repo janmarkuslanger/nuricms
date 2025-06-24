@@ -49,6 +49,12 @@ func TestContentsToContentGroup(t *testing.T) {
 }
 
 func TestRenderFields_Success(t *testing.T) {
+	original := utilstemplate.RenderTemplate
+	defer func() { utilstemplate.RenderTemplate = original }()
+
+	utilstemplate.RenderTemplate = func(templatePath string, data any) (string, error) {
+		return "<div>Mocked</div>", nil
+	}
 	field := model.Field{Alias: "body", FieldType: "text"}
 	contentField := FieldContent{
 		Field:   field,
@@ -57,7 +63,8 @@ func TestRenderFields_Success(t *testing.T) {
 		Assets:  []model.Asset{},
 	}
 
-	RenderFields([]FieldContent{contentField})
+	f := RenderFields([]FieldContent{contentField})
+	assert.Len(t, f, 1)
 }
 
 func TestRenderFieldsByContent(t *testing.T) {
