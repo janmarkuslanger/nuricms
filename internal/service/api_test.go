@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/janmarkuslanger/nuricms/internal/db"
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/testutils"
@@ -60,15 +61,15 @@ func TestApiService_prepareContent_SimpleAndListCollectionAsset(t *testing.T) {
 	assert.Equal(t, ce.ID, resp.ID)
 	assert.Equal(t, now.Unix(), resp.CreatedAt.Unix())
 	assert.Equal(t, now.Unix(), resp.UpdatedAt.Unix())
-	v := resp.Values["text"].(ContentValueResponse)
+	v := resp.Values["text"].(dto.ContentValueResponse)
 	assert.Equal(t, uint(1), v.ID)
 	assert.Equal(t, "hello", v.Value)
 	listVals := resp.Values["list"].([]any)
 	assert.Len(t, listVals, 2)
-	collVal := resp.Values["coll"].(ContentValueResponse)
+	collVal := resp.Values["coll"].(dto.ContentValueResponse)
 	assert.NotNil(t, collVal.Collection)
 	assert.Equal(t, col2.ID, collVal.Collection.ID)
-	assetVal := resp.Values["asset"].(ContentValueResponse)
+	assetVal := resp.Values["asset"].(dto.ContentValueResponse)
 	assert.NotNil(t, assetVal.Asset)
 	assert.Equal(t, asset.ID, assetVal.Asset.ID)
 	assert.Equal(t, col1.ID, resp.Collection.ID)

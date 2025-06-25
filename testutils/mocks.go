@@ -298,3 +298,27 @@ func (m *MockContentService) Create(c *model.Content) (*model.Content, error) {
 	}
 	return nil, args.Error(1)
 }
+
+type MockApiService struct {
+	mock.Mock
+}
+
+func (m *MockApiService) FindContentByCollectionAlias(alias string, offset int, perPage int) ([]dto.ContentItemResponse, error) {
+	args := m.Called(alias, offset, perPage)
+	return args.Get(0).([]dto.ContentItemResponse), args.Error(1)
+}
+
+func (m *MockApiService) FindContentByID(id uint) (dto.ContentItemResponse, error) {
+	args := m.Called(id)
+	return args.Get(0).(dto.ContentItemResponse), args.Error(1)
+}
+
+func (m *MockApiService) FindContentByCollectionAndFieldValue(alias, fieldAlias, value string, offset, perPage int) ([]dto.ContentItemResponse, error) {
+	args := m.Called(alias, fieldAlias, value, offset, perPage)
+	return args.Get(0).([]dto.ContentItemResponse), args.Error(1)
+}
+
+func (m *MockApiService) PrepareContent(content *model.Content) (dto.ContentItemResponse, error) {
+	args := m.Called(content)
+	return args.Get(0).(dto.ContentItemResponse), args.Error(1)
+}
