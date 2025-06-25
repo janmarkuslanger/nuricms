@@ -91,3 +91,23 @@ func TestWebhookController_showWebhooks_Failed(t *testing.T) {
 	assert.Contains(t, w.Body.String(), `"error":"Failed to retrieve webhooks."`)
 	svc.AssertExpectations(t)
 }
+
+func TestWebhookController_showEditWebhook_Success(t *testing.T) {
+	svc := new(testutils.MockWebhookService)
+	svc.On("FindByID", 1).Return(model.Webhook{}, nil)
+	ct := createMockController(svc)
+	c, w := testutils.MakeGETContext("/webhooks/edit/1")
+
+	ct.showEditWebhook(c)
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+}
+
+func TestWebhookController_showEditWebhook_NotFound(t *testing.T) {
+	svc := new(testutils.MockWebhookService)
+	svc.On("FindByID", 1).Return(model.Webhook{}, nil)
+	ct := createMockController(svc)
+	c, w := testutils.MakeGETContext("/webhooks/edit/2")
+
+	ct.showEditWebhook(c)
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+}
