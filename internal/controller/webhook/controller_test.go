@@ -102,12 +102,22 @@ func TestWebhookController_showEditWebhook_Success(t *testing.T) {
 	assert.Equal(t, http.StatusSeeOther, w.Code)
 }
 
-func TestWebhookController_showEditWebhook_NotFound(t *testing.T) {
+func TestWebhookController_showEditWebhook_NoParam(t *testing.T) {
 	svc := new(testutils.MockWebhookService)
-	svc.On("FindByID", 1).Return(model.Webhook{}, nil)
 	ct := createMockController(svc)
-	c, w := testutils.MakeGETContext("/webhooks/edit/2")
+	c, w := testutils.MakeGETContext("/webhooks/edit")
 
 	ct.showEditWebhook(c)
 	assert.Equal(t, http.StatusSeeOther, w.Code)
+}
+
+func TestWebhookController_showEditWebhook_NotFound(t *testing.T) {
+	svc := new(testutils.MockWebhookService)
+	svc.On("FindByID", uint(23)).Return(&model.Webhook{}, errors.New("not found"))
+	ct := createMockController(svc)
+	c, w := testutils.MakeGETContext("/webhooks/edit/23")
+	testutils.SetParam(c, "id", "23")
+
+	ct.showEditWebhook(c)
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }

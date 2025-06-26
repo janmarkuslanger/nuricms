@@ -86,7 +86,8 @@ func (ct *Controller) showEditWebhook(c *gin.Context) {
 
 	webhook, err := ct.services.Webhook.FindByID(id)
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/webhooks")
+		c.AbortWithStatus(http.StatusNotFound)
+		return
 	}
 
 	utils.RenderWithLayout(c, "webhook/create_or_edit.tmpl", gin.H{
@@ -105,7 +106,8 @@ func (ct *Controller) editWebhook(c *gin.Context) {
 
 	webhook, err := ct.services.Webhook.FindByID(id)
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/webhooks")
+		c.AbortWithStatus(http.StatusNotFound)
+		return
 	}
 
 	name := c.PostForm("name")
