@@ -8,7 +8,6 @@ import (
 
 	"slices"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/embedfs"
 	"github.com/janmarkuslanger/nuricms/internal/server"
 )
@@ -45,35 +44,12 @@ var RenderWithLayoutHTTP = func(ctx server.Context, contentTemplate string, data
 		return
 	}
 
-	ctx.Writer.WriteHeader(statusCode)
-	if err := tmpl.ExecuteTemplate(ctx.Writer, "layout.tmpl", data); err != nil {
+	var buf strings.Builder
+	if err := tmpl.ExecuteTemplate(&buf, "layout.tmpl", data); err != nil {
 		http.Error(ctx.Writer, "Template execution error: "+err.Error(), http.StatusInternalServerError)
-	}
-}
-
-var RenderWithLayout = func(c *gin.Context, contentTemplate string, data gin.H, statusCode int) {
-	if _, ok := c.Get("userID"); ok {
-		data["IsLoggedIn"] = true
-	} else {
-		data["IsLoggedIn"] = false
-	}
-
-	tmpl, err := template.New("layout.tmpl").
-		Funcs(funcMap).
-		ParseFS(
-			templatesFS,
-			"templates/base/layout.tmpl",
-			"templates/"+contentTemplate,
-		)
-
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Template parse error: %v", err)
 		return
 	}
 
-	c.Status(statusCode)
-
-	if err := tmpl.ExecuteTemplate(c.Writer, "layout.tmpl", data); err != nil {
-		c.String(http.StatusInternalServerError, "Template error: %v", err)
-	}
+	ctx.Writer.WriteHeader(statusCode)
+	_, _ = ctx.Writer.Write([]byte(buf.String()))
 }

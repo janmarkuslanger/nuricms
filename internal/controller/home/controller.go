@@ -3,7 +3,6 @@ package home
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/janmarkuslanger/nuricms/internal/service"
@@ -23,5 +22,5 @@ func (ct Controller) RegisterRoutes(s *server.Server) {
 }
 
 func (ct Controller) home(ctx server.Context) {
-	utils.RenderWithLayoutHTTP(ctx, "home/home.tmpl", gin.H{}, http.StatusOK)
+	utils.RenderWithLayoutHTTP(ctx, "home/home.tmpl", map[string]any{}, http.StatusOK)
 }

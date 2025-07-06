@@ -1,65 +1,71 @@
-package utils
+package utils_test
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"testing/fstest"
 
-	"github.com/gin-gonic/gin"
-	"github.com/janmarkuslanger/nuricms/internal/embedfs"
+	"github.com/janmarkuslanger/nuricms/internal/server"
+	"github.com/janmarkuslanger/nuricms/internal/utils"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRenderWithLayout_HasUserID_FieldTrue(t *testing.T) {
-	stubFS := fstest.MapFS{
-		"templates/base/layout.tmpl": {Data: []byte(`{{if .IsLoggedIn}}IN{{else}}OUT{{end}}|{{template "content.tmpl" .}}`)},
-		"templates/content.tmpl":     {Data: []byte(`{{define "content.tmpl"}}MSG: {{.Msg}}{{end}}`)},
+func TestRenderWithLayoutHTTP_Success(t *testing.T) {
+	fakeFS := fstest.MapFS{
+		"templates/base/layout.tmpl": &fstest.MapFile{
+			Data: []byte(`{{ define "layout.tmpl" }}<html>{{ template "content" . }}</html>{{ end }}`),
+		},
+		"templates/test.tmpl": &fstest.MapFile{
+			Data: []byte(`{{ define "content" }}Hello, {{ if .IsLoggedIn }}User{{ else }}Guest{{ end }}{{ end }}`),
+		},
 	}
 
-	SetTemplatesFS(stubFS)
-	defer SetTemplatesFS(embedfs.TemplatesFS)
+	utils.SetTemplatesFS(fakeFS)
 
-	rec := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(rec)
-	ctx.Set("userID", 42)
+	req := httptest.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	ctx := server.Context{
+		Request: req,
+		Writer:  w,
+	}
 
-	RenderWithLayout(ctx, "content.tmpl", gin.H{"Msg": "Hello"}, http.StatusTeapot)
+	utils.RenderWithLayoutHTTP(ctx, "test.tmpl", map[string]any{}, http.StatusOK)
 
-	assert.Equal(t, http.StatusTeapot, rec.Code)
-	assert.Equal(t, "IN|MSG: Hello", rec.Body.String())
+	res := w.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+
+	buf := new(strings.Builder)
+	_, err := io.Copy(buf, res.Body)
+	assert.NoError(t, err)
+	assert.Contains(t, buf.String(), "<html>Hello, Guest</html>")
 }
 
-func TestRenderWithLayout_NoUserID_FieldFalse(t *testing.T) {
-	stubFS := fstest.MapFS{
-		"templates/base/layout.tmpl": {Data: []byte(`{{if .IsLoggedIn}}IN{{else}}OUT{{end}}|{{template "content.tmpl" .}}`)},
-		"templates/content.tmpl":     {Data: []byte(`{{define "content.tmpl"}}MSG: {{.Msg}}{{end}}`)},
+func TestRenderWithLayoutHTTP_TemplateParseError(t *testing.T) {
+	fakeFS := fstest.MapFS{
+		"templates/base/layout.tmpl": &fstest.MapFile{
+			Data: []byte(`{{ define "layout.tmpl" }}<html>{{ template "oops" . }}</html>{{ end }}`),
+		},
+		"templates/test.tmpl": &fstest.MapFile{
+			Data: []byte(`{{ define "content" }}Hello{{ end }}`),
+		},
 	}
-	originalFS := embedfs.TemplatesFS
-	SetTemplatesFS(stubFS)
-	defer SetTemplatesFS(originalFS)
+	utils.SetTemplatesFS(fakeFS)
 
-	rec := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(rec)
-
-	RenderWithLayout(ctx, "content.tmpl", gin.H{"Msg": "World"}, http.StatusOK)
-
-	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, "OUT|MSG: World", rec.Body.String())
-}
-
-func TestRenderWithLayout_TemplateExecutionError(t *testing.T) {
-	stubFS := fstest.MapFS{
-		"templates/base/layout.tmpl": {Data: []byte(`{{template "missing" .}}`)},
+	req := httptest.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	ctx := server.Context{
+		Request: req,
+		Writer:  w,
 	}
-	SetTemplatesFS(stubFS)
-	defer SetTemplatesFS(embedfs.TemplatesFS)
 
-	rec := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(rec)
+	utils.RenderWithLayoutHTTP(ctx, "test.tmpl", map[string]any{}, http.StatusOK)
 
-	RenderWithLayout(ctx, "content.tmpl", gin.H{}, http.StatusOK)
-
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
-	assert.Contains(t, rec.Body.String(), "Template parse error:")
+	res := w.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 }

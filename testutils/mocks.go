@@ -3,10 +3,10 @@ package testutils
 import (
 	"mime/multipart"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository/base"
+	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -108,8 +108,8 @@ func (m *MockAssetService) Create(asset *model.Asset) error {
 	return args.Error(0)
 }
 
-func (m *MockAssetService) UploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
-	args := m.Called(c, file)
+func (m *MockAssetService) UploadFile(ctx server.Context, file *multipart.FileHeader) (string, error) {
+	args := m.Called(ctx, file)
 	return args.String(0), args.Error(1)
 }
 

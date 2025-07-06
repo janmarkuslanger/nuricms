@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
 )
@@ -19,7 +18,7 @@ func HandleList[T any](ctx server.Context, s ListHandler[T], template string) {
 
 	totalPages := (totalCount + int64(pageSize) - 1) / int64(pageSize)
 
-	utils.RenderWithLayoutHTTP(ctx, template, gin.H{
+	utils.RenderWithLayoutHTTP(ctx, template, map[string]any{
 		"Items":       items,
 		"TotalCount":  totalCount,
 		"TotalPages":  totalPages,

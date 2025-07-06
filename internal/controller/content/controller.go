@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/handler"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
@@ -93,7 +92,7 @@ func (ct *Controller) showCreateContent(ctx server.Context) {
 		})
 	}
 
-	utils.RenderWithLayoutHTTP(ctx, "content/create_or_edit.tmpl", gin.H{
+	utils.RenderWithLayoutHTTP(ctx, "content/create_or_edit.tmpl", map[string]any{
 		"FieldsHtml": RenderFields(fieldsContent),
 		"Collection": collection,
 	}, http.StatusOK)
@@ -171,7 +170,7 @@ func (ct *Controller) listContent(ctx server.Context) {
 
 	totalPages := (totalCount + int64(pageSizeNum) - 1) / int64(pageSizeNum)
 
-	utils.RenderWithLayoutHTTP(ctx, "content/content_list.tmpl", gin.H{
+	utils.RenderWithLayoutHTTP(ctx, "content/content_list.tmpl", map[string]any{
 		"Groups":       groups,
 		"Fields":       fields,
 		"CollectionID": collectionID,
@@ -208,7 +207,7 @@ func (ct *Controller) showEditContent(ctx server.Context) {
 	contents, err := ct.services.Content.FindContentsWithDisplayContentValue()
 	assets, _, err := ct.services.Asset.List(1, 100000)
 
-	utils.RenderWithLayoutHTTP(ctx, "content/create_or_edit.tmpl", gin.H{
+	utils.RenderWithLayoutHTTP(ctx, "content/create_or_edit.tmpl", map[string]any{
 		"FieldsHtml": RenderFieldsByContent(*contentEntry, DataContext{
 			collection: *collection,
 			contents:   contents,

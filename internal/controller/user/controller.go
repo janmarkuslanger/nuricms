@@ -3,7 +3,6 @@ package user
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/handler"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
@@ -63,7 +62,7 @@ func (ct *Controller) RegisterRoutes(s *server.Server) {
 }
 
 func (ct *Controller) showLogin(ctx server.Context) {
-	utils.RenderWithLayoutHTTP(ctx, "auth/login.tmpl", gin.H{}, http.StatusOK)
+	utils.RenderWithLayoutHTTP(ctx, "auth/login.tmpl", map[string]any{}, http.StatusOK)
 }
 
 func (ct *Controller) login(ctx server.Context) {
