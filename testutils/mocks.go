@@ -186,6 +186,14 @@ func (m *MockUserService) Create(dto dto.UserData) (*model.User, error) {
 	return args.Get(0).(*model.User), args.Error(1)
 }
 
+func (m *MockUserService) UpdateByID(id uint, data dto.UserData) (*model.User, error) {
+	args := m.Called(id, data)
+	if user := args.Get(0); user != nil {
+		return user.(*model.User), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func (m *MockUserService) FindByID(id uint) (*model.User, error) {
 	args := m.Called(id)
 	return args.Get(0).(*model.User), args.Error(1)
@@ -332,4 +340,33 @@ func (m *MockApiService) FindContentByCollectionAndFieldValue(alias, fieldAlias,
 func (m *MockApiService) PrepareContent(content *model.Content) (dto.ContentItemResponse, error) {
 	args := m.Called(content)
 	return args.Get(0).(dto.ContentItemResponse), args.Error(1)
+}
+
+type MockApikeyService struct {
+	mock.Mock
+}
+
+func (m *MockApikeyService) List(page, pageSize int) ([]model.Apikey, int64, error) {
+	args := m.Called(page, pageSize)
+	return args.Get(0).([]model.Apikey), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockApikeyService) Create(data dto.ApikeyData) (*model.Apikey, error) {
+	args := m.Called(data)
+	return args.Get(0).(*model.Apikey), args.Error(1)
+}
+
+func (m *MockApikeyService) FindByID(id uint) (*model.Apikey, error) {
+	args := m.Called(id)
+	return args.Get(0).(*model.Apikey), args.Error(1)
+}
+
+func (m *MockApikeyService) DeleteByID(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *MockApikeyService) Validate(token string) error {
+	args := m.Called(token)
+	return args.Error(0)
 }

@@ -86,5 +86,5 @@ func StartServer(config *ServerConfig) {
 		module.RegisterRoutes(server)
 	}
 
-	log.Fatal(http.ListenAndServe(":"+config.Port, server.Mux))
+	log.Fatal(http.ListenAndServe(":"+config.Port, server))
 }

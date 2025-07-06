@@ -21,7 +21,7 @@ type Server struct {
 	Mux *http.ServeMux
 }
 
-func (s Server) AddHandler(pattern string, handler HandlerFunc, middlewares ...func(http.Handler) http.Handler) {
+func (s *Server) AddHandler(pattern string, handler HandlerFunc, middlewares ...func(http.Handler) http.Handler) {
 	baseHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handler(Context{
 			Writer:  w,
@@ -33,7 +33,7 @@ func (s Server) AddHandler(pattern string, handler HandlerFunc, middlewares ...f
 	s.Mux.Handle(pattern, finalHandler)
 }
 
-func (s Server) Handle(pattern string, handler HandlerFunc, middlewares ...func(http.Handler) http.Handler) {
+func (s *Server) Handle(pattern string, handler HandlerFunc, middlewares ...func(http.Handler) http.Handler) {
 	fmt.Println("Serving route(s) with pattern: " + pattern)
 
 	s.AddHandler(pattern, handler, middlewares...)
@@ -41,4 +41,8 @@ func (s Server) Handle(pattern string, handler HandlerFunc, middlewares ...func(
 	if pattern[len(pattern)-1:] != "/" {
 		s.AddHandler(pattern+"/", handler, middlewares...)
 	}
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.Mux.ServeHTTP(w, r)
 }
