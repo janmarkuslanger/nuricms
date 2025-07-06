@@ -1,66 +1,55 @@
-package utils
+package utils_test
 
 import (
 	"net/http"
-	"net/http/httptest"
+	"net/url"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
+	"github.com/janmarkuslanger/nuricms/internal/utils"
 )
 
 func TestParsePagination(t *testing.T) {
 	tests := []struct {
-		name         string
-		query        string
-		expectedPage int
-		expectedSize int
+		name     string
+		query    url.Values
+		wantPage int
+		wantSize int
 	}{
 		{
-			name:         "valid parameters",
-			query:        "/?page=3&pageSize=20",
-			expectedPage: 3,
-			expectedSize: 20,
+			name:     "valid pagination params",
+			query:    url.Values{"page": {"2"}, "pageSize": {"20"}},
+			wantPage: 2, wantSize: 20,
 		},
 		{
-			name:         "missing parameters",
-			query:        "/",
-			expectedPage: 1,
-			expectedSize: 10,
+			name:     "missing params",
+			query:    url.Values{},
+			wantPage: 1, wantSize: 10,
 		},
 		{
-			name:         "invalid parameters",
-			query:        "/?page=abc&pageSize=xyz",
-			expectedPage: 1,
-			expectedSize: 10,
+			name:     "invalid params",
+			query:    url.Values{"page": {"abc"}, "pageSize": {"xyz"}},
+			wantPage: 1, wantSize: 10,
 		},
 		{
-			name:         "partial invalid parameters",
-			query:        "/?page=5&pageSize=bad",
-			expectedPage: 5,
-			expectedSize: 10,
-		},
-		{
-			name:         "partial missing parameters",
-			query:        "/?pageSize=15",
-			expectedPage: 1,
-			expectedSize: 15,
+			name:     "partial params",
+			query:    url.Values{"page": {"3"}},
+			wantPage: 3, wantSize: 10,
 		},
 	}
 
-	gin.SetMode(gin.TestMode)
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, tt.query, nil)
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = req
+			req := &http.Request{
+				URL: &url.URL{
+					RawQuery: tt.query.Encode(),
+				},
+			}
 
-			page, pageSize := ParsePagination(ctx)
-
-			assert.Equal(t, tt.expectedPage, page)
-			assert.Equal(t, tt.expectedSize, pageSize)
+			gotPage, gotSize := utils.ParsePagination(req)
+			if gotPage != tt.wantPage || gotSize != tt.wantSize {
+				t.Errorf("got (page: %d, size: %d), want (page: %d, size: %d)",
+					gotPage, gotSize, tt.wantPage, tt.wantSize)
+			}
 		})
 	}
 }

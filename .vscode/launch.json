@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "name": "Debug Gin Server",
+        "name": "Debug go server",
         "type": "go",
         "request": "launch",
         "mode": "auto",
@@ -10,7 +10,6 @@
         "cwd": "${workspaceFolder}", 
         "env": {
           "GIN_MODE": "debug",
-          "PORT": "8080",
           "JWT_SECRET": "uP7r3Ss9cReT_T0k3n_2025_AbCdEfGhIjKlMnOp"
         },
         "args": [

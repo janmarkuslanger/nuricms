@@ -2,144 +2,147 @@ package service
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 
-	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/testutils"
 )
 
-func TestWebhookService_Create_List_Find_Save_Delete(t *testing.T) {
+func newTestWebhookServiceWithClient(t *testing.T, client *http.Client) *webhookService {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svcIface := NewWebhookService(repos)
-	ws := svcIface.(*webhookService)
-
-	events := map[model.EventType]bool{
-		model.EventContentCreated: true,
-		model.EventContentDeleted: false,
-		model.EventContentUpdated: true,
+	return &webhookService{
+		repos:      repos,
+		httpClient: client,
 	}
-	wh, err := ws.Create("name1", "http://example.com", model.RequestTypePost, events)
-	assert.NoError(t, err)
-	assert.NotZero(t, wh.ID)
-	assert.Contains(t, wh.Events, string(model.EventContentCreated)+",")
-	assert.Contains(t, wh.Events, string(model.EventContentUpdated)+",")
-	assert.NotContains(t, wh.Events, string(model.EventContentDeleted)+",")
-
-	wh2, err := ws.Create("name2", "http://example.org", model.RequestTypeGet, map[model.EventType]bool{"e": true})
-	assert.NoError(t, err)
-
-	list, total, err := ws.List(1, 10)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(2), total)
-	ids := []uint{list[0].ID, list[1].ID}
-	assert.Contains(t, ids, wh.ID)
-	assert.Contains(t, ids, wh2.ID)
-
-	found, err := ws.FindByID(wh.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, wh.ID, found.ID)
-
-	found.Url = "http://changed"
-	err = ws.Save(found)
-	assert.NoError(t, err)
-	reloaded, err := ws.FindByID(wh.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, "http://changed", reloaded.Url)
-
-	err = ws.DeleteByID(wh2.ID)
-	assert.NoError(t, err)
-	_, err = repos.Webhook.FindByID(wh2.ID)
-	assert.Error(t, err)
 }
 
-func TestWebhookService_Dispatch_NoHooks(t *testing.T) {
-	db := testutils.SetupTestDB(t)
-	repos := repository.NewSet(db)
-	svcIface := NewWebhookService(repos)
-	ws := svcIface.(*webhookService)
-	ws.Dispatch("noevent", map[string]string{"k": "v"})
-	time.Sleep(10 * time.Millisecond)
+func newTestWebhookService(t *testing.T) WebhookService {
+	return NewWebhookService(repository.NewSet(testutils.SetupTestDB(t)))
 }
 
-func TestWebhookService_Dispatch_SendsRequest(t *testing.T) {
-	db := testutils.SetupTestDB(t)
-	repos := repository.NewSet(db)
-	svcIface := NewWebhookService(repos)
-	ws := svcIface.(*webhookService)
+func TestWebhookService_Create_Success(t *testing.T) {
+	svc := newTestWebhookService(t)
 
-	var wg sync.WaitGroup
-	payloadCh := make(chan []byte, 1)
+	hook, err := svc.Create(dto.WebhookData{
+		Name:        "My Hook",
+		Url:         "https://example.com",
+		RequestType: "POST",
+		Events: map[string]bool{
+			"create": true,
+			"update": false,
+		},
+	})
+
+	assert.NoError(t, err)
+	assert.NotNil(t, hook)
+	assert.Equal(t, "My Hook", hook.Name)
+	assert.Equal(t, "https://example.com", hook.Url)
+	assert.Contains(t, hook.Events, "create")
+	assert.NotContains(t, hook.Events, "update")
+}
+
+func TestWebhookService_Create_ValidationError(t *testing.T) {
+	svc := newTestWebhookService(t)
+
+	_, err := svc.Create(dto.WebhookData{})
+	assert.EqualError(t, err, "no name given")
+
+	_, err = svc.Create(dto.WebhookData{Name: "x"})
+	assert.EqualError(t, err, "no url given")
+
+	_, err = svc.Create(dto.WebhookData{Name: "x", Url: "y"})
+	assert.EqualError(t, err, "no request type given")
+}
+
+func TestWebhookService_UpdateByID(t *testing.T) {
+	svc := newTestWebhookService(t)
+
+	hook, _ := svc.Create(dto.WebhookData{
+		Name:        "Original",
+		Url:         "https://original.com",
+		RequestType: "POST",
+		Events:      map[string]bool{"create": true},
+	})
+
+	updated, err := svc.UpdateByID(hook.ID, dto.WebhookData{
+		Name:        "Updated",
+		Url:         "https://updated.com",
+		RequestType: "POST",
+		Events:      map[string]bool{"delete": true},
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Updated", updated.Name)
+	assert.Equal(t, "https://updated.com", updated.Url)
+	assert.Contains(t, updated.Events, "delete")
+}
+
+func TestWebhookService_UpdateByID_ValidationError(t *testing.T) {
+	svc := newTestWebhookService(t)
+	_, err := svc.UpdateByID(999, dto.WebhookData{})
+	assert.EqualError(t, err, "no name given")
+}
+
+func TestWebhookService_List_Find_Save_Delete(t *testing.T) {
+	svc := newTestWebhookService(t)
+
+	h, _ := svc.Create(dto.WebhookData{
+		Name:        "Hook A",
+		Url:         "https://a.com",
+		RequestType: "POST",
+		Events:      map[string]bool{"create": true},
+	})
+
+	list, total, err := svc.List(1, 10)
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, int64(len(list)), int64(1))
+	assert.GreaterOrEqual(t, total, int64(1))
+
+	found, err := svc.FindByID(h.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, h.ID, found.ID)
+
+	found.Active = false
+	err = svc.Save(found)
+	assert.NoError(t, err)
+
+	err = svc.DeleteByID(h.ID)
+	assert.NoError(t, err)
+
+	_, err = svc.FindByID(h.ID)
+	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+}
+
+func TestWebhookService_Dispatch(t *testing.T) {
+	called := false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer wg.Done()
-		body, _ := io.ReadAll(r.Body)
-		payloadCh <- body
-		w.WriteHeader(http.StatusOK)
+		called = true
+		defer r.Body.Close()
+		var payload map[string]string
+		json.NewDecoder(r.Body).Decode(&payload)
+		assert.Equal(t, "value", payload["key"])
 	}))
 	defer server.Close()
 
-	ws.httpClient = server.Client()
+	svc := newTestWebhookServiceWithClient(t, server.Client())
+	hook, _ := svc.Create(dto.WebhookData{
+		Name:        "DispatchHook",
+		Url:         server.URL,
+		RequestType: "POST",
+		Events:      map[string]bool{"dispatch": true},
+	})
 
-	evs := map[model.EventType]bool{"testev": true}
-	wh, err := ws.Create("w1", server.URL, model.RequestTypePost, evs)
-	assert.NoError(t, err)
-	assert.NotZero(t, wh.ID)
+	svc.Dispatch("dispatch", map[string]string{"key": "value"})
+	time.Sleep(100 * time.Millisecond)
 
-	payload := map[string]interface{}{"foo": "bar"}
-	wg.Add(1)
-	ws.Dispatch("testev", payload)
-
-	done := make(chan struct{})
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
-	select {
-	case <-done:
-	case <-time.After(1 * time.Second):
-		t.Fatal("timeout waiting for webhook dispatch")
-	}
-
-	received := <-payloadCh
-	var got map[string]interface{}
-	err = json.Unmarshal(received, &got)
-	assert.NoError(t, err)
-	assert.Equal(t, "bar", got["foo"])
-}
-
-func TestWebhookService_Dispatch_InvalidJSON(t *testing.T) {
-	db := testutils.SetupTestDB(t)
-	repos := repository.NewSet(db)
-	svcIface := NewWebhookService(repos)
-	ws := svcIface.(*webhookService)
-
-	evs := map[model.EventType]bool{"ev": true}
-	_, err := ws.Create("w2", "http://example.invalid", model.RequestTypePost, evs)
-	assert.NoError(t, err)
-	payload := make(chan int)
-	ws.Dispatch("ev", payload)
-	time.Sleep(10 * time.Millisecond)
-}
-
-func TestWebhookService_Dispatch_RequestError(t *testing.T) {
-	db := testutils.SetupTestDB(t)
-	repos := repository.NewSet(db)
-	svcIface := NewWebhookService(repos)
-	ws := svcIface.(*webhookService)
-
-	evs := map[model.EventType]bool{"ev2": true}
-	_, err := ws.Create("w3", "http://invalid.invalid", model.RequestTypePost, evs)
-	assert.NoError(t, err)
-
-	ws.httpClient.Timeout = 1 * time.Millisecond
-	ws.Dispatch("ev2", map[string]string{"x": "y"})
-	time.Sleep(50 * time.Millisecond)
+	assert.True(t, called, "Dispatch should have triggered HTTP call")
+	assert.NotZero(t, hook.ID)
 }

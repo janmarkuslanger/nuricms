@@ -1,6 +1,6 @@
 {{ define "content" }}
-    {{ $webhook := .Webhook }}
-    {{ $eventTypeValues := .EventTypeValues }}
+    {{ $webhook := .Item }}
+    {{ $eventTypeValues := split $webhook.Events "," }}
     <h1>{{ if $webhook }}Edit webhook{{ else }}New webhook{{ end }}</h1>
 
     <form method="POST">
@@ -25,7 +25,6 @@
         </fieldset>
 
         <h2 class="my-4">Event Types</h2>
-
         {{ range .EventTypes }}
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">{{ . }}</legend>

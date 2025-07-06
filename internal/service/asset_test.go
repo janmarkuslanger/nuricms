@@ -1,49 +1,53 @@
-package service
+package service_test
 
 import (
 	"bytes"
-	"io"
 	"mime/multipart"
-	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
+	"github.com/janmarkuslanger/nuricms/internal/server"
+	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/testutils"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
-func TestAssetService_UploadFile(t *testing.T) {
-	recorder := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(recorder)
-	var buf bytes.Buffer
-	writer := multipart.NewWriter(&buf)
-	fw, _ := writer.CreateFormFile("file", "upload.txt")
-	fw.Write([]byte("content"))
-	writer.Close()
-	ctx.Request = &http.Request{
-		Method: "POST",
-		Header: http.Header{"Content-Type": {writer.FormDataContentType()}},
-		Body:   io.NopCloser(&buf),
-	}
-	file, err := ctx.FormFile("file")
+func TestUploadFile_Success(t *testing.T) {
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("file", "testfile.txt")
 	assert.NoError(t, err)
-	svc := NewAssetService(&repository.Set{})
-	os.MkdirAll("public/assets", 0755)
-	defer os.RemoveAll("public")
-	path, err := svc.UploadFile(ctx, file)
+	part.Write([]byte("test file content"))
+	writer.Close()
+
+	req := httptest.NewRequest("POST", "/upload", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	w := httptest.NewRecorder()
+	ctx := server.Context{Writer: w, Request: req}
+
+	err = req.ParseMultipartForm(10 << 20)
+	assert.NoError(t, err)
+
+	_, header, err := req.FormFile("file")
+	assert.NoError(t, err)
+
+	svc := service.NewAssetService(nil)
+	path, err := svc.UploadFile(ctx, header)
 	assert.NoError(t, err)
 	assert.FileExists(t, path)
+
+	defer os.Remove(path)
 }
 
 func TestAssetService_Create(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewAssetService(repos)
+	svc := service.NewAssetService(repos)
 	a := &model.Asset{Name: "A", Path: "p"}
 	err := svc.Create(a)
 	assert.NoError(t, err)
@@ -53,7 +57,7 @@ func TestAssetService_Create(t *testing.T) {
 func TestAssetService_Save(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewAssetService(repos)
+	svc := service.NewAssetService(repos)
 	a := &model.Asset{Name: "B", Path: "p2"}
 	svc.Create(a)
 	a.Name = "B2"
@@ -66,7 +70,7 @@ func TestAssetService_Save(t *testing.T) {
 func TestAssetService_FindByID(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewAssetService(repos)
+	svc := service.NewAssetService(repos)
 	a := &model.Asset{Name: "C", Path: "p3"}
 	svc.Create(a)
 	got, err := svc.FindByID(a.ID)
@@ -77,7 +81,7 @@ func TestAssetService_FindByID(t *testing.T) {
 func TestAssetService_List(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewAssetService(repos)
+	svc := service.NewAssetService(repos)
 	for i := 0; i < 3; i++ {
 		svc.Create(&model.Asset{Name: "L", Path: "p"})
 	}
@@ -90,7 +94,7 @@ func TestAssetService_List(t *testing.T) {
 func TestAssetService_DeleteByID(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewAssetService(repos)
+	svc := service.NewAssetService(repos)
 	a := &model.Asset{Name: "D", Path: "to_delete.txt"}
 	svc.Create(a)
 	os.WriteFile(a.Path, []byte("x"), 0644)
