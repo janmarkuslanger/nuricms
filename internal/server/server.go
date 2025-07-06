@@ -37,5 +37,8 @@ func (s Server) Handle(pattern string, handler HandlerFunc, middlewares ...func(
 	fmt.Println("Serving route(s) with pattern: " + pattern)
 
 	s.AddHandler(pattern, handler, middlewares...)
-	s.AddHandler(pattern+"/", handler, middlewares...)
+
+	if pattern[len(pattern)-1:] != "/" {
+		s.AddHandler(pattern+"/", handler, middlewares...)
+	}
 }

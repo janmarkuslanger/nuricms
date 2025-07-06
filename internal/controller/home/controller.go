@@ -18,7 +18,7 @@ func NewController(services *service.Set) *Controller {
 }
 
 func (ct Controller) RegisterRoutes(s *server.Server) {
-	s.Handle("GET ", ct.home, middleware.Userauth(ct.services.User))
+	s.Handle("GET /", ct.home, middleware.Userauth(ct.services.User))
 }
 
 func (ct Controller) home(ctx server.Context) {

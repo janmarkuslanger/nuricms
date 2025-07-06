@@ -116,8 +116,8 @@ func (ct *Controller) createContent(ctx server.Context) {
 }
 
 func (ct *Controller) editContent(ctx server.Context) {
-	colID, okCol := utils.StringToUint(ctx.Request.PostFormValue("id"))
-	conID, okCon := utils.StringToUint(ctx.Request.PostFormValue("contentID"))
+	colID, okCol := utils.StringToUint(ctx.Request.PathValue("id"))
+	conID, okCon := utils.StringToUint(ctx.Request.PathValue("contentID"))
 	err := ctx.Request.ParseForm()
 	if !okCon || !okCol || err != nil {
 		http.Redirect(ctx.Writer, ctx.Request, "/content/collections", http.StatusSeeOther)

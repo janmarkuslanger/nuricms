@@ -19,7 +19,7 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (ct *Controller) RegisterRoutes(s *server.Server) {
+func (ct Controller) RegisterRoutes(s *server.Server) {
 	s.Handle("GET /assets",
 		ct.showAssets,
 		middleware.Userauth(ct.services.User),
@@ -93,7 +93,7 @@ func (ct Controller) showEditAsset(ctx server.Context) {
 }
 
 func (ct Controller) createAsset(ctx server.Context) {
-	err := ctx.Request.ParseMultipartForm(10 << 20) // max 10 MB
+	err := ctx.Request.ParseMultipartForm(10 << 20)
 	if err != nil {
 		http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 		return
@@ -121,7 +121,7 @@ func (ct Controller) createAsset(ctx server.Context) {
 	http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 }
 
-func (ct *Controller) editAsset(ctx server.Context) {
+func (ct Controller) editAsset(ctx server.Context) {
 	id, ok := utils.GetParamOrRedirect(ctx, "/assets", "id")
 	if !ok {
 		return

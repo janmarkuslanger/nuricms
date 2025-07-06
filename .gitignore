@@ -31,3 +31,5 @@ go.work.sum
 __debug_bin*
 
 public/
+
+coverage.txt
