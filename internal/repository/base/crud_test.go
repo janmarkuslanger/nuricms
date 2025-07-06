@@ -1,4 +1,4 @@
-package base
+package base_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"github.com/janmarkuslanger/nuricms/internal/repository/base"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +29,7 @@ func setupDB(t *testing.T) *gorm.DB {
 
 func TestBaseRepository_Create(t *testing.T) {
 	db := setupDB(t)
-	repo := NewBaseRepository[TestEntity](db)
+	repo := base.NewBaseRepository[TestEntity](db)
 	e := &TestEntity{Name: "Alice"}
 	assert.NoError(t, repo.Create(e))
 	assert.NotZero(t, e.ID)
@@ -36,7 +37,7 @@ func TestBaseRepository_Create(t *testing.T) {
 
 func TestBaseRepository_FindByID(t *testing.T) {
 	db := setupDB(t)
-	repo := NewBaseRepository[TestEntity](db)
+	repo := base.NewBaseRepository[TestEntity](db)
 	e := &TestEntity{Name: "Bob"}
 	repo.Create(e)
 	got, err := repo.FindByID(e.ID)
@@ -46,7 +47,7 @@ func TestBaseRepository_FindByID(t *testing.T) {
 
 func TestBaseRepository_Save(t *testing.T) {
 	db := setupDB(t)
-	repo := NewBaseRepository[TestEntity](db)
+	repo := base.NewBaseRepository[TestEntity](db)
 	e := &TestEntity{Name: "Carol"}
 	repo.Create(e)
 	e.Name = "CarolUpdated"
@@ -58,7 +59,7 @@ func TestBaseRepository_Save(t *testing.T) {
 
 func TestBaseRepository_Delete(t *testing.T) {
 	db := setupDB(t)
-	repo := NewBaseRepository[TestEntity](db)
+	repo := base.NewBaseRepository[TestEntity](db)
 	e := &TestEntity{Name: "Dave"}
 	repo.Create(e)
 	assert.NoError(t, repo.Delete(e))
@@ -68,7 +69,7 @@ func TestBaseRepository_Delete(t *testing.T) {
 
 func TestBaseRepository_ListPagination(t *testing.T) {
 	db := setupDB(t)
-	repo := NewBaseRepository[TestEntity](db)
+	repo := base.NewBaseRepository[TestEntity](db)
 	for i := 1; i <= 5; i++ {
 		e := &TestEntity{Name: fmt.Sprintf("N%d", i)}
 		repo.Create(e)

@@ -3,9 +3,10 @@ package asset
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/janmarkuslanger/nuricms/internal/handler"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
 )
@@ -18,78 +19,97 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (ct *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/assets", middleware.Userauth(ct.services.User))
+func (ct *Controller) RegisterRoutes(s *server.Server) {
+	s.Handle("GET /assets",
+		ct.showAssets,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
 
-	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showAssets)
-	secure.GET("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showCreateAsset)
-	secure.POST("/create", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.createAsset)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showEditAsset)
-	secure.POST("/edit/:id", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.editAsset)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), ct.deleteAsset)
+	s.Handle("GET /assets/create",
+		ct.showCreateAsset,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
+
+	s.Handle("POST /assets/create",
+		ct.createAsset,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
+
+	s.Handle("GET /assets/edit/{id}",
+		ct.showEditAsset,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
+
+	s.Handle("POST /assets/edit/{id}",
+		ct.editAsset,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
+
+	s.Handle("POST /assets/delete/{id}",
+		ct.deleteAsset,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
 }
 
-func (h *Controller) showAssets(c *gin.Context) {
-	page, pageSize := utils.ParsePagination(c)
-
-	assets, totalCount, _ := h.services.Asset.List(page, pageSize)
-
-	totalPages := (totalCount + int64(pageSize) - 1) / int64(pageSize)
-
-	utils.RenderWithLayout(c, "asset/index.tmpl", gin.H{
-		"Assets":      assets,
-		"TotalCount":  totalCount,
-		"TotalPages":  totalPages,
-		"CurrentPage": page,
-		"PageSize":    pageSize,
-	}, http.StatusOK)
+func (ct Controller) showAssets(ctx server.Context) {
+	handler.HandleList(ctx, ct.services.Asset, "asset/index.tmpl")
 }
 
-func (ct *Controller) showCreateAsset(c *gin.Context) {
-	utils.RenderWithLayout(c, "asset/create_or_edit.tmpl", gin.H{}, http.StatusOK)
+func (ct Controller) showCreateAsset(ctx server.Context) {
+	utils.RenderWithLayoutHTTP(ctx, "asset/create_or_edit.tmpl", map[string]any{}, http.StatusOK)
 }
 
-func (ct *Controller) deleteAsset(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/assets", "id")
+func (ct Controller) deleteAsset(ctx server.Context) {
+	id, ok := utils.GetParamOrRedirect(ctx, "/assets", "id")
 	if !ok {
 		return
 	}
 
 	ct.services.Asset.DeleteByID(id)
-	c.Redirect(http.StatusSeeOther, "/assets")
+	http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 }
 
-func (ct *Controller) showEditAsset(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/assets", "id")
+func (ct Controller) showEditAsset(ctx server.Context) {
+	id, ok := utils.GetParamOrRedirect(ctx, "/assets", "id")
 	if !ok {
 		return
 	}
 
 	asset, err := ct.services.Asset.FindByID(id)
-
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/assets")
+		http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 		return
 	}
 
-	utils.RenderWithLayout(c, "asset/create_or_edit.tmpl", gin.H{
+	utils.RenderWithLayoutHTTP(ctx, "asset/create_or_edit.tmpl", map[string]any{
 		"Asset": asset,
 	}, http.StatusOK)
 }
 
-func (ct *Controller) createAsset(c *gin.Context) {
-	file, err := c.FormFile("file")
-
+func (ct Controller) createAsset(ctx server.Context) {
+	err := ctx.Request.ParseMultipartForm(10 << 20) // max 10 MB
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/assets")
+		http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 		return
 	}
 
-	name := c.PostForm("name")
-	filePath, err := ct.services.Asset.UploadFile(c, file)
-
+	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/assets")
+		http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
+		return
+	}
+	defer file.Close()
+
+	name := ctx.Request.FormValue("name")
+	filePath, err := ct.services.Asset.UploadFile(ctx, header)
+	if err != nil {
+		http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 		return
 	}
 
@@ -98,38 +118,42 @@ func (ct *Controller) createAsset(c *gin.Context) {
 		Name: name,
 	})
 
-	c.Redirect(http.StatusSeeOther, "/assets")
+	http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 }
 
-func (ct *Controller) editAsset(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/assets", "id")
+func (ct *Controller) editAsset(ctx server.Context) {
+	id, ok := utils.GetParamOrRedirect(ctx, "/assets", "id")
 	if !ok {
 		return
 	}
 
 	asset, err := ct.services.Asset.FindByID(id)
-
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/assets")
+		http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 		return
 	}
 
-	file, err := c.FormFile("file")
+	err = ctx.Request.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
+		return
+	}
 
-	if file != nil && err == nil {
-		path, err := ct.services.Asset.UploadFile(c, file)
+	file, header, err := ctx.Request.FormFile("file")
+	if err == nil && file != nil {
+		defer file.Close()
+		path, err := ct.services.Asset.UploadFile(ctx, header)
 		if err != nil {
-			c.Redirect(http.StatusSeeOther, "/assets")
+			http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 			return
 		}
-
 		asset.Path = path
 	}
 
-	name := c.PostForm("name")
+	name := ctx.Request.FormValue("name")
 	asset.Name = name
 
 	ct.services.Asset.Save(asset)
 
-	c.Redirect(http.StatusSeeOther, "/assets")
+	http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 }

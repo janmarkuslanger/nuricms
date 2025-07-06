@@ -4,11 +4,13 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"strings"
 
 	"slices"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/embedfs"
+	"github.com/janmarkuslanger/nuricms/internal/server"
 )
 
 var templatesFS fs.FS = embedfs.TemplatesFS
@@ -23,6 +25,30 @@ var funcMap = template.FuncMap{
 	"add":      func(a, b int) int { return a + b },
 	"sub":      func(a, b int) int { return a - b },
 	"in":       func(s string, list []string) bool { return slices.Contains(list, s) },
+	"split":    strings.Split,
+}
+
+var RenderWithLayoutHTTP = func(ctx server.Context, contentTemplate string, data map[string]any, statusCode int) {
+	_, err := ctx.Request.Cookie("auth_token")
+	data["IsLoggedIn"] = err == nil
+
+	tmpl, err := template.New("layout.tmpl").
+		Funcs(funcMap).
+		ParseFS(
+			templatesFS,
+			"templates/base/layout.tmpl",
+			"templates/"+contentTemplate,
+		)
+
+	if err != nil {
+		http.Error(ctx.Writer, "Template parse error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ctx.Writer.WriteHeader(statusCode)
+	if err := tmpl.ExecuteTemplate(ctx.Writer, "layout.tmpl", data); err != nil {
+		http.Error(ctx.Writer, "Template execution error: "+err.Error(), http.StatusInternalServerError)
+	}
 }
 
 var RenderWithLayout = func(c *gin.Context, contentTemplate string, data gin.H, statusCode int) {

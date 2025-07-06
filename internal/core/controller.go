@@ -1,7 +1,9 @@
 package core
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/janmarkuslanger/nuricms/internal/server"
+)
 
 type Controller interface {
-	RegisterRoutes(r *gin.Engine)
+	RegisterRoutes(s *server.Server)
 }

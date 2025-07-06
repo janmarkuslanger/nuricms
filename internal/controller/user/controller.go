@@ -4,8 +4,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/janmarkuslanger/nuricms/internal/dto"
+	"github.com/janmarkuslanger/nuricms/internal/handler"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
 )
@@ -18,142 +21,125 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (ct *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/user", middleware.Userauth(ct.services.User))
+func (ct *Controller) RegisterRoutes(s *server.Server) {
+	s.Handle("GET /login", ct.showLogin)
+	s.Handle("POST /login", ct.login)
 
-	r.GET("/login", ct.showLogin)
-	r.POST("/login", ct.login)
+	s.Handle("GET /user",
+		ct.showUser,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
 
-	secure.GET("/", middleware.Roleauth(model.RoleEditor, model.RoleAdmin), ct.showUser)
-	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), ct.showCreateUser)
-	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), ct.createUser)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.showEditUser)
-	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.editUser)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), ct.deleteUser)
+	s.Handle("GET /user/create",
+		ct.showCreateUser,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
+
+	s.Handle("POST /user/create",
+		ct.createUser,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
+
+	s.Handle("GET /user/edit/{id}",
+		ct.showEditUser,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
+
+	s.Handle("POST /user/edit/{id}",
+		ct.editUser,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
+
+	s.Handle("POST /user/delete/{id}",
+		ct.deleteUser,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
 }
 
-func (ct *Controller) showLogin(c *gin.Context) {
-	utils.RenderWithLayout(c, "auth/login.tmpl", gin.H{}, http.StatusOK)
+func (ct *Controller) showLogin(ctx server.Context) {
+	utils.RenderWithLayoutHTTP(ctx, "auth/login.tmpl", gin.H{}, http.StatusOK)
 }
 
-func (ct *Controller) login(c *gin.Context) {
-	email := c.PostForm("email")
-	password := c.PostForm("password")
-
-	if email == "" || password == "" {
-		c.Redirect(http.StatusSeeOther, "/login")
-		return
-	}
+func (ct *Controller) login(ctx server.Context) {
+	email := ctx.Request.FormValue("email")
+	password := ctx.Request.FormValue("password")
 
 	token, err := ct.services.User.LoginUser(email, password)
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/login")
+		http.Redirect(ctx.Writer, ctx.Request, "/login", http.StatusSeeOther)
 		return
 	}
 
-	c.SetCookie(
-		"auth_token",
-		token,
-		3600*24,
-		"/",
-		"",
-		gin.Mode() == gin.ReleaseMode,
-		gin.Mode() == gin.ReleaseMode,
-	)
+	http.SetCookie(ctx.Writer, &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		MaxAge:   3600 * 24,
+	})
 
-	c.Redirect(http.StatusSeeOther, "/")
+	http.Redirect(ctx.Writer, ctx.Request, "/", http.StatusSeeOther)
 }
 
-func (ct *Controller) showUser(c *gin.Context) {
-	page, pageSize := utils.ParsePagination(c)
-
-	users, totalCount, err := ct.services.User.List(page, pageSize)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users."})
-		return
-	}
-
-	totalPages := (totalCount + int64(pageSize) - 1) / int64(pageSize)
-
-	utils.RenderWithLayout(c, "user/index.tmpl", gin.H{
-		"Roles":       model.GetUserRoles(),
-		"User":        users,
-		"TotalCount":  totalCount,
-		"TotalPages":  totalPages,
-		"CurrentPage": page,
-		"PageSize":    pageSize,
-	}, http.StatusOK)
+func (ct Controller) showUser(ctx server.Context) {
+	handler.HandleList(ctx, ct.services.User, "user/index.tmpl")
 }
 
-func (ct *Controller) showCreateUser(c *gin.Context) {
-	utils.RenderWithLayout(c, "user/create_or_edit.tmpl", gin.H{
-		"Roles": model.GetUserRoles(),
-	}, http.StatusOK)
+func (ct Controller) showCreateUser(ctx server.Context) {
+	handler.HandleShowCreate(ctx, handler.HandlerOptions{
+		RenderOnSuccess: "user/create_or_edit.tmpl",
+		TemplateData: func() (map[string]any, error) {
+			data := make(map[string]any, 1)
+			data["Roles"] = model.GetUserRoles()
+			return data, nil
+		},
+	})
 }
 
-func (ct *Controller) showEditUser(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/user", "id")
-	if !ok {
-		return
-	}
-
-	user, err := ct.services.User.FindByID(id)
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/user")
-	}
-
-	utils.RenderWithLayout(c, "user/create_or_edit.tmpl", gin.H{
-		"Roles": model.GetUserRoles(),
-		"User":  user,
-	}, http.StatusOK)
+func (ct Controller) createUser(ctx server.Context) {
+	handler.HandleCreate(ctx, ct.services.User, dto.UserData{
+		Email:    ctx.Request.PostFormValue("email"),
+		Password: ctx.Request.PostFormValue("password"),
+		Role:     ctx.Request.PostFormValue("role"),
+	}, handler.HandlerOptions{
+		RedirectOnSuccess: "/user",
+		RenderOnFail:      "user/create_or_edit.tmpl",
+	})
 }
 
-func (ct *Controller) editUser(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/user", "id")
-	if !ok {
-		return
-	}
-
-	user, err := ct.services.User.FindByID(id)
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/user")
-	}
-
-	email := c.PostForm("email")
-	password := c.PostForm("password")
-	role := c.PostForm("role")
-
-	user.Email = email
-	user.Role = model.Role(role)
-
-	if password != "" {
-		user.Password = password
-	}
-
-	ct.services.User.Save(user)
-	c.Redirect(http.StatusSeeOther, "/user")
+func (ct Controller) showEditUser(ctx server.Context) {
+	handler.HandleShowEdit(ctx, ct.services.User, ctx.Request.PathValue("id"), handler.HandlerOptions{
+		RedirectOnFail:  "/user",
+		RenderOnSuccess: "user/create_or_edit.tmpl",
+		TemplateData: func() (map[string]any, error) {
+			data := make(map[string]any, 1)
+			data["Roles"] = model.GetUserRoles()
+			return data, nil
+		},
+	})
 }
 
-func (ct *Controller) createUser(c *gin.Context) {
-	email := c.PostForm("email")
-	password := c.PostForm("password")
-	role := c.PostForm("role")
-
-	_, err := ct.services.User.Create(email, password, model.Role(role))
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/user")
-		return
-	}
-
-	c.Redirect(http.StatusSeeOther, "/user")
+func (ct Controller) editUser(ctx server.Context) {
+	handler.HandleEdit(ctx, ct.services.User, ctx.Request.PathValue("id"), dto.UserData{
+		Email:    ctx.Request.PostFormValue("email"),
+		Password: ctx.Request.PostFormValue("password"),
+		Role:     ctx.Request.PostFormValue("role"),
+	}, handler.HandlerOptions{
+		RedirectOnSuccess: "/user",
+		RenderOnFail:      "user/create_or_edit.tmpl",
+	})
 }
 
-func (ct *Controller) deleteUser(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/user", "id")
-	if !ok {
-		return
-	}
-
-	ct.services.User.DeleteByID(id)
-	c.Redirect(http.StatusSeeOther, "/user")
+func (ct Controller) deleteUser(ctx server.Context) {
+	handler.HandleDelete(ctx, ct.services.User, ctx.Request.PathValue("id"), handler.HandlerOptions{
+		RedirectOnSuccess: "/user",
+		RedirectOnFail:    "/user",
+	})
 }

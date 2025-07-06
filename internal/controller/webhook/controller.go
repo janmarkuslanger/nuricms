@@ -1,14 +1,12 @@
 package webhook
 
 import (
-	"net/http"
-	"strings"
-
-	"github.com/gin-gonic/gin"
+	"github.com/janmarkuslanger/nuricms/internal/dto"
+	"github.com/janmarkuslanger/nuricms/internal/handler"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
+	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/janmarkuslanger/nuricms/internal/service"
-	"github.com/janmarkuslanger/nuricms/internal/utils"
 )
 
 type Controller struct {
@@ -19,130 +17,110 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (ct *Controller) RegisterRoutes(r *gin.Engine) {
-	secure := r.Group("/webhooks", middleware.Userauth(ct.services.User))
+func (ct *Controller) RegisterRoutes(s *server.Server) {
+	s.Handle("GET /webhooks",
+		ct.showWebhooks,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
 
-	secure.GET("/", middleware.Roleauth(model.RoleAdmin), ct.showWebhooks)
-	secure.GET("/create", middleware.Roleauth(model.RoleAdmin), ct.showCreateWebhook)
-	secure.POST("/create", middleware.Roleauth(model.RoleAdmin), ct.createWebhook)
-	secure.GET("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.showEditWebhook)
-	secure.POST("/edit/:id", middleware.Roleauth(model.RoleAdmin), ct.editWebhook)
-	secure.POST("/delete/:id", middleware.Roleauth(model.RoleAdmin), ct.deleteWebhook)
+	s.Handle("GET /webhooks/create",
+		ct.showCreateWebhook,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
+
+	s.Handle("POST /webhooks/create",
+		ct.createWebhook,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
+
+	s.Handle("GET /webhooks/edit/{id}",
+		ct.showEditWebhook,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
+
+	s.Handle("POST /webhooks/edit/{id}",
+		ct.editWebhook,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
+
+	s.Handle("POST /webhooks/delete/{id}",
+		ct.deleteWebhook,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin),
+	)
 }
 
-func (ct *Controller) showWebhooks(c *gin.Context) {
-	page, pageSize := utils.ParsePagination(c)
-
-	webhooks, totalCount, err := ct.services.Webhook.List(page, pageSize)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve webhooks."})
-		return
-	}
-
-	totalPages := (totalCount + int64(pageSize) - 1) / int64(pageSize)
-
-	utils.RenderWithLayout(c, "webhook/index.tmpl", gin.H{
-		"Webhooks":    webhooks,
-		"TotalCount":  totalCount,
-		"TotalPages":  totalPages,
-		"CurrentPage": page,
-		"PageSize":    pageSize,
-	}, http.StatusOK)
+func (ct Controller) showWebhooks(ctx server.Context) {
+	handler.HandleList(ctx, ct.services.Webhook, "webhook/index.tmpl")
 }
 
-func (ct *Controller) showCreateWebhook(c *gin.Context) {
-	utils.RenderWithLayout(c, "webhook/create_or_edit.tmpl", gin.H{
-		"RequestTypes": model.GetRequestTypes(),
-		"EventTypes":   model.GetWebhookEvents(),
-	}, http.StatusOK)
+func (ct Controller) showCreateWebhook(ctx server.Context) {
+	handler.HandleShowCreate(ctx, handler.HandlerOptions{
+		RenderOnSuccess: "webhook/create_or_edit.tmpl",
+		TemplateData: func() (map[string]any, error) {
+			data := make(map[string]any, 1)
+			data["RequestTypes"] = model.GetRequestTypes()
+			data["EventTypes"] = model.GetWebhookEvents()
+			return data, nil
+		},
+	})
 }
 
-func (ct *Controller) createWebhook(c *gin.Context) {
-	name := c.PostForm("name")
-	url := c.PostForm("url")
-	requestType := model.RequestType(c.PostForm("request_type"))
-
-	events := map[model.EventType]bool{}
-
+func (ct Controller) createWebhook(ctx server.Context) {
+	events := make(map[string]bool)
 	for _, event := range model.GetWebhookEvents() {
-		isActive := c.PostForm(string(event)) == "on"
-		events[event] = isActive
+		events[string(event)] = ctx.Request.PostFormValue(string(event)) == "on"
 	}
 
-	_, err := ct.services.Webhook.Create(name, url, requestType, events)
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/webhooks")
-		return
-	}
-
-	c.Redirect(http.StatusSeeOther, "/webhooks")
+	handler.HandleCreate(ctx, ct.services.Webhook, dto.WebhookData{
+		Name:        ctx.Request.PostFormValue("name"),
+		Url:         ctx.Request.PostFormValue("url"),
+		RequestType: ctx.Request.PostFormValue("request_type"),
+		Events:      events,
+	}, handler.HandlerOptions{
+		RedirectOnSuccess: "/webhooks",
+		RenderOnFail:      "webhook/create_or_edit.tmpl",
+	})
 }
 
-func (ct *Controller) showEditWebhook(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/webhooks", "id")
-	if !ok {
-		return
-	}
-
-	webhook, err := ct.services.Webhook.FindByID(id)
-	if err != nil {
-		c.AbortWithStatus(http.StatusNotFound)
-		return
-	}
-
-	utils.RenderWithLayout(c, "webhook/create_or_edit.tmpl", gin.H{
-		"RequestTypes":    model.GetRequestTypes(),
-		"EventTypes":      model.GetWebhookEvents(),
-		"Webhook":         webhook,
-		"EventTypeValues": strings.Split(webhook.Events, ","),
-	}, http.StatusOK)
+func (ct Controller) showEditWebhook(ctx server.Context) {
+	handler.HandleShowEdit(ctx, ct.services.Webhook, ctx.Request.PathValue("id"), handler.HandlerOptions{
+		RedirectOnFail:  "/webhooks",
+		RenderOnSuccess: "webhook/create_or_edit.tmpl",
+		TemplateData: func() (map[string]any, error) {
+			data := make(map[string]any, 1)
+			data["RequestTypes"] = model.GetRequestTypes()
+			data["EventTypes"] = model.GetWebhookEvents()
+			return data, nil
+		},
+	})
 }
 
-func (ct *Controller) editWebhook(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/webhooks", "id")
-	if !ok {
-		return
-	}
-
-	webhook, err := ct.services.Webhook.FindByID(id)
-	if err != nil {
-		c.AbortWithStatus(http.StatusNotFound)
-		return
-	}
-
-	name := c.PostForm("name")
-	url := c.PostForm("url")
-	requestType := model.RequestType(c.PostForm("request_type"))
-
-	var eventString strings.Builder
+func (ct Controller) editWebhook(ctx server.Context) {
+	events := make(map[string]bool)
 	for _, event := range model.GetWebhookEvents() {
-		s := string(event)
-		if c.PostForm(s) == "on" {
-			eventString.WriteString(s)
-			eventString.WriteString(",")
-		}
+		events[string(event)] = ctx.Request.PostFormValue(string(event)) == "on"
 	}
 
-	webhook.Name = name
-	webhook.Url = url
-	webhook.RequestType = requestType
-	webhook.Events = eventString.String()
-
-	err = ct.services.Webhook.Save(webhook)
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/webhooks")
-		return
-	}
-
-	c.Redirect(http.StatusSeeOther, "/webhooks")
+	handler.HandleEdit(ctx, ct.services.Webhook, ctx.Request.PathValue("id"), dto.WebhookData{
+		Name:        ctx.Request.PostFormValue("name"),
+		Url:         ctx.Request.PostFormValue("url"),
+		RequestType: ctx.Request.PostFormValue("request_type"),
+		Events:      events,
+	}, handler.HandlerOptions{
+		RedirectOnSuccess: "/webhooks",
+		RenderOnFail:      "webhook/create_or_edit.tmpl",
+	})
 }
 
-func (ct *Controller) deleteWebhook(c *gin.Context) {
-	id, ok := utils.GetParamOrRedirect(c, "/webhooks", "id")
-	if !ok {
-		return
-	}
-
-	ct.services.Webhook.DeleteByID(id)
-	c.Redirect(http.StatusSeeOther, "/user")
+func (ct Controller) deleteWebhook(ctx server.Context) {
+	handler.HandleDelete(ctx, ct.services.Webhook, ctx.Request.PathValue("id"), handler.HandlerOptions{
+		RedirectOnSuccess: "/webhooks",
+		RedirectOnFail:    "/webhooks",
+	})
 }

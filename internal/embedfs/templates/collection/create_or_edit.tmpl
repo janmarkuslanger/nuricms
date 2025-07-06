@@ -1,27 +1,27 @@
 {{ define "content" }}
     <h1>New collection</h1>
-    <form method="POST" action="{{ if .Collection }}/collections/edit/{{ .Collection.ID }}{{ else }}/collections/create{{ end }}">
+    <form method="POST" action="{{ if .Item }}/collections/edit/{{ .Item.ID }}{{ else }}/collections/create{{ end }}">
 
         <fieldset class="fieldset">
             <legend class="fieldset-legend">Name:</legend>
-            <input class="input" type="text" name="name" {{ if .Collection.Name }}value="{{ .Collection.Name }}"{{ end }}>
+            <input class="input" type="text" name="name" {{ if .Item.Name }}value="{{ .Item.Name }}"{{ end }}>
         </fieldset>
 
         <fieldset class="fieldset">
             <legend class="fieldset-legend">Alias:</legend>
-            <input class="input" type="text" name="alias" {{ if .Collection.Alias }}value="{{ .Collection.Alias }}"{{ end }}>
+            <input class="input" type="text" name="alias" {{ if .Item.Alias }}value="{{ .Item.Alias }}"{{ end }}>
         </fieldset>
 
         <fieldset class="fieldset">
             <legend class="fieldset-legend">Description:</legend>
-            <textarea class="textarea" name="description">{{ if .Collection.Description }}{{ .Collection.Description }}{{ end }}</textarea>
+            <textarea class="textarea" name="description">{{ if .Item.Description }}{{ .Item.Description }}{{ end }}</textarea>
         </fieldset>
 
-        <button class="btn my-4" type="submit">{{ if .Collection }}Update{{ else }}Create{{ end }}</button>
+        <button class="btn my-4" type="submit">{{ if .Item }}Update{{ else }}Create{{ end }}</button>
     </form>
 
-    {{ if .Collection }}
-        <form method="POST" action="/collections/delete/{{ .Collection.ID }}" onsubmit="return confirm('Confirm deletion?');">
+    {{ if .Item }}
+        <form method="POST" action="/collections/delete/{{ .Item.ID }}" onsubmit="return confirm('Confirm deletion?');">
             <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}

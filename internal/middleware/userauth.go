@@ -1,10 +1,10 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 )
 
@@ -12,42 +12,56 @@ type jwtValidator interface {
 	ValidateJWT(token string) (uint, string, model.Role, error)
 }
 
-func Userauth(userService jwtValidator) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token, err := c.Cookie("auth_token")
-		if err != nil {
-			hdr := c.GetHeader("Authorization")
-			if !strings.HasPrefix(hdr, "Bearer ") {
-				c.Redirect(http.StatusSeeOther, "/login")
+func Userauth(jwtService jwtValidator) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenCookie, err := r.Cookie("auth_token")
+			var token string
+			if err == nil {
+				token = tokenCookie.Value
+			} else {
+				authHeader := r.Header.Get("Authorization")
+				if !strings.HasPrefix(authHeader, "Bearer ") {
+					http.Redirect(w, r, "/login", http.StatusSeeOther)
+					return
+				}
+				token = strings.TrimPrefix(authHeader, "Bearer ")
+			}
+
+			uid, email, role, err := jwtService.ValidateJWT(token)
+			if err != nil {
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
 				return
 			}
-			token = strings.TrimPrefix(hdr, "Bearer ")
-		}
 
-		uid, email, role, err := userService.ValidateJWT(token)
-		if err != nil {
-			c.Redirect(http.StatusSeeOther, "/login")
-			return
-		}
-		c.Set("userID", uid)
-		c.Set("userEmail", email)
-		c.Set("userRole", role)
+			ctx := context.WithValue(r.Context(), UserIDKey, uid)
+			ctx = context.WithValue(ctx, UserEmailKey, email)
+			ctx = context.WithValue(ctx, UserRoleKey, role)
 
-		c.Next()
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 
-func Roleauth(allowed ...model.Role) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		val, _ := c.Get("userRole")
-		userRole := val.(model.Role)
-
-		for _, want := range allowed {
-			if userRole == want {
-				c.Next()
+func Roleauth(allowed ...model.Role) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			roleVal := r.Context().Value(UserRoleKey)
+			role, ok := roleVal.(model.Role)
+			if !ok {
+				http.Error(w, "missing role", http.StatusForbidden)
 				return
 			}
-		}
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+
+			for _, want := range allowed {
+				if role == want {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			http.Error(w, "insufficient permissions", http.StatusForbidden)
+		})
 	}
 }

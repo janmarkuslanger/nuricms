@@ -1,199 +1,121 @@
 package middleware
 
 import (
-	"encoding/json"
-	"errors"
+	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-type fakeUserService struct {
-	validTokens map[string]struct {
-		uid   uint
-		email string
-		role  model.Role
-	}
+type mockValidator struct {
+	mock.Mock
 }
 
-func (f *fakeUserService) ValidateJWT(token string) (uint, string, model.Role, error) {
-	if val, ok := f.validTokens[token]; ok {
-		return val.uid, val.email, val.role, nil
-	}
-	return 0, "", "", errors.New("invalid token")
+func (m *mockValidator) ValidateJWT(token string) (uint, string, model.Role, error) {
+	args := m.Called(token)
+	return args.Get(0).(uint), args.String(1), args.Get(2).(model.Role), args.Error(3)
 }
 
-func TestUserauthMiddleware(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestUserauth_WithCookie_Success(t *testing.T) {
+	validator := new(mockValidator)
+	validator.On("ValidateJWT", "validtoken").Return(uint(1), "user@example.com", model.RoleAdmin, nil)
 
-	fakeSvc := &fakeUserService{
-		validTokens: map[string]struct {
-			uid   uint
-			email string
-			role  model.Role
-		}{
-			"good-token": {uid: 42, email: "test@example.com", role: model.RoleAdmin},
-		},
-	}
+	handler := Userauth(validator)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, uint(1), r.Context().Value(UserIDKey))
+		assert.Equal(t, "user@example.com", r.Context().Value(UserEmailKey))
+		assert.Equal(t, model.RoleAdmin, r.Context().Value(UserRoleKey))
+		w.WriteHeader(http.StatusOK)
+	}))
 
-	tests := []struct {
-		name             string
-		setCookie        bool
-		cookieToken      string
-		setAuthHeader    bool
-		headerValue      string
-		expectedStatus   int
-		expectedLocation string
-		expectUserID     uint
-		expectEmail      string
-		expectRole       model.Role
-		callNext         bool
-	}{
-		{
-			name:             "No cookie, no Authorization header → Redirect",
-			setCookie:        false,
-			setAuthHeader:    false,
-			expectedStatus:   http.StatusSeeOther,
-			expectedLocation: "/login",
-			callNext:         false,
-		},
-		{
-			name:             "Invalid Authorization header (no Bearer prefix) → Redirect",
-			setCookie:        false,
-			setAuthHeader:    true,
-			headerValue:      "SomethingElse xyz",
-			expectedStatus:   http.StatusSeeOther,
-			expectedLocation: "/login",
-			callNext:         false,
-		},
-		{
-			name:             "Bearer header present, invalid token → Redirect",
-			setCookie:        false,
-			setAuthHeader:    true,
-			headerValue:      "Bearer bad-token",
-			expectedStatus:   http.StatusSeeOther,
-			expectedLocation: "/login",
-			callNext:         false,
-		},
-		{
-			name:           "Bearer header present, valid token → Next called",
-			setCookie:      false,
-			setAuthHeader:  true,
-			headerValue:    "Bearer good-token",
-			expectedStatus: http.StatusOK,
-			expectUserID:   42,
-			expectEmail:    "test@example.com",
-			expectRole:     model.RoleAdmin,
-			callNext:       true,
-		},
-		{
-			name:           "Cookie present, valid token → Next called",
-			setCookie:      true,
-			cookieToken:    "good-token",
-			setAuthHeader:  false,
-			expectedStatus: http.StatusOK,
-			expectUserID:   42,
-			expectEmail:    "test@example.com",
-			expectRole:     model.RoleAdmin,
-			callNext:       true,
-		},
-	}
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "auth_token", Value: "validtoken"})
+	w := httptest.NewRecorder()
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			router := gin.New()
-			router.Use(Userauth(fakeSvc))
-			router.GET("/test", func(c *gin.Context) {
-				id, _ := c.Get("userID")
-				email, _ := c.Get("userEmail")
-				role, _ := c.Get("userRole")
-				c.JSON(http.StatusOK, gin.H{
-					"userID":    id,
-					"userEmail": email,
-					"userRole":  role,
-				})
-			})
-
-			req := httptest.NewRequest("GET", "/test", nil)
-			if tc.setCookie {
-				req.AddCookie(&http.Cookie{Name: "auth_token", Value: tc.cookieToken})
-			}
-			if tc.setAuthHeader {
-				req.Header.Set("Authorization", tc.headerValue)
-			}
-			w := httptest.NewRecorder()
-			router.ServeHTTP(w, req)
-
-			if tc.callNext {
-				assert.Equal(t, http.StatusOK, w.Code)
-				var body map[string]interface{}
-				err := json.Unmarshal(w.Body.Bytes(), &body)
-				assert.NoError(t, err)
-				assert.Equal(t, float64(tc.expectUserID), body["userID"])
-				assert.Equal(t, tc.expectEmail, body["userEmail"])
-				assert.Equal(t, string(tc.expectRole), body["userRole"])
-			} else {
-				assert.Equal(t, tc.expectedStatus, w.Code)
-				loc := w.Header().Get("Location")
-				assert.Equal(t, tc.expectedLocation, loc)
-			}
-		})
-	}
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
-func TestRoleauthMiddleware(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestUserauth_WithHeader_Success(t *testing.T) {
+	validator := new(mockValidator)
+	validator.On("ValidateJWT", "validtoken").Return(uint(2), "header@example.com", model.RoleEditor, nil)
 
-	tests := []struct {
-		name           string
-		userRole       model.Role
-		allowedRoles   []model.Role
-		expectedStatus int
-		responseBody   string
-		callNext       bool
-	}{
-		{
-			name:           "RoleAdmin allowed → Next called",
-			userRole:       model.RoleAdmin,
-			allowedRoles:   []model.Role{model.RoleAdmin, model.RoleEditor},
-			expectedStatus: http.StatusOK,
-			callNext:       true,
-		},
-		{
-			name:           "RoleEditor not allowed (only Admin) → 403 Forbidden",
-			userRole:       model.RoleEditor,
-			allowedRoles:   []model.Role{model.RoleAdmin},
-			expectedStatus: http.StatusForbidden,
-			responseBody:   `{"error":"insufficient permissions"}`,
-			callNext:       false,
-		},
-	}
+	handler := Userauth(validator)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, uint(2), r.Context().Value(UserIDKey))
+		assert.Equal(t, "header@example.com", r.Context().Value(UserEmailKey))
+		assert.Equal(t, model.RoleEditor, r.Context().Value(UserRoleKey))
+		w.WriteHeader(http.StatusOK)
+	}))
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			router := gin.New()
-			router.Use(func(c *gin.Context) {
-				c.Set("userRole", tc.userRole)
-				c.Next()
-			})
-			router.GET("/test", Roleauth(tc.allowedRoles...), func(c *gin.Context) {
-				c.String(http.StatusOK, "ROLE_OK")
-			})
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer validtoken")
+	w := httptest.NewRecorder()
 
-			req := httptest.NewRequest("GET", "/test", nil)
-			w := httptest.NewRecorder()
-			router.ServeHTTP(w, req)
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
 
-			assert.Equal(t, tc.expectedStatus, w.Code)
-			if tc.callNext {
-				assert.Equal(t, "ROLE_OK", w.Body.String())
-			} else {
-				assert.JSONEq(t, tc.responseBody, w.Body.String())
-			}
-		})
-	}
+func TestUserauth_MissingToken(t *testing.T) {
+	validator := new(mockValidator)
+
+	handler := Userauth(validator)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not reach handler")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	assert.Equal(t, "/login", w.Header().Get("Location"))
+}
+
+func TestRoleauth_AccessGranted(t *testing.T) {
+	handler := Roleauth(model.RoleAdmin)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, UserRoleKey, model.RoleAdmin)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestRoleauth_AccessDenied(t *testing.T) {
+	handler := Roleauth(model.RoleAdmin)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not be allowed")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, UserRoleKey, model.RoleEditor)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.True(t, strings.Contains(w.Body.String(), "insufficient permissions"))
+}
+
+func TestRoleauth_NoRoleSet(t *testing.T) {
+	handler := Roleauth(model.RoleAdmin)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not be allowed")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.True(t, strings.Contains(w.Body.String(), "missing role"))
 }

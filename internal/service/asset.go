@@ -1,13 +1,14 @@
 package service
 
 import (
+	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
+	"github.com/janmarkuslanger/nuricms/internal/server"
 )
 
 type AssetService interface {
@@ -15,7 +16,7 @@ type AssetService interface {
 	DeleteByID(id uint) error
 	Save(asset *model.Asset) error
 	Create(asset *model.Asset) error
-	UploadFile(c *gin.Context, file *multipart.FileHeader) (string, error)
+	UploadFile(ctx server.Context, file *multipart.FileHeader) (string, error)
 	FindByID(id uint) (*model.Asset, error)
 }
 
@@ -29,10 +30,27 @@ func NewAssetService(repos *repository.Set) AssetService {
 	}
 }
 
-func (s *assetService) UploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
-	savePath := filepath.Join("public", "assets", file.Filename)
-	if err := c.SaveUploadedFile(file, savePath); err != nil {
-		return savePath, err
+func (s *assetService) UploadFile(ctx server.Context, header *multipart.FileHeader) (string, error) {
+	src, err := header.Open()
+	if err != nil {
+		return "", err
+	}
+	defer src.Close()
+
+	savePath := filepath.Join("public", "assets", header.Filename)
+
+	if err := os.MkdirAll(filepath.Dir(savePath), 0755); err != nil {
+		return "", err
+	}
+
+	dst, err := os.Create(savePath)
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, src); err != nil {
+		return "", err
 	}
 
 	return savePath, nil

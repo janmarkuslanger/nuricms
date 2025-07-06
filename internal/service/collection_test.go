@@ -125,7 +125,7 @@ func TestCollectionService_Create(t *testing.T) {
 	repo := new(mockCollectionRepo)
 	svc := newTestCollectionService(repo)
 
-	data := &dto.CollectionData{Name: "N", Alias: "A", Description: "D"}
+	data := dto.CollectionData{Name: "N", Alias: "A", Description: "D"}
 	repo.On("Create", mock.MatchedBy(func(c *model.Collection) bool {
 		return c.Name == "N" && c.Alias == "A" && c.Description == "D"
 	})).Return(nil)
@@ -141,7 +141,7 @@ func TestCollectionService_Create_Error(t *testing.T) {
 	repo := new(mockCollectionRepo)
 	svc := newTestCollectionService(repo)
 
-	data := &dto.CollectionData{Name: "N", Alias: "A", Description: ""}
+	data := dto.CollectionData{Name: "N", Alias: "A", Description: ""}
 	repo.On("Create", mock.Anything).Return(errors.New("cfail"))
 
 	_, err := svc.Create(data)

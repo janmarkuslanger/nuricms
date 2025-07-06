@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/testutils"
@@ -18,7 +19,11 @@ func TestUserService_Create_ValidRole(t *testing.T) {
 	repos := repository.NewSet(db)
 	svc := NewUserService(repos, []byte("secret"))
 
-	user, err := svc.Create("u@example.com", "pass123", model.RoleAdmin)
+	user, err := svc.Create(dto.UserData{
+		Email:    "u@example.com",
+		Password: "pass123",
+		Role:     string(model.RoleAdmin),
+	})
 	assert.NoError(t, err)
 	assert.NotZero(t, user.ID)
 	assert.Equal(t, "u@example.com", user.Email)
@@ -31,9 +36,13 @@ func TestUserService_Create_InvalidRole(t *testing.T) {
 	repos := repository.NewSet(db)
 	svc := NewUserService(repos, []byte("secret"))
 
-	user, err := svc.Create("u2@example.com", "pass", model.Role("unknown"))
+	user, err := svc.Create(dto.UserData{
+		Email:    "u@example.com",
+		Password: "pass",
+		Role:     "unknown",
+	})
 	assert.Nil(t, user)
-	assert.EqualError(t, err, "Not a valid role")
+	assert.EqualError(t, err, "not a valid role")
 }
 
 func TestUserService_ListAndDeleteByID(t *testing.T) {
@@ -41,8 +50,16 @@ func TestUserService_ListAndDeleteByID(t *testing.T) {
 	repos := repository.NewSet(db)
 	svc := NewUserService(repos, []byte("secret"))
 
-	u1, _ := svc.Create("a@e.com", "p", model.RoleEditor)
-	svc.Create("ab@e.com", "p", model.RoleEditor)
+	u1, _ := svc.Create(dto.UserData{
+		Email:    "a@e.com",
+		Password: "p",
+		Role:     string(model.RoleEditor),
+	})
+	svc.Create(dto.UserData{
+		Email:    "aaaaaa@e.com",
+		Password: "p",
+		Role:     string(model.RoleEditor),
+	})
 
 	list, total, err := svc.List(1, 10)
 	assert.NoError(t, err)
@@ -60,7 +77,11 @@ func TestUserService_FindSaveDelete(t *testing.T) {
 	repos := repository.NewSet(db)
 	svc := NewUserService(repos, []byte("secret"))
 
-	u, _ := svc.Create("c@e.com", "pw", model.RoleAdmin)
+	u, _ := svc.Create(dto.UserData{
+		Email:    "c@e.com",
+		Password: "pw",
+		Role:     string(model.RoleAdmin),
+	})
 	found, err := svc.FindByID(u.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, u.ID, found.ID)
@@ -83,7 +104,11 @@ func TestUserService_LoginUser_Success(t *testing.T) {
 	secret := []byte("mysecret")
 	svc := NewUserService(repos, secret)
 
-	u, _ := svc.Create("x@e.com", "mypw", model.RoleEditor)
+	u, _ := svc.Create(dto.UserData{
+		Email:    "x@e.com",
+		Password: "mypw",
+		Role:     string(model.RoleEditor),
+	})
 
 	tokenStr, err := svc.LoginUser("x@e.com", "mypw")
 	assert.NoError(t, err)
@@ -100,6 +125,26 @@ func TestUserService_LoginUser_Success(t *testing.T) {
 	assert.Equal(t, string(model.RoleEditor), claims["role"])
 }
 
+func TestUserService_LoginUser_EmptyEmail(t *testing.T) {
+	db := testutils.SetupTestDB(t)
+	repos := repository.NewSet(db)
+	svc := NewUserService(repos, []byte("secret"))
+
+	_, err := svc.LoginUser("", "pw")
+	assert.Error(t, err)
+	assert.EqualError(t, err, "email is empty")
+}
+
+func TestUserService_LoginUser_EmptyPassword(t *testing.T) {
+	db := testutils.SetupTestDB(t)
+	repos := repository.NewSet(db)
+	svc := NewUserService(repos, []byte("secret"))
+
+	_, err := svc.LoginUser("nuri@nuri.com", "")
+	assert.Error(t, err)
+	assert.EqualError(t, err, "password is empty")
+}
+
 func TestUserService_LoginUser_Failure(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
@@ -108,7 +153,11 @@ func TestUserService_LoginUser_Failure(t *testing.T) {
 	_, err := svc.LoginUser("no@e.com", "pw")
 	assert.Error(t, err)
 
-	svc.Create("y@e.com", "pw2", model.RoleAdmin)
+	svc.Create(dto.UserData{
+		Email:    "y@e.com",
+		Password: "pw2",
+		Role:     string(model.RoleAdmin),
+	})
 	_, err = svc.LoginUser("y@e.com", "wrong")
 	assert.Error(t, err)
 }
@@ -119,7 +168,11 @@ func TestUserService_ValidateJWT(t *testing.T) {
 	secret := []byte("abc123")
 	svc := NewUserService(repos, secret)
 
-	u, _ := svc.Create("z@e.com", "pw3", model.RoleEditor)
+	u, _ := svc.Create(dto.UserData{
+		Email:    "z@e.com",
+		Password: "pw3",
+		Role:     string(model.RoleEditor),
+	})
 	tokenStr, _ := svc.LoginUser("z@e.com", "pw3")
 
 	uid, email, role, err := svc.ValidateJWT(tokenStr)

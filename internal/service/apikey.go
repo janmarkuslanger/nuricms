@@ -6,13 +6,14 @@ import (
 	"errors"
 	"time"
 
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 )
 
 type ApikeyService interface {
 	List(page, pageSize int) ([]model.Apikey, int64, error)
-	CreateToken(name string, ttl time.Duration) (string, error)
+	Create(dto dto.ApikeyData) (*model.Apikey, error)
 	FindByID(id uint) (*model.Apikey, error)
 	DeleteByID(id uint) error
 	Validate(token string) error
@@ -28,33 +29,29 @@ func NewApikeyService(repos *repository.Set) *apikeyService {
 	}
 }
 
-func (s *apikeyService) CreateToken(name string, ttl time.Duration) (token string, err error) {
-	if name == "" {
-		return "", errors.New("no name given")
+func (s apikeyService) Create(dto dto.ApikeyData) (apiKey *model.Apikey, err error) {
+	if dto.Name == "" {
+		return apiKey, errors.New("no name given")
 	}
 
 	b := make([]byte, 32)
 	if _, err = rand.Read(b); err != nil {
-		return "", err
+		return apiKey, err
 	}
-	token = hex.EncodeToString(b)
+	token := hex.EncodeToString(b)
 
-	apiKey := &model.Apikey{
-		Name:  name,
+	apiKey = &model.Apikey{
+		Name:  dto.Name,
 		Token: token,
-	}
-	if ttl > 0 {
-		exp := time.Now().Add(ttl)
-		apiKey.ExpiresAt = &exp
 	}
 
 	if err := s.repos.Apikey.Create(apiKey); err != nil {
-		return "", err
+		return nil, err
 	}
-	return token, nil
+	return apiKey, nil
 }
 
-func (s *apikeyService) Validate(token string) error {
+func (s apikeyService) Validate(token string) error {
 	apikey, err := s.repos.Apikey.FindByToken(token)
 	if err != nil {
 		return errors.New("invalid api key")
@@ -65,15 +62,15 @@ func (s *apikeyService) Validate(token string) error {
 	return nil
 }
 
-func (s *apikeyService) List(page, pageSize int) ([]model.Apikey, int64, error) {
+func (s apikeyService) List(page, pageSize int) ([]model.Apikey, int64, error) {
 	return s.repos.Apikey.List(page, pageSize)
 }
 
-func (s *apikeyService) FindByID(id uint) (*model.Apikey, error) {
+func (s apikeyService) FindByID(id uint) (*model.Apikey, error) {
 	return s.repos.Apikey.FindByID(id)
 }
 
-func (s *apikeyService) DeleteByID(id uint) error {
+func (s apikeyService) DeleteByID(id uint) error {
 	apikey, err := s.repos.Apikey.FindByID(id)
 	if err != nil {
 		return err

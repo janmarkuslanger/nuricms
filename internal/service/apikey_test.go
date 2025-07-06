@@ -9,131 +9,142 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
-	"github.com/janmarkuslanger/nuricms/internal/repository/base"
+	"github.com/janmarkuslanger/nuricms/testutils"
 )
 
-type mockApikeyRepo struct{ mock.Mock }
-
-func (m *mockApikeyRepo) Create(a *model.Apikey) error {
-	return m.Called(a).Error(0)
-}
-func (m *mockApikeyRepo) Save(a *model.Apikey) error {
-	return m.Called(a).Error(0)
-}
-func (m *mockApikeyRepo) Delete(a *model.Apikey) error {
-	return m.Called(a).Error(0)
-}
-func (m *mockApikeyRepo) FindByToken(token string) (*model.Apikey, error) {
-	args := m.Called(token)
-	if obj := args.Get(0); obj != nil {
-		return obj.(*model.Apikey), args.Error(1)
-	}
-	return nil, args.Error(1)
-}
-func (m *mockApikeyRepo) FindByID(id uint, opts ...base.QueryOption) (*model.Apikey, error) {
-	args := m.Called(id)
-	if obj := args.Get(0); obj != nil {
-		return obj.(*model.Apikey), args.Error(1)
-	}
-	return nil, args.Error(1)
-}
-func (m *mockApikeyRepo) List(page, pageSize int, opts ...base.QueryOption) ([]model.Apikey, int64, error) {
-	args := m.Called(page, pageSize)
-	return args.Get(0).([]model.Apikey), args.Get(1).(int64), args.Error(2)
-}
-
 func newTestService(repo repository.ApikeyRepo) ApikeyService {
-	set := &repository.Set{Apikey: repo}
-	return NewApikeyService(set)
+	return NewApikeyService(&repository.Set{Apikey: repo})
 }
 
-func TestApikeyService_Create_Success(t *testing.T) {
-	repo := new(mockApikeyRepo)
+func TestCreate_Success(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
 	svc := newTestService(repo)
-	repo.
-		On("Create", mock.MatchedBy(func(a *model.Apikey) bool {
-			return a.Name == "test" && len(a.Token) == 64
-		})).
-		Return(nil)
-	token, err := svc.CreateToken("test", 0)
+
+	repo.On("Create", mock.MatchedBy(func(a *model.Apikey) bool {
+		return a.Name == "Test" && len(a.Token) == 64
+	})).Return(nil)
+
+	key, err := svc.Create(dto.ApikeyData{Name: "Test"})
+
 	assert.NoError(t, err)
-	assert.Len(t, token, 64)
+	assert.NotNil(t, key)
+	assert.Equal(t, "Test", key.Name)
+	assert.Len(t, key.Token, 64)
+
 	repo.AssertExpectations(t)
 }
 
-func TestApikeyService_Create_FailureOnRepo(t *testing.T) {
-	repo := new(mockApikeyRepo)
+func TestCreate_NoName(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
 	svc := newTestService(repo)
+
+	key, err := svc.Create(dto.ApikeyData{Name: ""})
+
+	assert.Nil(t, key)
+	assert.EqualError(t, err, "no name given")
+}
+
+func TestCreate_RepoFails(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
+	svc := newTestService(repo)
+
 	repo.On("Create", mock.Anything).Return(errors.New("db error"))
-	token, err := svc.CreateToken("xyz", time.Minute)
-	assert.Empty(t, token)
+
+	key, err := svc.Create(dto.ApikeyData{Name: "Fail"})
+
+	assert.Nil(t, key)
 	assert.EqualError(t, err, "db error")
 }
 
-func TestApikeyService_Validate_Success(t *testing.T) {
-	repo := new(mockApikeyRepo)
+func TestValidate_Success(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
 	svc := newTestService(repo)
-	future := time.Now().Add(time.Hour)
-	key := &model.Apikey{Model: gorm.Model{ID: 1}, Token: "tok", ExpiresAt: &future}
-	repo.On("FindByToken", "tok").Return(key, nil)
-	err := svc.Validate("tok")
+
+	key := &model.Apikey{
+		Model: gorm.Model{ID: 1},
+		Token: "abc",
+	}
+	repo.On("FindByToken", "abc").Return(key, nil)
+
+	err := svc.Validate("abc")
 	assert.NoError(t, err)
 }
 
-func TestApikeyService_Validate_InvalidToken(t *testing.T) {
-	repo := new(mockApikeyRepo)
+func TestValidate_Expired(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
 	svc := newTestService(repo)
-	repo.On("FindByToken", "bad").Return(nil, errors.New("not found"))
-	err := svc.Validate("bad")
-	assert.EqualError(t, err, "invalid api key")
-}
 
-func TestApikeyService_Validate_Expired(t *testing.T) {
-	repo := new(mockApikeyRepo)
-	svc := newTestService(repo)
-	past := time.Now().Add(-time.Hour)
-	key := &model.Apikey{Model: gorm.Model{ID: 2}, Token: "tok2", ExpiresAt: &past}
-	repo.On("FindByToken", "tok2").Return(key, nil)
-	err := svc.Validate("tok2")
+	past := time.Now().Add(-1 * time.Hour)
+	key := &model.Apikey{
+		Model:     gorm.Model{ID: 2},
+		Token:     "expired",
+		ExpiresAt: &past,
+	}
+	repo.On("FindByToken", "expired").Return(key, nil)
+
+	err := svc.Validate("expired")
 	assert.EqualError(t, err, "api key expired")
 }
 
-func TestApikeyService_ListAndFindByID(t *testing.T) {
-	repo := new(mockApikeyRepo)
+func TestValidate_NotFound(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
 	svc := newTestService(repo)
-	sample := []model.Apikey{
-		{Model: gorm.Model{ID: 1}},
-		{Model: gorm.Model{ID: 2}},
+
+	repo.On("FindByToken", "invalid").Return(nil, errors.New("not found"))
+
+	err := svc.Validate("invalid")
+	assert.EqualError(t, err, "invalid api key")
+}
+
+func TestList(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
+	svc := newTestService(repo)
+
+	mockList := []model.Apikey{
+		{Model: gorm.Model{ID: 1}, Name: "One"},
+		{Model: gorm.Model{ID: 2}, Name: "Two"},
 	}
-	repo.On("List", 1, 2).Return(sample, int64(2), nil)
-	list, total, err := svc.List(1, 2)
+	repo.On("List", 1, 5).Return(mockList, int64(2), nil)
+
+	list, total, err := svc.List(1, 5)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(2), total)
-	assert.Equal(t, sample, list)
+	assert.Equal(t, mockList, list)
+}
 
-	key := &model.Apikey{Model: gorm.Model{ID: 3}}
-	repo.On("FindByID", uint(3)).Return(key, nil)
-	found, err := svc.FindByID(3)
+func TestFindByID(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
+	svc := newTestService(repo)
+
+	key := &model.Apikey{Model: gorm.Model{ID: 10}, Name: "Test"}
+	repo.On("FindByID", uint(10)).Return(key, nil)
+
+	found, err := svc.FindByID(10)
 	assert.NoError(t, err)
 	assert.Equal(t, key, found)
 }
 
-func TestApikeyService_DeleteByID_Success(t *testing.T) {
-	repo := new(mockApikeyRepo)
+func TestDeleteByID_Success(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
 	svc := newTestService(repo)
-	key := &model.Apikey{Model: gorm.Model{ID: 5}}
-	repo.On("FindByID", uint(5)).Return(key, nil)
+
+	key := &model.Apikey{Model: gorm.Model{ID: 9}, Name: "DeleteMe"}
+	repo.On("FindByID", uint(9)).Return(key, nil)
 	repo.On("Delete", key).Return(nil)
-	err := svc.DeleteByID(5)
+
+	err := svc.DeleteByID(9)
 	assert.NoError(t, err)
 }
 
-func TestApikeyService_DeleteByID_NotFound(t *testing.T) {
-	repo := new(mockApikeyRepo)
+func TestDeleteByID_NotFound(t *testing.T) {
+	repo := new(testutils.MockApikeyRepo)
 	svc := newTestService(repo)
-	repo.On("FindByID", uint(7)).Return(nil, errors.New("not found"))
-	err := svc.DeleteByID(7)
+
+	repo.On("FindByID", uint(404)).Return(nil, errors.New("not found"))
+
+	err := svc.DeleteByID(404)
 	assert.EqualError(t, err, "not found")
 }

@@ -1,14 +1,13 @@
 package utils
 
 import (
+	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
-func ParsePagination(c *gin.Context) (page int, pageSize int) {
-	pageParam := c.DefaultQuery("page", "1")
-	pageSizeParam := c.DefaultQuery("pageSize", "10")
+func ParsePagination(r *http.Request) (page int, pageSize int) {
+	pageParam := DefaultQuery(r, "page", "1")
+	pageSizeParam := DefaultQuery(r, "pageSize", "10")
 
 	page, err := strconv.Atoi(pageParam)
 	if err != nil {

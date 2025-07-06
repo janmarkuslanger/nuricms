@@ -1,7 +1,9 @@
 package nuricms
 
 import (
-	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+
 	"github.com/janmarkuslanger/nuricms/internal/controller/api"
 	"github.com/janmarkuslanger/nuricms/internal/controller/apikey"
 	"github.com/janmarkuslanger/nuricms/internal/controller/asset"
@@ -13,8 +15,10 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/controller/webhook"
 	"github.com/janmarkuslanger/nuricms/internal/core"
 	"github.com/janmarkuslanger/nuricms/internal/db"
+	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
+	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/pkg/plugin"
 	"gorm.io/driver/sqlite"
@@ -36,7 +40,6 @@ func StartServer(config *ServerConfig) {
 		p.Register(hr)
 	}
 
-	router := gin.Default()
 	database, err := db.Init(sqlite.Open("nuricms.db"))
 	if err != nil {
 		panic("failed to init db")
@@ -58,7 +61,11 @@ func StartServer(config *ServerConfig) {
 
 	_, count, _ := services.User.List(1, 1)
 	if count == 0 {
-		services.User.Create("admin@admin.com", "mysecret", model.RoleAdmin)
+		services.User.Create(dto.UserData{
+			Email:    "admin@admin.com",
+			Password: "mysecret",
+			Role:     string(model.RoleAdmin),
+		})
 	}
 
 	modules := []core.Controller{
@@ -73,10 +80,11 @@ func StartServer(config *ServerConfig) {
 		webhook.NewController(services),
 	}
 
+	server := server.NewServer()
+
 	for _, module := range modules {
-		module.RegisterRoutes(router)
+		module.RegisterRoutes(server)
 	}
 
-	router.Static("/public/assets", "./public/assets")
-	router.Run("0.0.0.0:" + config.Port)
+	log.Fatal(http.ListenAndServe(":"+config.Port, server.Mux))
 }

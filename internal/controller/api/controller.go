@@ -1,13 +1,14 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
+	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
 )
@@ -20,19 +21,33 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (ct *Controller) RegisterRoutes(r *gin.Engine) {
-	api := r.Group("/api",
-		middleware.ApikeyAuth(ct.services.Apikey),
-	)
-	api.GET("/collections/:alias/content", ct.listContents)
-	api.GET("/content/:id", ct.findContentById)
-	api.GET("/collections/:alias/content/filter", ct.listContentsByFieldValue)
+func writeJSON(w http.ResponseWriter, status int, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(payload)
 }
 
-func (ct *Controller) findContentById(c *gin.Context) {
-	id, _ := utils.StringToUint(c.Param("id"))
+func (ct Controller) RegisterRoutes(s *server.Server) {
+	s.Handle("GET /api/collections/{alias}/content", ct.listContents,
+		middleware.ApikeyAuth(ct.services.Apikey),
+	)
+
+	s.Handle("GET /api/content/{id}", ct.findContentById,
+		middleware.ApikeyAuth(ct.services.Apikey),
+	)
+
+	s.Handle("GET /api/collections/{alias}/content/filter", ct.listContentsByFieldValue,
+		middleware.ApikeyAuth(ct.services.Apikey),
+	)
+}
+
+func (ct Controller) findContentById(ctx server.Context) {
+	idStr := ctx.Request.PathValue("id")
+	id, _ := utils.StringToUint(idStr)
+
 	data, _ := ct.services.Api.FindContentByID(id)
-	c.JSON(http.StatusOK, dto.ApiResponse{
+
+	writeJSON(ctx.Writer, http.StatusOK, dto.ApiResponse{
 		Data:    data,
 		Success: true,
 		Meta: &dto.MetaData{
@@ -41,22 +56,25 @@ func (ct *Controller) findContentById(c *gin.Context) {
 	})
 }
 
-func (ct *Controller) listContents(c *gin.Context) {
-	alias := c.Param("alias")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if page < 1 {
-		page = 1
+func (ct Controller) listContents(ctx server.Context) {
+	alias := ctx.Request.PathValue("alias")
+
+	page := 1
+	if p := ctx.Request.URL.Query().Get("page"); p != "" {
+		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
+			page = parsed
+		}
 	}
 	const perPage = 100
 	offset := (page - 1) * perPage
 
 	data, err := ct.services.Api.FindContentByCollectionAlias(alias, offset, perPage)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		writeJSON(ctx.Writer, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.ApiResponse{
+	writeJSON(ctx.Writer, http.StatusOK, dto.ApiResponse{
 		Data:    data,
 		Success: true,
 		Meta: &dto.MetaData{
@@ -69,28 +87,34 @@ func (ct *Controller) listContents(c *gin.Context) {
 	})
 }
 
-func (ct *Controller) listContentsByFieldValue(c *gin.Context) {
-	alias := c.Param("alias")
-	fieldAlias := c.Query("field")
-	value := c.Query("value")
+func (ct Controller) listContentsByFieldValue(ctx server.Context) {
+	req := ctx.Request
+	w := ctx.Writer
+
+	alias := req.PathValue("alias")
+
+	fieldAlias := req.URL.Query().Get("field")
+	value := req.URL.Query().Get("value")
 	if fieldAlias == "" || value == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "field and value query parameters are required",
-			"meta":    &dto.MetaData{Timestamp: time.Now().UTC()},
+		writeJSON(w, http.StatusBadRequest, dto.ApiResponse{
+			Success: false,
+			Meta:    &dto.MetaData{Timestamp: time.Now().UTC()},
 		})
 		return
 	}
-	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
+
+	page := 1
+	if p := req.URL.Query().Get("page"); p != "" {
+		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
+			page = parsed
+		}
 	}
 	const perPage = 100
 	offset := (page - 1) * perPage
 
 	items, _ := ct.services.Api.FindContentByCollectionAndFieldValue(alias, fieldAlias, value, offset, perPage)
 
-	c.JSON(http.StatusOK, dto.ApiResponse{
+	writeJSON(w, http.StatusOK, dto.ApiResponse{
 		Data:    items,
 		Success: true,
 		Meta: &dto.MetaData{

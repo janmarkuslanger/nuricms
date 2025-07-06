@@ -6,92 +6,71 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
-type fakeApikeyService struct {
-	validKeys map[string]error
+type apimockValidator struct {
+	ValidateFunc func(string) error
 }
 
-func (f *fakeApikeyService) Validate(token string) error {
-	if err, ok := f.validKeys[token]; ok {
-		return err
-	}
-	return errors.New("invalid API key")
+func (m *apimockValidator) Validate(token string) error {
+	return m.ValidateFunc(token)
 }
 
-func TestApikeyAuthMiddleware(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestApikeyAuth_MissingHeader(t *testing.T) {
+	validator := &apimockValidator{}
+	handler := ApikeyAuth(validator)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
 
-	fakeSvc := &fakeApikeyService{
-		validKeys: map[string]error{
-			"valid-key": nil,
-			"bad-key":   errors.New("key revoked"),
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "missing X-API-Key")
+}
+
+func TestApikeyAuth_InvalidToken(t *testing.T) {
+	validator := &apimockValidator{
+		ValidateFunc: func(token string) error {
+			return errors.New("invalid token")
 		},
 	}
 
-	tests := []struct {
-		name           string
-		setHeader      bool
-		headerValue    string
-		expectedStatus int
-		expectedBody   string
-		callNext       bool
-	}{
-		{
-			name:           "Missing X-API-Key header → 401",
-			setHeader:      false,
-			expectedStatus: http.StatusUnauthorized,
-			expectedBody:   `{"error":"missing X-API-Key header"}`,
-			callNext:       false,
-		},
-		{
-			name:           "Invalid key → 401",
-			setHeader:      true,
-			headerValue:    "unknown-key",
-			expectedStatus: http.StatusUnauthorized,
-			expectedBody:   `{"error":"invalid API key"}`,
-			callNext:       false,
-		},
-		{
-			name:           "Revoked key → 401",
-			setHeader:      true,
-			headerValue:    "bad-key",
-			expectedStatus: http.StatusUnauthorized,
-			expectedBody:   `{"error":"key revoked"}`,
-			callNext:       false,
-		},
-		{
-			name:           "Valid key → Next aufgerufen",
-			setHeader:      true,
-			headerValue:    "valid-key",
-			expectedStatus: http.StatusOK,
-			callNext:       true,
+	handler := ApikeyAuth(validator)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("X-API-Key", "invalid")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "invalid token")
+}
+
+func TestApikeyAuth_ValidToken(t *testing.T) {
+	validator := &apimockValidator{
+		ValidateFunc: func(token string) error {
+			return nil
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			router := gin.New()
-			router.Use(ApikeyAuth(fakeSvc))
-			router.GET("/test", func(c *gin.Context) {
-				c.String(http.StatusOK, "OK")
-			})
+	handler := ApikeyAuth(validator)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("success"))
+	}))
 
-			req := httptest.NewRequest("GET", "/test", nil)
-			if tc.setHeader {
-				req.Header.Set("X-API-Key", tc.headerValue)
-			}
-			w := httptest.NewRecorder()
-			router.ServeHTTP(w, req)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("X-API-Key", "valid-token")
+	rr := httptest.NewRecorder()
 
-			assert.Equal(t, tc.expectedStatus, w.Code)
-			if tc.callNext {
-				assert.Equal(t, "OK", w.Body.String())
-			} else {
-				assert.JSONEq(t, tc.expectedBody, w.Body.String())
-			}
-		})
-	}
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "success", rr.Body.String())
 }
