@@ -17,7 +17,7 @@ func NewController(services *service.Set) *Controller {
 	return &Controller{services: services}
 }
 
-func (ct *Controller) RegisterRoutes(s *server.Server) {
+func (ct Controller) RegisterRoutes(s *server.Server) {
 	s.Handle("GET /apikeys",
 		ct.showApikeys,
 		middleware.Userauth(ct.services.User),
