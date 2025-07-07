@@ -60,7 +60,7 @@ func (m *MockCollectionService) DeleteByID(collectionID uint) error {
 	args := m.Called(collectionID)
 	return args.Error(0)
 }
-func (m *MockCollectionService) Create(data *dto.CollectionData) (*model.Collection, error) {
+func (m *MockCollectionService) Create(data dto.CollectionData) (*model.Collection, error) {
 	args := m.Called(data)
 	if obj := args.Get(0); obj != nil {
 		return obj.(*model.Collection), args.Error(1)
@@ -73,6 +73,10 @@ func (m *MockCollectionService) FindByAlias(alias string) (*model.Collection, er
 		return obj.(*model.Collection), args.Error(1)
 	}
 	return nil, args.Error(1)
+}
+func (m *MockCollectionService) Save(col *model.Collection) error {
+	args := m.Called(col)
+	return args.Error(0)
 }
 func (m *MockCollectionService) FindByID(id uint) (*model.Collection, error) {
 	args := m.Called(id)
@@ -182,7 +186,7 @@ func (m *MockUserService) DeleteByID(id uint) error {
 }
 
 func (m *MockUserService) Create(dto dto.UserData) (*model.User, error) {
-	args := m.Called(dto.Email, dto.Password, dto.Role)
+	args := m.Called(dto)
 	return args.Get(0).(*model.User), args.Error(1)
 }
 
