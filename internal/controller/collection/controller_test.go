@@ -36,6 +36,22 @@ func setupTestServer() (*server.Server, *httptest.ResponseRecorder, *testutils.M
 	return srv, rec, mockCollection, mockUser
 }
 
+func Test_RegisterRoutes(t *testing.T) {
+	services := &service.Set{}
+	ctrl := NewController(services)
+
+	srv := server.NewServer()
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/collections", nil)
+	ctrl.RegisterRoutes(srv)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code == http.StatusNotFound {
+		t.Errorf("expected different code then 404, got %d", rec.Code)
+	}
+
+}
+
 func Test_showCollections(t *testing.T) {
 	srv, rec, collectionMock, _ := setupTestServer()
 	collectionMock.On("List", 1, 10).Return([]model.Collection{}, int64(0), nil)
