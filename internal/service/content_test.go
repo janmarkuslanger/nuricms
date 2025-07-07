@@ -1,84 +1,123 @@
-package service
+package service_test
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
+	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/testutils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestContentService_CreateAndFindByID(t *testing.T) {
-	db := testutils.SetupTestDB(t)
-	repos := repository.NewSet(db)
-	s := NewContentService(repos)
+func TestDeleteByID(t *testing.T) {
+	mockContentRepo := new(testutils.MockContentRepo)
+	mockContentValueRepo := new(testutils.MockContentValueRepo)
 
-	col := &model.Collection{Name: "Col1", Alias: "col1"}
-	repos.Collection.Create(col)
+	repos := &repository.Set{
+		Content:      mockContentRepo,
+		ContentValue: mockContentValueRepo,
+	}
 
-	c := &model.Content{CollectionID: col.ID}
-	created, err := s.Create(c)
+	s := service.NewContentService(repos)
+
+	id := uint(1)
+	mockContentRepo.On("DeleteByID", id).Return(nil)
+	mockContentValueRepo.On("FindByContentID", id).Return([]model.ContentValue{{}}, nil)
+	mockContentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(nil)
+
+	err := s.DeleteByID(id)
 	assert.NoError(t, err)
-	assert.NotZero(t, created.ID)
-
-	found, err := s.FindByID(created.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, created.ID, found.ID)
 }
 
-func TestContentService_ListByCollectionAliasAndByID(t *testing.T) {
-	db := testutils.SetupTestDB(t)
-	repos := repository.NewSet(db)
-	s := NewContentService(repos)
+func TestDeleteContentValuesByID(t *testing.T) {
+	mockContentValueRepo := new(testutils.MockContentValueRepo)
+	repos := &repository.Set{ContentValue: mockContentValueRepo}
+	s := service.NewContentService(repos)
 
-	col := &model.Collection{Name: "Col2", Alias: "col2"}
-	repos.Collection.Create(col)
+	mockContentValueRepo.On("FindByContentID", uint(1)).Return([]model.ContentValue{{}}, nil)
+	mockContentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(nil)
 
-	for i := 0; i < 3; i++ {
-		repos.Content.Create(&model.Content{CollectionID: col.ID})
-	}
-
-	listByID, err := s.FindByCollectionID(col.ID)
+	err := s.DeleteContentValuesByID(1)
 	assert.NoError(t, err)
-	assert.Len(t, listByID, 3)
-
-	listByAlias, err := s.ListByCollectionAlias("col2", 0, 0)
-	assert.NoError(t, err)
-	assert.Len(t, listByAlias, 3)
-
-	_, err = s.ListByCollectionAlias("missing", 0, 0)
-	assert.Error(t, err)
 }
 
-func TestContentService_FindDisplayAndListWithDisplay(t *testing.T) {
-	db := testutils.SetupTestDB(t)
-	repos := repository.NewSet(db)
-	s := NewContentService(repos)
+func TestCreate(t *testing.T) {
+	mockContentRepo := new(testutils.MockContentRepo)
+	repos := &repository.Set{Content: mockContentRepo}
+	s := service.NewContentService(repos)
 
-	col := &model.Collection{Name: "Col3", Alias: "col3"}
-	repos.Collection.Create(col)
-	f := &model.Field{Name: "F", Alias: "f", FieldType: "text", CollectionID: col.ID, DisplayField: true}
-	repos.Field.Create(f)
+	input := &model.Content{CollectionID: 1}
+	mockContentRepo.On("Create", input).Return(nil)
 
-	repos.Field.Create(&model.Field{Name: "X", Alias: "x", FieldType: "text", CollectionID: col.ID})
-
-	for i := 0; i < 2; i++ {
-		c, _ := s.Create(&model.Content{CollectionID: col.ID})
-		repos.ContentValue.Create(&model.ContentValue{ContentID: c.ID, FieldID: f.ID, Value: "v"})
-		repos.ContentValue.Create(&model.ContentValue{ContentID: c.ID, FieldID: f.ID, Value: "w"})
-	}
-
-	disp, total, err := s.FindDisplayValueByCollectionID(col.ID, 1, 1)
+	out, err := s.Create(input)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(2), total)
-	assert.Len(t, disp, 1)
-	for _, c := range disp {
-		assert.Len(t, c.ContentValues, 2)
-	}
+	assert.Equal(t, input, out)
+}
 
-	allDisp, err := s.FindContentsWithDisplayContentValue()
+func TestFindByID(t *testing.T) {
+	mockContentRepo := new(testutils.MockContentRepo)
+	repos := &repository.Set{Content: mockContentRepo}
+	s := service.NewContentService(repos)
+
+	mockContent := &model.Content{}
+	mockContentRepo.On("FindByID", uint(42)).Return(mockContent, nil)
+
+	result, err := s.FindByID(42)
 	assert.NoError(t, err)
-	assert.Len(t, allDisp, 2)
+	assert.Equal(t, mockContent, result)
+}
+
+func TestListByCollectionAlias(t *testing.T) {
+	mockContentRepo := new(testutils.MockContentRepo)
+	mockCollectionRepo := new(testutils.MockCollectionRepo)
+	repos := &repository.Set{
+		Content:    mockContentRepo,
+		Collection: mockCollectionRepo,
+	}
+	s := service.NewContentService(repos)
+
+	collection := &model.Collection{}
+	collection.ID = 1
+	mockCollectionRepo.On("FindByAlias", "blog").Return(collection, nil)
+	mockContentRepo.On("FindByCollectionID", uint(1), 0, 10).Return([]model.Content{{}}, nil)
+
+	contents, err := s.ListByCollectionAlias("blog", 0, 10)
+	assert.NoError(t, err)
+	assert.Len(t, contents, 1)
+}
+
+func TestFindByCollectionID(t *testing.T) {
+	mockContentRepo := new(testutils.MockContentRepo)
+	repos := &repository.Set{Content: mockContentRepo}
+	s := service.NewContentService(repos)
+
+	mockContentRepo.On("FindByCollectionID", uint(1), 0, 0).Return([]model.Content{{}}, nil)
+	result, err := s.FindByCollectionID(1)
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+}
+
+func TestFindDisplayValueByCollectionID(t *testing.T) {
+	mockContentRepo := new(testutils.MockContentRepo)
+	repos := &repository.Set{Content: mockContentRepo}
+	s := service.NewContentService(repos)
+
+	mockContentRepo.On("FindDisplayValueByCollectionID", uint(1), 0, 10).Return([]model.Content{{}}, int64(1), nil)
+	result, count, err := s.FindDisplayValueByCollectionID(1, 0, 10)
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+	assert.Equal(t, int64(1), count)
+}
+
+func TestFindContentsWithDisplayContentValue(t *testing.T) {
+	mockContentRepo := new(testutils.MockContentRepo)
+	repos := &repository.Set{Content: mockContentRepo}
+	s := service.NewContentService(repos)
+
+	mockContentRepo.On("ListWithDisplayContentValue").Return([]model.Content{{}}, nil)
+	result, err := s.FindContentsWithDisplayContentValue()
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
 }
