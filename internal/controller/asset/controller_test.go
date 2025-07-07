@@ -35,6 +35,22 @@ func setupAssetTest() (*server.Server, *httptest.ResponseRecorder, *testutils.Mo
 	return s, r, mockAsset, mockUser
 }
 
+func Test_RegisterRoutes(t *testing.T) {
+	services := &service.Set{}
+	ctrl := NewController(services)
+
+	srv := server.NewServer()
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/assets", nil)
+	ctrl.RegisterRoutes(srv)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code == http.StatusNotFound {
+		t.Errorf("expected different code then 404, got %d", rec.Code)
+	}
+
+}
+
 func Test_showAssets(t *testing.T) {
 	srv, rec, mockAsset, _ := setupAssetTest()
 	mockAsset.On("List", 1, mock.Anything).Return([]model.Asset{}, int64(0), nil)

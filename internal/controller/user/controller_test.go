@@ -36,6 +36,21 @@ func setupTestServer() (*server.Server, *httptest.ResponseRecorder, *testutils.M
 	return srv, rec, mockUser
 }
 
+func Test_RegisterRoutes(t *testing.T) {
+	services := &service.Set{}
+	ctrl := NewController(services)
+
+	srv := server.NewServer()
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/user", nil)
+	ctrl.RegisterRoutes(srv)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code == http.StatusNotFound {
+		t.Errorf("expected different code then 404, got %d", rec.Code)
+	}
+}
+
 func Test_showLogin(t *testing.T) {
 	srv, rec, _ := setupTestServer()
 	req := httptest.NewRequest(http.MethodGet, "/login", nil)

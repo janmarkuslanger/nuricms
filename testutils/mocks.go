@@ -227,14 +227,22 @@ type MockWebhookService struct {
 	mock.Mock
 }
 
-func (m *MockWebhookService) Create(name string, url string, requestType model.RequestType, events map[model.EventType]bool) (*model.Webhook, error) {
-	args := m.Called(name, url, requestType, events)
+func (m *MockWebhookService) Create(dto dto.WebhookData) (*model.Webhook, error) {
+	args := m.Called(dto)
 	return args.Get(0).(*model.Webhook), args.Error(1)
 }
 
 func (m *MockWebhookService) List(page, pageSize int) ([]model.Webhook, int64, error) {
 	args := m.Called(page, pageSize)
 	return args.Get(0).([]model.Webhook), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockWebhookService) UpdateByID(id uint, data dto.WebhookData) (*model.Webhook, error) {
+	args := m.Called(id, data)
+	if webhook := args.Get(0); webhook != nil {
+		return webhook.(*model.Webhook), args.Error(1)
+	}
+	return nil, args.Error(1)
 }
 
 func (m *MockWebhookService) FindByID(id uint) (*model.Webhook, error) {
