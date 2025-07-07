@@ -49,7 +49,6 @@ func Test_RegisterRoutes(t *testing.T) {
 	if rec.Code == http.StatusNotFound {
 		t.Errorf("expected different code then 404, got %d", rec.Code)
 	}
-
 }
 
 func Test_showCollections(t *testing.T) {
