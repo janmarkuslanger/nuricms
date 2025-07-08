@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/janmarkuslanger/nuricms/internal/config"
+	"github.com/janmarkuslanger/nuricms/internal/embedfs"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	utilstemplate "github.com/janmarkuslanger/nuricms/internal/template"
 )
@@ -21,7 +22,7 @@ func renderField(content FieldContent) (template.HTML, error) {
 	var html template.HTML
 	templateName := config.FieldTemplates[string(content.Field.FieldType)]
 	templatePath := filepath.Join("templates", templateName+".tmpl")
-	templateContent, err := utilstemplate.RenderTemplate(templatePath, content)
+	templateContent, err := utilstemplate.RenderTemplate(embedfs.TemplatesFS, templatePath, content)
 	if err != nil {
 		return html, err
 	}

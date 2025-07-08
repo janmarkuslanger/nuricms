@@ -1,6 +1,7 @@
 package content
 
 import (
+	"embed"
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/model"
@@ -52,7 +53,7 @@ func TestRenderFields_Success(t *testing.T) {
 	original := utilstemplate.RenderTemplate
 	defer func() { utilstemplate.RenderTemplate = original }()
 
-	utilstemplate.RenderTemplate = func(templatePath string, data any) (string, error) {
+	utilstemplate.RenderTemplate = func(embededFs embed.FS, templatePath string, data any) (string, error) {
 		return "<div>Mocked</div>", nil
 	}
 	field := model.Field{Alias: "body", FieldType: "text"}
@@ -71,7 +72,7 @@ func TestRenderFieldsByContent(t *testing.T) {
 	original := utilstemplate.RenderTemplate
 	defer func() { utilstemplate.RenderTemplate = original }()
 
-	utilstemplate.RenderTemplate = func(templatePath string, data any) (string, error) {
+	utilstemplate.RenderTemplate = func(embededFs embed.FS, templatePath string, data any) (string, error) {
 		return "<div>Mocked</div>", nil
 	}
 
