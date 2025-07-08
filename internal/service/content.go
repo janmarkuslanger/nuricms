@@ -62,6 +62,25 @@ func (s *contentService) FindContentsWithDisplayContentValue() ([]model.Content,
 	return s.repos.Content.ListWithDisplayContentValue()
 }
 
+func (s contentService) CreateContentValues(id uint, cwv dto.ContentWithValues, fields []model.Field) error {
+	for _, f := range fields {
+		for i, v := range cwv.FormData[f.Alias] {
+			cv := model.ContentValue{
+				SortIndex: i + 1,
+				ContentID: id,
+				FieldID:   f.ID,
+				Value:     v,
+			}
+
+			if err := s.repos.ContentValue.Create(&cv); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *contentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
 	var content model.Content
 	err := db.DB.Transaction(func(tx *gorm.DB) error {
@@ -77,19 +96,8 @@ func (s *contentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Con
 			return err
 		}
 
-		for _, f := range fields {
-			for i, v := range cwv.FormData[f.Alias] {
-				cv := model.ContentValue{
-					SortIndex: i + 1,
-					ContentID: content.ID,
-					FieldID:   f.ID,
-					Value:     v,
-				}
-
-				if err := s.repos.ContentValue.Create(&cv); err != nil {
-					return err
-				}
-			}
+		if err := s.CreateContentValues(content.ID, cwv, fields); err != nil {
+			return err
 		}
 
 		return nil
@@ -151,19 +159,8 @@ func (s *contentService) EditWithValues(cwv dto.ContentWithValues) (*model.Conte
 			return err
 		}
 
-		for _, f := range fields {
-			for i, v := range cwv.FormData[f.Alias] {
-				cv := model.ContentValue{
-					SortIndex: i + 1,
-					ContentID: content.ID,
-					FieldID:   f.ID,
-					Value:     v,
-				}
-
-				if err := s.repos.ContentValue.Create(&cv); err != nil {
-					return err
-				}
-			}
+		if err := s.CreateContentValues(content.ID, cwv, fields); err != nil {
+			return err
 		}
 
 		return nil
