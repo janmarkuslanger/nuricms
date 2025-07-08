@@ -2,16 +2,15 @@ package template
 
 import (
 	"bytes"
+	"embed"
 	"html/template"
 	"strings"
-
-	"github.com/janmarkuslanger/nuricms/internal/embedfs"
 )
 
-var RenderTemplate = func(templatePath string, data any) (string, error) {
+var RenderTemplate = func(embededFs embed.FS, templatePath string, data any) (string, error) {
 	tpl := strings.TrimPrefix(templatePath, "/")
 
-	rawTemplate, err := template.ParseFS(embedfs.TemplatesFS, tpl)
+	rawTemplate, err := template.ParseFS(embededFs, tpl)
 	if err != nil {
 		return "", err
 	}

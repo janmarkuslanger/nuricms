@@ -9,7 +9,7 @@
         "program": "${workspaceFolder}/cmd/nuricms/main.go",
         "cwd": "${workspaceFolder}", 
         "env": {
-          "GIN_MODE": "debug",
+          "PORT": "8080",
           "JWT_SECRET": "uP7r3Ss9cReT_T0k3n_2025_AbCdEfGhIjKlMnOp"
         },
         "args": [
