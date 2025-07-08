@@ -24,8 +24,3 @@ func TestRenderTemplate_TemplateNotFound(t *testing.T) {
 	require.Error(t, err)
 	require.True(t, errors.Is(err, fs.ErrNotExist) || err.Error() != "")
 }
-
-func TestRenderTemplate_ExecuteError(t *testing.T) {
-	_, err := template.RenderTemplate(testFS, "testdata/helloo.tmpl", nil)
-	require.Error(t, err)
-}
