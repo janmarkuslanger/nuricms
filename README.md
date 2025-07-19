@@ -4,6 +4,10 @@
 
 ---
 
+[![codecov](https://codecov.io/gh/janmarkuslanger/nuricms/graph/badge.svg?token=U51WPEFN5Y)](https://codecov.io/gh/janmarkuslanger/nuricms)
+
+---
+
 <img src="demo.png" alt="Dashboard Screenshot" width="800"/>
 
 ---
