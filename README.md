@@ -2,8 +2,6 @@
 
 **nuricms is a api first content management system written in go.**
 
----
-
 [![codecov](https://codecov.io/gh/janmarkuslanger/nuricms/graph/badge.svg?token=U51WPEFN5Y)](https://codecov.io/gh/janmarkuslanger/nuricms)
 
 ---
