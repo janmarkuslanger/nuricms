@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"errors"
@@ -12,6 +12,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/internal/repository/base"
+	"github.com/janmarkuslanger/nuricms/internal/service"
 )
 
 type mockCollectionRepo struct{ mock.Mock }
@@ -49,12 +50,12 @@ func (m *mockCollectionRepo) FindByAlias(alias string) (*model.Collection, error
 	return nil, args.Error(1)
 }
 
-func newTestCollectionService(repo repository.CollectionRepo) CollectionService {
-	return NewCollectionService(&repository.Set{Collection: repo})
+func newTestCollectionService(repo repository.CollectionRepo) service.CollectionService {
+	return service.NewCollectionService(&repository.Set{Collection: repo})
 }
 func TestCollectionService_List(t *testing.T) {
 	repo := new(mockCollectionRepo)
-	svc := NewCollectionService(&repository.Set{Collection: repo})
+	svc := service.NewCollectionService(&repository.Set{Collection: repo})
 
 	sample := []model.Collection{{Model: gorm.Model{ID: 1}}}
 	repo.On("List", 2, 5).Return(sample, int64(1), nil)
@@ -67,7 +68,7 @@ func TestCollectionService_List(t *testing.T) {
 
 func TestCollectionService_List_Error(t *testing.T) {
 	repo := new(mockCollectionRepo)
-	svc := NewCollectionService(&repository.Set{Collection: repo})
+	svc := service.NewCollectionService(&repository.Set{Collection: repo})
 
 	repo.On("List", 1, 1).Return([]model.Collection{}, int64(0), errors.New("fail"))
 

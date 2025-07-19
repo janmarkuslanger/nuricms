@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParsePagination(t *testing.T) {
@@ -52,4 +53,11 @@ func TestParsePagination(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCalcTotalPages(t *testing.T) {
+	assert.Equal(t, utils.CalcTotalPages(1, 2), int64(1))
+	assert.Equal(t, utils.CalcTotalPages(10, 2), int64(5))
+	assert.Equal(t, utils.CalcTotalPages(11, 2), int64(6))
+	assert.Equal(t, utils.CalcTotalPages(12, 2), int64(6))
 }

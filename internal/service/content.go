@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 
-	"github.com/janmarkuslanger/nuricms/internal/db"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
@@ -25,10 +24,11 @@ type ContentService interface {
 
 type contentService struct {
 	repos *repository.Set
+	db    *gorm.DB
 }
 
-func NewContentService(repos *repository.Set) *contentService {
-	return &contentService{repos: repos}
+func NewContentService(repos *repository.Set, db *gorm.DB) *contentService {
+	return &contentService{repos: repos, db: db}
 }
 
 func (s *contentService) Create(c *model.Content) (*model.Content, error) {
@@ -64,7 +64,7 @@ func (s *contentService) FindContentsWithDisplayContentValue() ([]model.Content,
 
 func (s *contentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
 	var content model.Content
-	err := db.DB.Transaction(func(tx *gorm.DB) error {
+	err := s.db.Transaction(func(tx *gorm.DB) error {
 		fields, err := s.repos.Field.FindByCollectionID(cwv.CollectionID)
 		if err != nil {
 			return err
@@ -99,7 +99,7 @@ func (s *contentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Con
 }
 
 func (s *contentService) DeleteByID(id uint) error {
-	return db.DB.Transaction(func(tx *gorm.DB) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
 		err := s.repos.Content.DeleteByID(id)
 		if err != nil {
 			return err
@@ -132,7 +132,7 @@ func (s *contentService) DeleteContentValuesByID(id uint) error {
 
 func (s *contentService) EditWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
 	var content model.Content
-	err := db.DB.Transaction(func(tx *gorm.DB) error {
+	err := s.db.Transaction(func(tx *gorm.DB) error {
 		content, err := s.repos.Content.FindByID(cwv.ContentID)
 		if err != nil {
 			return err

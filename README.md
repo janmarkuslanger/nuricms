@@ -36,16 +36,17 @@ package main
 import (
 	"github.com/janmarkuslanger/nuricms"
 	"github.com/janmarkuslanger/nuricms/pkg/plugin"
+	"github.com/janmarkuslanger/nuricms/pkg/config"
 )
 
 func main() {
 
-	config := &nuricms.ServerConfig{
+	config := config.Server{
 		Port:        "8080",
 		HookPlugins: []plugin.HookPlugin{},
 	}
 
-	nuricms.StartServer(config)
+	nuricms.Run(config)
 }
 ```
 
@@ -81,14 +82,14 @@ The server will now run at `http://localhost:8080`. You can change the port by m
 Plugins are passed in during server initialization:
 
 ```go
-config := &nuricms.ServerConfig{
+config := config.Server{
     Port: "8080",
     HookPlugins: []nuricms.HookPlugin{
         &MyCustomPlugin{},
     },
 }
 
-nuricms.StartServer(config)
+nuricms.Run(config)
 ```
 
 ---
@@ -139,14 +140,14 @@ func (p *SlugPlugin) Register(h *plugin.HookRegistry) {
 Then register your plugin in your `main.go`:
 
 ```go
-cfg := &nuricms.ServerConfig{
+cfg := config.Server{
     Port: "8080",
     HookPlugins: []nuricms.HookPlugin{
         &myplugin.SlugPlugin{},
     },
 }
 
-nuricms.StartServer(cfg)
+nuricms.Run(cfg)
 ```
 
 ### Events 

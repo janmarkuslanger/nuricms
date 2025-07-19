@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"testing"
@@ -11,13 +11,14 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
+	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/testutils"
 )
 
-func TestUserService_Create_ValidRole(t *testing.T) {
+func TestCreate_ValidRole(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewUserService(repos, []byte("secret"))
+	svc := service.NewUserService(repos, []byte("secret"))
 
 	user, err := svc.Create(dto.UserData{
 		Email:    "u@example.com",
@@ -31,10 +32,10 @@ func TestUserService_Create_ValidRole(t *testing.T) {
 	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("pass123")))
 }
 
-func TestUserService_Create_InvalidRole(t *testing.T) {
+func TestCreate_InvalidRole(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewUserService(repos, []byte("secret"))
+	svc := service.NewUserService(repos, []byte("secret"))
 
 	user, err := svc.Create(dto.UserData{
 		Email:    "u@example.com",
@@ -45,10 +46,10 @@ func TestUserService_Create_InvalidRole(t *testing.T) {
 	assert.EqualError(t, err, "not a valid role")
 }
 
-func TestUserService_ListAndDeleteByID(t *testing.T) {
+func TestListAndDeleteByID(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewUserService(repos, []byte("secret"))
+	svc := service.NewUserService(repos, []byte("secret"))
 
 	u1, _ := svc.Create(dto.UserData{
 		Email:    "a@e.com",
@@ -72,10 +73,10 @@ func TestUserService_ListAndDeleteByID(t *testing.T) {
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-func TestUserService_FindSaveDelete(t *testing.T) {
+func TestFindSaveDelete(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewUserService(repos, []byte("secret"))
+	svc := service.NewUserService(repos, []byte("secret"))
 
 	u, _ := svc.Create(dto.UserData{
 		Email:    "c@e.com",
@@ -98,11 +99,11 @@ func TestUserService_FindSaveDelete(t *testing.T) {
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-func TestUserService_LoginUser_Success(t *testing.T) {
+func TestLoginUser_Success(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
 	secret := []byte("mysecret")
-	svc := NewUserService(repos, secret)
+	svc := service.NewUserService(repos, secret)
 
 	u, _ := svc.Create(dto.UserData{
 		Email:    "x@e.com",
@@ -125,30 +126,30 @@ func TestUserService_LoginUser_Success(t *testing.T) {
 	assert.Equal(t, string(model.RoleEditor), claims["role"])
 }
 
-func TestUserService_LoginUser_EmptyEmail(t *testing.T) {
+func TestLoginUser_EmptyEmail(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewUserService(repos, []byte("secret"))
+	svc := service.NewUserService(repos, []byte("secret"))
 
 	_, err := svc.LoginUser("", "pw")
 	assert.Error(t, err)
 	assert.EqualError(t, err, "email is empty")
 }
 
-func TestUserService_LoginUser_EmptyPassword(t *testing.T) {
+func TestLoginUser_EmptyPassword(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewUserService(repos, []byte("secret"))
+	svc := service.NewUserService(repos, []byte("secret"))
 
 	_, err := svc.LoginUser("nuri@nuri.com", "")
 	assert.Error(t, err)
 	assert.EqualError(t, err, "password is empty")
 }
 
-func TestUserService_LoginUser_Failure(t *testing.T) {
+func TestLoginUser_Failure(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewUserService(repos, []byte("secret"))
+	svc := service.NewUserService(repos, []byte("secret"))
 
 	_, err := svc.LoginUser("no@e.com", "pw")
 	assert.Error(t, err)
@@ -162,11 +163,11 @@ func TestUserService_LoginUser_Failure(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestUserService_ValidateJWT(t *testing.T) {
+func TestValidateJWT(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
 	secret := []byte("abc123")
-	svc := NewUserService(repos, secret)
+	svc := service.NewUserService(repos, secret)
 
 	u, _ := svc.Create(dto.UserData{
 		Email:    "z@e.com",
@@ -182,11 +183,91 @@ func TestUserService_ValidateJWT(t *testing.T) {
 	assert.Equal(t, model.RoleEditor, role)
 }
 
-func TestUserService_ValidateJWT_Invalid(t *testing.T) {
+func TestValidateJWT_Invalid(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
-	svc := NewUserService(repos, []byte("secret"))
+	svc := service.NewUserService(repos, []byte("secret"))
 
 	_, _, _, err := svc.ValidateJWT("notatoken")
 	assert.Error(t, err)
+}
+
+func TestUpdateByID_NoEmail(t *testing.T) {
+	db := testutils.SetupTestDB(t)
+	repos := repository.NewSet(db)
+	svc := service.NewUserService(repos, []byte("secret"))
+
+	svc.Create(dto.UserData{
+		Email:    "test",
+		Password: "p",
+		Role:     string(model.RoleEditor),
+	})
+
+	_, err := svc.UpdateByID(1, dto.UserData{
+		Password: "p",
+		Role:     string(model.RoleEditor),
+	})
+
+	assert.Equal(t, err.Error(), "no email given")
+}
+
+func TestUpdateByID_NoPw(t *testing.T) {
+	db := testutils.SetupTestDB(t)
+	repos := repository.NewSet(db)
+	svc := service.NewUserService(repos, []byte("secret"))
+
+	svc.Create(dto.UserData{
+		Email:    "test",
+		Password: "p",
+		Role:     string(model.RoleEditor),
+	})
+
+	_, err := svc.UpdateByID(1, dto.UserData{
+		Email: "EMAIL",
+		Role:  string(model.RoleEditor),
+	})
+
+	assert.Equal(t, err.Error(), "no password given")
+}
+
+func TestUpdateByID_NoRole(t *testing.T) {
+	db := testutils.SetupTestDB(t)
+	repos := repository.NewSet(db)
+	svc := service.NewUserService(repos, []byte("secret"))
+
+	svc.Create(dto.UserData{
+		Email:    "test",
+		Password: "p",
+		Role:     string(model.RoleEditor),
+	})
+
+	_, err := svc.UpdateByID(1, dto.UserData{
+		Email:    "EMAIL",
+		Password: "Test",
+	})
+
+	assert.Equal(t, err.Error(), "no role given")
+}
+
+func TestUpdateByID_Success(t *testing.T) {
+	db := testutils.SetupTestDB(t)
+	repos := repository.NewSet(db)
+	svc := service.NewUserService(repos, []byte("secret"))
+
+	svc.Create(dto.UserData{
+		Email:    "beforeE",
+		Password: "beforePw",
+		Role:     string(model.RoleEditor),
+	})
+
+	u, err := svc.UpdateByID(1, dto.UserData{
+		Email:    "afterE",
+		Password: "afterPw",
+		Role:     string(model.RoleAdmin),
+	})
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, u.Email, "afterE")
+	assert.Equal(t, u.Password, "afterPw")
+	assert.Equal(t, u.Role, model.RoleAdmin)
 }

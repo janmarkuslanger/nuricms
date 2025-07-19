@@ -3,11 +3,10 @@
 package service
 
 import (
-	"fmt"
-	"os"
-
+	"github.com/janmarkuslanger/nuricms/internal/env"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/pkg/plugin"
+	"gorm.io/gorm"
 )
 
 type Set struct {
@@ -22,19 +21,14 @@ type Set struct {
 	Api          ApiService
 }
 
-func NewSet(r *repository.Set, hr *plugin.HookRegistry) (*Set, error) {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		return nil, fmt.Errorf("JWT_SECRET must be set")
-	}
-
+func NewSet(r *repository.Set, hr *plugin.HookRegistry, db *gorm.DB, env *env.Env) (*Set, error) {
 	return &Set{
 		Collection:   NewCollectionService(r),
 		Field:        NewFieldService(r),
-		Content:      NewContentService(r),
+		Content:      NewContentService(r, db),
 		ContentValue: NewContentValueService(r, hr),
 		Asset:        NewAssetService(r),
-		User:         NewUserService(r, []byte(secret)),
+		User:         NewUserService(r, []byte(env.Secret)),
 		Apikey:       NewApikeyService(r),
 		Webhook:      NewWebhookService(r),
 		Api:          NewApiService(r),

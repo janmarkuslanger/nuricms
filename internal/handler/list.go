@@ -16,7 +16,7 @@ func HandleList[T any](ctx server.Context, s ListHandler[T], template string) {
 
 	items, totalCount, _ := s.List(page, pageSize)
 
-	totalPages := (totalCount + int64(pageSize) - 1) / int64(pageSize)
+	totalPages := utils.CalcTotalPages(totalCount, pageSize)
 
 	utils.RenderWithLayoutHTTP(ctx, template, map[string]any{
 		"Items":       items,
