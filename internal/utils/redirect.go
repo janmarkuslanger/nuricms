@@ -6,11 +6,11 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/server"
 )
 
-func GetParamOrRedirect(ctx server.Context, r string, p string) (uint, bool) {
-	id, ok := StringToUint(ctx.Request.PathValue(p))
+func GetParamOrRedirect(ctx server.Context, dest string, param string) (uint, bool) {
+	v, ok := StringToUint(ctx.Request.PathValue(param))
 	if !ok {
-		http.Redirect(ctx.Writer, ctx.Request, r, http.StatusSeeOther)
+		http.Redirect(ctx.Writer, ctx.Request, dest, http.StatusSeeOther)
 	}
 
-	return id, ok
+	return v, ok
 }

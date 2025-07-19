@@ -1,14 +1,14 @@
-package service
+package service_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/janmarkuslanger/nuricms/internal/db"
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
+	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/testutils"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -16,9 +16,8 @@ import (
 
 func TestApiService_prepareContent_SimpleAndListCollectionAsset(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	db.DB = testDB
 	repos := repository.NewSet(testDB)
-	s := NewApiService(repos)
+	s := service.NewApiService(repos)
 
 	col1 := &model.Collection{Name: "Col", Alias: "col"}
 	repos.Collection.Create(col1)
@@ -79,9 +78,8 @@ func TestApiService_prepareContent_SimpleAndListCollectionAsset(t *testing.T) {
 
 func TestApiService_FindContentByCollectionAlias_FindByID(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	db.DB = testDB
 	repos := repository.NewSet(testDB)
-	s := NewApiService(repos)
+	s := service.NewApiService(repos)
 
 	col := &model.Collection{Name: "ColX", Alias: "colx"}
 	repos.Collection.Create(col)
@@ -104,9 +102,8 @@ func TestApiService_FindContentByCollectionAlias_FindByID(t *testing.T) {
 
 func TestApiService_FindContentByCollectionAndFieldValue(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	db.DB = testDB
 	repos := repository.NewSet(testDB)
-	s := NewApiService(repos)
+	s := service.NewApiService(repos)
 
 	col := &model.Collection{Name: "ColY", Alias: "coly"}
 	repos.Collection.Create(col)
@@ -124,9 +121,8 @@ func TestApiService_FindContentByCollectionAndFieldValue(t *testing.T) {
 
 func TestApiService_FindContentByCollectionAlias_Error(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	db.DB = testDB
 	repos := repository.NewSet(testDB)
-	s := NewApiService(repos)
+	s := service.NewApiService(repos)
 
 	_, err := s.FindContentByCollectionAlias("nonexistent", 0, 10)
 	assert.Error(t, err)

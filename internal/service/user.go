@@ -130,11 +130,11 @@ func (s userService) UpdateByID(colID uint, data dto.UserData) (*model.User, err
 	}
 
 	if data.Email == "" {
-		return nil, errors.New("no alias given")
+		return nil, errors.New("no email given")
 	}
 
 	if data.Password == "" {
-		return nil, errors.New("no name given")
+		return nil, errors.New("no password given")
 	}
 
 	if data.Role == "" {

@@ -4,10 +4,11 @@ import (
 	"os"
 
 	"github.com/janmarkuslanger/nuricms"
+	"github.com/janmarkuslanger/nuricms/pkg/config"
 )
 
 func main() {
-	config := &nuricms.ServerConfig{
+	config := config.Config{
 		Port: os.Getenv("PORT"),
 	}
 
@@ -15,5 +16,5 @@ func main() {
 		config.Port = "8080"
 	}
 
-	nuricms.StartServer(config)
+	nuricms.Run(config)
 }
