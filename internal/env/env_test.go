@@ -21,5 +21,5 @@ func TestOsEnv(t *testing.T) {
 	src := env.OsEnv{}
 	res := src.Getenv(k)
 
-	assert.Equal(t, res, v)
+	assert.Equal(t, v, res)
 }
