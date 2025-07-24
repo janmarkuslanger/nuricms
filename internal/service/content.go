@@ -92,7 +92,8 @@ func (s *contentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Con
 			return err
 		}
 
-		content = model.Content{CollectionID: cwv.CollectionID}
+		found := model.Content{CollectionID: cwv.CollectionID}
+		content = found
 
 		err = txContent.Create(&content)
 		if err != nil {
@@ -144,12 +145,13 @@ func (s *contentService) deleteContentValuesByID(repo repository.ContentValueRep
 }
 
 func (s *contentService) EditWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
-	var content model.Content
+	var content *model.Content
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		txContent := s.repos.Content.WithTx(tx)
 		txContentValue := s.repos.ContentValue.WithTx(tx)
 
-		content, err := txContent.FindByID(cwv.ContentID)
+		found, err := txContent.FindByID(cwv.ContentID)
+		content = found
 		if err != nil {
 			return err
 		}
@@ -174,5 +176,5 @@ func (s *contentService) EditWithValues(cwv dto.ContentWithValues) (*model.Conte
 		return nil
 	})
 
-	return &content, err
+	return content, err
 }

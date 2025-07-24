@@ -33,6 +33,7 @@ func (m *MockContentRepo) FindByID(id uint, opts ...base.QueryOption) (*model.Co
 }
 
 func (m *MockContentRepo) WithTx(tx *gorm.DB) repository.ContentRepo {
+	m.Called(tx)
 	return m
 }
 
