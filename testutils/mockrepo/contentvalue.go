@@ -43,5 +43,6 @@ func (m *MockContentValueRepo) FindByContentID(cID uint) ([]model.ContentValue, 
 }
 
 func (m *MockContentValueRepo) WithTx(tx *gorm.DB) repository.ContentValueRepo {
+	m.Called(tx)
 	return m
 }
