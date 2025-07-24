@@ -7,42 +7,16 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/pkg/plugin"
+	"github.com/janmarkuslanger/nuricms/testutils/mockrepo"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-
-	"github.com/janmarkuslanger/nuricms/internal/repository/base"
 )
 
-type mockContentValueRepo struct {
-	mock.Mock
-}
-
-func (m *mockContentValueRepo) Create(cv *model.ContentValue) error {
-	return m.Called(cv).Error(0)
-}
-func (m *mockContentValueRepo) Save(cv *model.ContentValue) error {
-	return m.Called(cv).Error(0)
-}
-func (m *mockContentValueRepo) Delete(cv *model.ContentValue) error {
-	return m.Called(cv).Error(0)
-}
-func (m *mockContentValueRepo) FindByContentID(id uint) ([]model.ContentValue, error) {
-	args := m.Called(id)
-	return args.Get(0).([]model.ContentValue), args.Error(1)
-}
-func (m *mockContentValueRepo) FindByID(id uint, opts ...base.QueryOption) (*model.ContentValue, error) {
-	return nil, nil
-}
-func (m *mockContentValueRepo) List(page, pageSize int, opts ...base.QueryOption) ([]model.ContentValue, int64, error) {
-	return nil, 0, nil
-}
-
-func newTestContentValueService(repo *mockContentValueRepo, hr *plugin.HookRegistry) ContentValueService {
+func newTestContentValueService(repo *mockrepo.MockContentValueRepo, hr *plugin.HookRegistry) ContentValueService {
 	return NewContentValueService(&repository.Set{ContentValue: repo}, hr)
 }
 
 func TestContentValueService_Create_RunsHookAndCreates(t *testing.T) {
-	repo := new(mockContentValueRepo)
+	repo := new(mockrepo.MockContentValueRepo)
 	hr := plugin.NewHookRegistry()
 	var invoked bool
 	var gotPayload any
@@ -64,7 +38,7 @@ func TestContentValueService_Create_RunsHookAndCreates(t *testing.T) {
 }
 
 func TestContentValueService_Create_HookErrorIgnored(t *testing.T) {
-	repo := new(mockContentValueRepo)
+	repo := new(mockrepo.MockContentValueRepo)
 	hr := plugin.NewHookRegistry()
 	hr.Register("contentValue:beforeSave", func(payload any) error {
 		return errors.New("hookfail")
@@ -80,7 +54,7 @@ func TestContentValueService_Create_HookErrorIgnored(t *testing.T) {
 }
 
 func TestContentValueService_Create_RepoError(t *testing.T) {
-	repo := new(mockContentValueRepo)
+	repo := new(mockrepo.MockContentValueRepo)
 	hr := plugin.NewHookRegistry()
 	hr.Register("contentValue:beforeSave", func(payload any) error { return nil })
 

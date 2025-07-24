@@ -10,6 +10,7 @@ type FieldRepo interface {
 	base.CRUDRepository[model.Field]
 	FindByCollectionID(collectionID uint) ([]model.Field, error)
 	FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error)
+	WithTx(tx *gorm.DB) FieldRepo
 }
 
 type fieldRepository struct {
@@ -22,6 +23,10 @@ func NewFieldRepository(db *gorm.DB) FieldRepo {
 		BaseRepository: base.NewBaseRepository[model.Field](db),
 		db:             db,
 	}
+}
+
+func (r *fieldRepository) WithTx(tx *gorm.DB) FieldRepo {
+	return NewFieldRepository(tx)
 }
 
 func (r *fieldRepository) FindByCollectionID(collectionID uint) ([]model.Field, error) {

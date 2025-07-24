@@ -7,14 +7,15 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/testutils"
+	"github.com/janmarkuslanger/nuricms/testutils/mockrepo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestDeleteByID(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	mockContentRepo := new(testutils.MockContentRepo)
-	mockContentValueRepo := new(testutils.MockContentValueRepo)
+	mockContentRepo := new(mockrepo.MockContentRepo)
+	mockContentValueRepo := new(mockrepo.MockContentValueRepo)
 
 	repos := &repository.Set{
 		Content:      mockContentRepo,
@@ -32,22 +33,9 @@ func TestDeleteByID(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestDeleteContentValuesByID(t *testing.T) {
-	testDB := testutils.SetupTestDB(t)
-	mockContentValueRepo := new(testutils.MockContentValueRepo)
-	repos := &repository.Set{ContentValue: mockContentValueRepo}
-	s := service.NewContentService(repos, testDB)
-
-	mockContentValueRepo.On("FindByContentID", uint(1)).Return([]model.ContentValue{{}}, nil)
-	mockContentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(nil)
-
-	err := s.DeleteContentValuesByID(1)
-	assert.NoError(t, err)
-}
-
 func TestCreate(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	mockContentRepo := new(testutils.MockContentRepo)
+	mockContentRepo := new(mockrepo.MockContentRepo)
 	repos := &repository.Set{Content: mockContentRepo}
 	s := service.NewContentService(repos, testDB)
 
@@ -61,7 +49,7 @@ func TestCreate(t *testing.T) {
 
 func TestFindByID(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	mockContentRepo := new(testutils.MockContentRepo)
+	mockContentRepo := new(mockrepo.MockContentRepo)
 	repos := &repository.Set{Content: mockContentRepo}
 	s := service.NewContentService(repos, testDB)
 
@@ -75,7 +63,7 @@ func TestFindByID(t *testing.T) {
 
 func TestListByCollectionAlias(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	mockContentRepo := new(testutils.MockContentRepo)
+	mockContentRepo := new(mockrepo.MockContentRepo)
 	mockCollectionRepo := new(testutils.MockCollectionRepo)
 	repos := &repository.Set{
 		Content:    mockContentRepo,
@@ -95,7 +83,7 @@ func TestListByCollectionAlias(t *testing.T) {
 
 func TestFindByCollectionID(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	mockContentRepo := new(testutils.MockContentRepo)
+	mockContentRepo := new(mockrepo.MockContentRepo)
 	repos := &repository.Set{Content: mockContentRepo}
 	s := service.NewContentService(repos, testDB)
 
@@ -107,7 +95,7 @@ func TestFindByCollectionID(t *testing.T) {
 
 func TestFindDisplayValueByCollectionID(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	mockContentRepo := new(testutils.MockContentRepo)
+	mockContentRepo := new(mockrepo.MockContentRepo)
 	repos := &repository.Set{Content: mockContentRepo}
 	s := service.NewContentService(repos, testDB)
 
@@ -120,7 +108,7 @@ func TestFindDisplayValueByCollectionID(t *testing.T) {
 
 func TestFindContentsWithDisplayContentValue(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
-	mockContentRepo := new(testutils.MockContentRepo)
+	mockContentRepo := new(mockrepo.MockContentRepo)
 	repos := &repository.Set{Content: mockContentRepo}
 	s := service.NewContentService(repos, testDB)
 

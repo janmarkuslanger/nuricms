@@ -216,11 +216,6 @@ type MockContentService struct {
 	mock.Mock
 }
 
-func (m *MockContentService) DeleteContentValuesByID(id uint) error {
-	args := m.Called(id)
-	return args.Error(0)
-}
-
 func (m *MockContentService) EditWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
 	args := m.Called(cwv)
 	if obj := args.Get(0); obj != nil {
