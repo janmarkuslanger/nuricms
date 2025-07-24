@@ -73,6 +73,24 @@ func TestListAndDeleteByID(t *testing.T) {
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
+func TestDeleteByID_FindByIDErr(t *testing.T) {
+	db := testutils.SetupTestDB(t)
+	repos := repository.NewSet(db)
+	svc := service.NewUserService(repos, []byte("secret"))
+
+	u, _ := svc.Create(dto.UserData{
+		Email:    "a@e.com",
+		Password: "p",
+		Role:     string(model.RoleEditor),
+	})
+
+	notthere := u.ID + 1
+
+	err := svc.DeleteByID(notthere)
+	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+
+}
+
 func TestFindSaveDelete(t *testing.T) {
 	db := testutils.SetupTestDB(t)
 	repos := repository.NewSet(db)
