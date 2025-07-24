@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/janmarkuslanger/nuricms/internal/dto"
@@ -170,6 +171,105 @@ func TestCreateWithValues(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, uint(123), result.CollectionID)
+
+	fieldRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+	contentValueRepo.AssertExpectations(t)
+}
+
+func TestCreateWithValues_FindByCollectionErr(t *testing.T) {
+	testDB := testutils.SetupTestDB(t)
+
+	fieldRepo := new(mockrepo.MockFieldRepo)
+	contentRepo := new(mockrepo.MockContentRepo)
+	contentValueRepo := new(mockrepo.MockContentValueRepo)
+
+	repos := &repository.Set{
+		Content:      contentRepo,
+		Field:        fieldRepo,
+		ContentValue: contentValueRepo,
+	}
+
+	s := service.NewContentService(repos, testDB)
+
+	fields := []model.Field{
+		{
+			Model: gorm.Model{ID: 1},
+			Alias: "title",
+		},
+		{
+			Model: gorm.Model{ID: 2},
+			Alias: "desc",
+		},
+	}
+
+	form := map[string][]string{
+		"1": {"My Title"},
+		"2": {"My Description"},
+	}
+
+	fieldRepo.On("WithTx", mock.Anything).Return(fieldRepo)
+	fieldRepo.On("FindByCollectionID", uint(123)).Return(fields, errors.New("Something"))
+	contentRepo.On("WithTx", mock.Anything).Return(contentRepo)
+	contentValueRepo.On("WithTx", mock.Anything).Return(contentValueRepo)
+
+	_, err := s.CreateWithValues(dto.ContentWithValues{
+		CollectionID: 123,
+		FormData:     form,
+	})
+
+	assert.NotNil(t, err)
+	fieldRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+	contentValueRepo.AssertExpectations(t)
+}
+
+func TestCreateWithValues_CreateErr(t *testing.T) {
+	testDB := testutils.SetupTestDB(t)
+
+	fieldRepo := new(mockrepo.MockFieldRepo)
+	contentRepo := new(mockrepo.MockContentRepo)
+	contentValueRepo := new(mockrepo.MockContentValueRepo)
+
+	repos := &repository.Set{
+		Content:      contentRepo,
+		Field:        fieldRepo,
+		ContentValue: contentValueRepo,
+	}
+
+	s := service.NewContentService(repos, testDB)
+
+	fields := []model.Field{
+		{
+			Model: gorm.Model{ID: 1},
+			Alias: "title",
+		},
+		{
+			Model: gorm.Model{ID: 2},
+			Alias: "desc",
+		},
+	}
+
+	form := map[string][]string{
+		"1": {"My Title"},
+		"2": {"My Description"},
+	}
+
+	fieldRepo.On("WithTx", mock.Anything).Return(fieldRepo)
+	fieldRepo.On("FindByCollectionID", uint(123)).Return(fields, nil)
+
+	contentRepo.On("WithTx", mock.Anything).Return(contentRepo)
+	contentRepo.On("Create", mock.AnythingOfType("*model.Content")).Return(errors.New("ohno"))
+
+	contentValueRepo.On("WithTx", mock.Anything).Return(contentValueRepo)
+	contentValueRepo.On("Create", mock.AnythingOfType("*model.ContentValue")).Return(nil).Maybe()
+
+	_, err := s.CreateWithValues(dto.ContentWithValues{
+		CollectionID: 123,
+		FormData:     form,
+	})
+
+	assert.NotNil(t, err)
 
 	fieldRepo.AssertExpectations(t)
 	contentRepo.AssertExpectations(t)

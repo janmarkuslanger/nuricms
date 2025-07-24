@@ -85,10 +85,22 @@ func TestWebhookService_UpdateByID(t *testing.T) {
 	assert.Contains(t, updated.Events, "delete")
 }
 
-func TestWebhookService_UpdateByID_ValidationError(t *testing.T) {
+func TestWebhookService_UpdateByID_NoName(t *testing.T) {
 	svc := newTestWebhookService(t)
 	_, err := svc.UpdateByID(999, dto.WebhookData{})
 	assert.EqualError(t, err, "no name given")
+}
+
+func TestWebhookService_UpdateByID_NoUrl(t *testing.T) {
+	svc := newTestWebhookService(t)
+	_, err := svc.UpdateByID(999, dto.WebhookData{Name: "My name is"})
+	assert.EqualError(t, err, "no url given")
+}
+
+func TestWebhookService_UpdateByID_NoRequestType(t *testing.T) {
+	svc := newTestWebhookService(t)
+	_, err := svc.UpdateByID(999, dto.WebhookData{Name: "My name is", Url: "http://helloworld.com"})
+	assert.EqualError(t, err, "no request type given")
 }
 
 func TestWebhookService_List_Find_Save_Delete(t *testing.T) {
