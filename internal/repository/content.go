@@ -13,6 +13,7 @@ type ContentRepo interface {
 	FindDisplayValueByCollectionID(collectionID uint, page, pageSize int) ([]model.Content, int64, error)
 	ListWithDisplayContentValue() ([]model.Content, error)
 	FindByCollectionAndFieldValue(collectionID uint, fieldAlias, value string, offset, limit int) ([]model.Content, int, error)
+	WithTx(tx *gorm.DB) ContentRepo
 }
 
 type contentRepository struct {
@@ -25,6 +26,10 @@ func NewContentRepository(db *gorm.DB) ContentRepo {
 		BaseRepository: base.NewBaseRepository[model.Content](db),
 		db:             db,
 	}
+}
+
+func (r *contentRepository) WithTx(tx *gorm.DB) ContentRepo {
+	return NewContentRepository(tx)
 }
 
 func (r *contentRepository) Create(content *model.Content) error {

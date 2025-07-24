@@ -10,7 +10,6 @@ import (
 )
 
 type ContentService interface {
-	DeleteContentValuesByID(id uint) error
 	EditWithValues(cwv dto.ContentWithValues) (*model.Content, error)
 	DeleteByID(id uint) error
 	CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error)
@@ -62,7 +61,7 @@ func (s *contentService) FindContentsWithDisplayContentValue() ([]model.Content,
 	return s.repos.Content.ListWithDisplayContentValue()
 }
 
-func (s *contentService) saveContentValues(contentID uint, fields []model.Field, formData map[string][]string) error {
+func (s *contentService) saveContentValues(contentValueRepo repository.ContentValueRepo, contentID uint, fields []model.Field, formData map[string][]string) error {
 	for _, f := range fields {
 		for i, v := range formData[f.Alias] {
 			cv := model.ContentValue{
@@ -72,7 +71,7 @@ func (s *contentService) saveContentValues(contentID uint, fields []model.Field,
 				Value:     v,
 			}
 
-			if err := s.repos.ContentValue.Create(&cv); err != nil {
+			if err := contentValueRepo.Create(&cv); err != nil {
 				return err
 			}
 		}
@@ -84,19 +83,23 @@ func (s *contentService) saveContentValues(contentID uint, fields []model.Field,
 func (s *contentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
 	var content model.Content
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		fields, err := s.repos.Field.FindByCollectionID(cwv.CollectionID)
+		txField := s.repos.Field.WithTx(tx)
+		txContent := s.repos.Content.WithTx(tx)
+		txContentValue := s.repos.ContentValue.WithTx(tx)
+
+		fields, err := txField.FindByCollectionID(cwv.CollectionID)
 		if err != nil {
 			return err
 		}
 
 		content = model.Content{CollectionID: cwv.CollectionID}
 
-		err = s.repos.Content.Create(&content)
+		err = txContent.Create(&content)
 		if err != nil {
 			return err
 		}
 
-		if err := s.saveContentValues(content.ID, fields, cwv.FormData); err != nil {
+		if err := s.saveContentValues(txContentValue, content.ID, fields, cwv.FormData); err != nil {
 			return err
 		}
 
@@ -108,12 +111,14 @@ func (s *contentService) CreateWithValues(cwv dto.ContentWithValues) (*model.Con
 
 func (s *contentService) DeleteByID(id uint) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		err := s.repos.Content.DeleteByID(id)
+		txContent := s.repos.Content.WithTx(tx)
+		txContentValue := s.repos.ContentValue.WithTx(tx)
+		err := txContent.DeleteByID(id)
 		if err != nil {
 			return err
 		}
 
-		err = s.DeleteContentValuesByID(id)
+		err = s.deleteContentValuesByID(txContentValue, id)
 		if err != nil {
 			return err
 		}
@@ -122,14 +127,14 @@ func (s *contentService) DeleteByID(id uint) error {
 	})
 }
 
-func (s *contentService) DeleteContentValuesByID(id uint) error {
-	values, err := s.repos.ContentValue.FindByContentID(id)
+func (s *contentService) deleteContentValuesByID(repo repository.ContentValueRepo, id uint) error {
+	values, err := repo.FindByContentID(id)
 	if err != nil {
 		return err
 	}
 
 	for _, v := range values {
-		err = s.repos.ContentValue.Delete(&v)
+		err = repo.Delete(&v)
 		if err != nil {
 			return err
 		}
@@ -141,7 +146,10 @@ func (s *contentService) DeleteContentValuesByID(id uint) error {
 func (s *contentService) EditWithValues(cwv dto.ContentWithValues) (*model.Content, error) {
 	var content model.Content
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		content, err := s.repos.Content.FindByID(cwv.ContentID)
+		txContent := s.repos.Content.WithTx(tx)
+		txContentValue := s.repos.ContentValue.WithTx(tx)
+
+		content, err := txContent.FindByID(cwv.ContentID)
 		if err != nil {
 			return err
 		}
@@ -150,7 +158,7 @@ func (s *contentService) EditWithValues(cwv dto.ContentWithValues) (*model.Conte
 			return errors.New("content doesnt relate to Collection")
 		}
 
-		if err = s.DeleteContentValuesByID(content.ID); err != nil {
+		if err = s.deleteContentValuesByID(txContentValue, content.ID); err != nil {
 			return err
 		}
 
@@ -159,7 +167,7 @@ func (s *contentService) EditWithValues(cwv dto.ContentWithValues) (*model.Conte
 			return err
 		}
 
-		if err := s.saveContentValues(content.ID, fields, cwv.FormData); err != nil {
+		if err := s.saveContentValues(txContentValue, content.ID, fields, cwv.FormData); err != nil {
 			return err
 		}
 
