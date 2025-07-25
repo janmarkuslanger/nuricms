@@ -12,6 +12,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/testutils"
 	"github.com/janmarkuslanger/nuricms/testutils/mockservices"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -126,4 +127,46 @@ func Test_deleteContent_success(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Errorf("expected 303, got %d", rec.Code)
 	}
+}
+
+func Test_showCreateContent_success(t *testing.T) {
+	srv, rec, mockColl, mockContent, mockField, mockAsset, _ := setup(t)
+
+	collectionID := uint(1)
+
+	mockField.On("FindByCollectionID", collectionID).Return([]model.Field{
+		{Alias: "title"},
+	}, nil)
+
+	mockColl.On("FindByID", collectionID).Return(&model.Collection{}, nil)
+
+	mockContent.On("FindContentsWithDisplayContentValue").Return([]model.Content{}, nil)
+
+	mockAsset.On("List", 1, 100000).Return([]model.Asset{}, int64(0), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/content/collections/1/create", nil)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", rec.Code)
+	}
+}
+
+func Test_listContent_success(t *testing.T) {
+	srv, rec, _, mockContent, mockField, _, _ := setup(t)
+
+	collectionID := uint(1)
+	page := 1
+	pageSize := 10
+
+	mockContent.On("FindDisplayValueByCollectionID", collectionID, page, pageSize).
+		Return([]model.Content{}, int64(0), nil)
+
+	mockField.On("FindDisplayFieldsByCollectionID", collectionID).
+		Return([]model.Field{}, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/content/collections/1/show", nil)
+	srv.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
 }
