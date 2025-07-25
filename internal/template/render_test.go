@@ -19,7 +19,7 @@ func TestRenderTemplate_Success(t *testing.T) {
 	require.Equal(t, "Hello, World!", result)
 }
 
-func TestRenderTemplate_ExecutionErr(t *testing.T) {
+func TestRenderTemplate_ParseErr(t *testing.T) {
 	_, err := template.RenderTemplate(testFS, "testdata/false.tmpl", nil)
 	require.Error(t, err)
 }
