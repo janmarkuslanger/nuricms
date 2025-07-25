@@ -195,13 +195,6 @@ go test ./... -coverprofile=cover.out
 go tool cover -html=cover.out
 ```
 
-For integration tests and full coverage across services:
-
-```bash
-GOCOVERDIR=coverage go test -coverpkg=./... -covermode=atomic ./...
-go tool covdata textfmt -i=coverage -o coverage.txt
-```
-
 ---
 
 For questions or contributions, feel free to open an issue or pull request.
