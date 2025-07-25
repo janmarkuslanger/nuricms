@@ -2,7 +2,6 @@ package service
 
 import (
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/janmarkuslanger/nuricms/internal/fs"
@@ -83,8 +82,7 @@ func (s *assetService) DeleteByID(id uint) error {
 		return err
 	}
 
-	err = os.Remove(asset.Path)
-	return err
+	return s.fs.Remove(asset.Path)
 }
 
 func (s *assetService) List(page, pageSize int) ([]model.Asset, int64, error) {

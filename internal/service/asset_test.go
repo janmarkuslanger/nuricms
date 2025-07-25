@@ -13,6 +13,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/server"
 	"github.com/janmarkuslanger/nuricms/internal/service"
 	"github.com/janmarkuslanger/nuricms/testutils"
+	"github.com/janmarkuslanger/nuricms/testutils/mockrepo"
 	"github.com/janmarkuslanger/nuricms/testutils/mockservices"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -63,20 +64,6 @@ func TestAssetService_List(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(3), total)
 	assert.Len(t, list, 2)
-}
-
-func TestAssetService_DeleteByID(t *testing.T) {
-	db := testutils.SetupTestDB(t)
-	repos := repository.NewSet(db)
-	svc := service.NewAssetService(repos, &mockservices.MockFileOps{})
-	a := &model.Asset{Name: "D", Path: "to_delete.txt"}
-	svc.Create(a)
-	os.WriteFile(a.Path, []byte("x"), 0644)
-	err := svc.DeleteByID(a.ID)
-	assert.NoError(t, err)
-	_, err = svc.FindByID(a.ID)
-	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
-	assert.NoFileExists(t, a.Path)
 }
 
 type readSeekCloser struct {
@@ -204,4 +191,75 @@ func Test_UploadFile_CopyFails(t *testing.T) {
 	_, err := svc.UploadFile(server.Context{}, header, header.Filename())
 
 	assert.EqualError(t, err, "read error")
+}
+
+func TestAssetService_DeleteByID_success(t *testing.T) {
+	mockRepo := &mockrepo.MockAssetRepo{}
+	mockFS := &mockservices.MockFileOps{}
+	svc := service.NewAssetService(&repository.Set{Asset: mockRepo}, mockFS)
+
+	asset := &model.Asset{
+		Model: gorm.Model{ID: 1},
+		Path:  "assets/image.png",
+	}
+
+	mockRepo.On("FindByID", uint(1)).Return(asset, nil)
+	mockRepo.On("Delete", asset).Return(nil)
+
+	err := svc.DeleteByID(1)
+	assert.NoError(t, err)
+	assert.Equal(t, "assets/image.png", mockFS.Removed)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAssetService_DeleteByID_findFails(t *testing.T) {
+	mockRepo := &mockrepo.MockAssetRepo{}
+	mockFS := &mockservices.MockFileOps{}
+	svc := service.NewAssetService(&repository.Set{Asset: mockRepo}, mockFS)
+
+	mockRepo.On("FindByID", uint(99)).Return(&model.Asset{}, errors.New("not found"))
+
+	err := svc.DeleteByID(99)
+	assert.EqualError(t, err, "not found")
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAssetService_DeleteByID_deleteFails(t *testing.T) {
+	mockRepo := &mockrepo.MockAssetRepo{}
+	mockFS := &mockservices.MockFileOps{}
+	svc := service.NewAssetService(&repository.Set{Asset: mockRepo}, mockFS)
+
+	asset := &model.Asset{
+		Model: gorm.Model{ID: 2},
+		Path:  "assets/fail.png",
+	}
+
+	mockRepo.On("FindByID", uint(2)).Return(asset, nil)
+	mockRepo.On("Delete", asset).Return(errors.New("delete error"))
+
+	err := svc.DeleteByID(2)
+	assert.EqualError(t, err, "delete error")
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAssetService_DeleteByID_removeFails(t *testing.T) {
+	mockRepo := &mockrepo.MockAssetRepo{}
+	mockFS := &mockservices.MockFileOps{RemoveErr: errors.New("remove error")}
+	svc := service.NewAssetService(&repository.Set{Asset: mockRepo}, mockFS)
+
+	asset := &model.Asset{
+		Model: gorm.Model{ID: 3},
+		Path:  "assets/remove.png",
+	}
+
+	mockRepo.On("FindByID", uint(3)).Return(asset, nil)
+	mockRepo.On("Delete", asset).Return(nil)
+
+	err := svc.DeleteByID(3)
+	assert.EqualError(t, err, "remove error")
+
+	mockRepo.AssertExpectations(t)
 }

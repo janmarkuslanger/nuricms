@@ -11,3 +11,7 @@ func (o OsFileOps) MkdirAll(path string, perm os.FileMode) error {
 func (o OsFileOps) Create(name string) (*os.File, error) {
 	return os.Create(name)
 }
+
+func (o OsFileOps) Remove(name string) error {
+	return os.Remove(name)
+}

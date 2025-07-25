@@ -8,6 +8,7 @@ import (
 type FileOps interface {
 	MkdirAll(path string, perm os.FileMode) error
 	Create(path string) (*os.File, error)
+	Remove(name string) error
 }
 
 type FileOpener interface {
