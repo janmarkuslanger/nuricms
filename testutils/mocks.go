@@ -208,8 +208,9 @@ func (m *MockWebhookService) DeleteByID(id uint) error {
 	return args.Error(0)
 }
 
-func (m *MockWebhookService) Dispatch(event string, payload any) {
+func (m *MockWebhookService) Dispatch(event string, payload any) error {
 	m.Called(event, payload)
+	return nil
 }
 
 type MockContentService struct {
