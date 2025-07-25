@@ -14,6 +14,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/testutils/mockservices"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 )
 
 func setup(t *testing.T) (*server.Server, *httptest.ResponseRecorder, *testutils.MockCollectionService, *testutils.MockContentService, *testutils.MockFieldService, *testutils.MockAssetService, *testutils.MockWebhookService) {
@@ -77,7 +78,7 @@ func Test_showCollections(t *testing.T) {
 	}
 }
 
-func Test_createContent_success(t *testing.T) {
+func Test_createContent_Success(t *testing.T) {
 	srv, rec, _, mockCont, _, _, mockWebhook := setup(t)
 
 	form := url.Values{}
@@ -96,7 +97,7 @@ func Test_createContent_success(t *testing.T) {
 	}
 }
 
-func Test_editContent_success(t *testing.T) {
+func Test_editContent_Success(t *testing.T) {
 	srv, rec, _, mockCont, _, _, mockWebhook := setup(t)
 
 	form := url.Values{}
@@ -115,7 +116,7 @@ func Test_editContent_success(t *testing.T) {
 	}
 }
 
-func Test_deleteContent_success(t *testing.T) {
+func Test_deleteContent_Success(t *testing.T) {
 	srv, rec, _, mockCont, _, _, mockWebhook := setup(t)
 
 	mockCont.On("DeleteByID", uint(2)).Return(nil)
@@ -129,7 +130,7 @@ func Test_deleteContent_success(t *testing.T) {
 	}
 }
 
-func Test_showCreateContent_success(t *testing.T) {
+func Test_showCreateContent_Success(t *testing.T) {
 	srv, rec, mockColl, mockContent, mockField, mockAsset, _ := setup(t)
 
 	collectionID := uint(1)
@@ -152,7 +153,7 @@ func Test_showCreateContent_success(t *testing.T) {
 	}
 }
 
-func Test_listContent_success(t *testing.T) {
+func Test_listContent_Success(t *testing.T) {
 	srv, rec, _, mockContent, mockField, _, _ := setup(t)
 
 	collectionID := uint(1)
@@ -166,6 +167,23 @@ func Test_listContent_success(t *testing.T) {
 		Return([]model.Field{}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/content/collections/1/show", nil)
+	srv.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func Test_showEditContent_Success(t *testing.T) {
+	srv, rec, mockColl, mockContent, _, mockAsset, _ := setup(t)
+
+	collectionID := uint(1)
+	contentID := uint(42)
+
+	mockContent.On("FindByID", contentID).Return(&model.Content{Model: gorm.Model{ID: contentID}}, nil)
+	mockColl.On("FindByID", collectionID).Return(&model.Collection{Model: gorm.Model{ID: collectionID}}, nil)
+	mockContent.On("FindContentsWithDisplayContentValue").Return([]model.Content{}, nil)
+	mockAsset.On("List", 1, 100000).Return([]model.Asset{}, int64(0), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/content/collections/1/edit/42", nil)
 	srv.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
