@@ -45,6 +45,21 @@ func TestBaseRepository_FindByID(t *testing.T) {
 	assert.Equal(t, "Bob", got.Name)
 }
 
+func TestBaseRepository_FindByID_WithQueryOption(t *testing.T) {
+	db := setupDB(t)
+	repo := base.NewBaseRepository[TestEntity](db)
+	e := &TestEntity{Name: "QueryOpt"}
+	assert.NoError(t, repo.Create(e))
+
+	opt := func(db *gorm.DB) *gorm.DB {
+		return db.Where("name = ?", "QueryOpt")
+	}
+
+	got, err := repo.FindByID(e.ID, opt)
+	assert.NoError(t, err)
+	assert.Equal(t, "QueryOpt", got.Name)
+}
+
 func TestBaseRepository_Save(t *testing.T) {
 	db := setupDB(t)
 	repo := base.NewBaseRepository[TestEntity](db)
@@ -84,4 +99,16 @@ func TestBaseRepository_ListPagination(t *testing.T) {
 	assert.Equal(t, int64(5), total3)
 	assert.Len(t, page3, 1)
 	assert.Equal(t, "N5", page3[0].Name)
+}
+
+func TestBaseRepository_List_CountError(t *testing.T) {
+	db := setupDB(t)
+	repo := base.NewBaseRepository[TestEntity](db)
+
+	badOption := func(db *gorm.DB) *gorm.DB {
+		return db.Where("INVALID SQL SYNTAX ???")
+	}
+
+	_, _, err := repo.List(1, 10, badOption)
+	assert.Error(t, err)
 }
