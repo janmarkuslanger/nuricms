@@ -19,12 +19,11 @@ func SetTemplatesFS(f fs.FS) {
 }
 
 var funcMap = template.FuncMap{
-	"safeHTML": func(s string) template.HTML { return template.HTML(s) },
-	"eq":       func(a, b any) bool { return a == b },
-	"add":      func(a, b int) int { return a + b },
-	"sub":      func(a, b int) int { return a - b },
-	"in":       func(s string, list []string) bool { return slices.Contains(list, s) },
-	"split":    strings.Split,
+	"eq":    func(a, b any) bool { return a == b },
+	"add":   func(a, b int) int { return a + b },
+	"sub":   func(a, b int) int { return a - b },
+	"in":    func(s string, list []string) bool { return slices.Contains(list, s) },
+	"split": strings.Split,
 }
 
 var RenderWithLayoutHTTP = func(ctx server.Context, contentTemplate string, data map[string]any, statusCode int) {
