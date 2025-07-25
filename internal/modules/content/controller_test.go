@@ -131,6 +131,20 @@ func Test_deleteContent_success(t *testing.T) {
 	}
 }
 
+func Test_deleteContent_paramredirect(t *testing.T) {
+	srv, rec, _, mockCont, _, _, mockWebhook := setup(t)
+
+	mockCont.On("DeleteByID", uint(2)).Return(nil)
+	mockWebhook.On("Dispatch", string(model.EventContentDeleted), mock.Anything).Return()
+
+	req := httptest.NewRequest(http.MethodPost, "/content/collections/1/delete/fail", nil)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Errorf("expected 303, got %d", rec.Code)
+	}
+}
+
 func Test_showCreateContent_success(t *testing.T) {
 	srv, rec, mockColl, mockContent, mockField, mockAsset, _ := setup(t)
 
@@ -253,7 +267,7 @@ func Test_showEditContent_paramredirect(t *testing.T) {
 	assert.Equal(t, http.StatusSeeOther, rec.Code)
 }
 
-func Test_showEditContent_notfound(t *testing.T) {
+func Test_showEditContent_contentnotfound(t *testing.T) {
 	srv, rec, mockColl, mockContent, _, mockAsset, _ := setup(t)
 
 	collectionID := uint(1)
@@ -261,6 +275,23 @@ func Test_showEditContent_notfound(t *testing.T) {
 
 	mockContent.On("FindByID", contentID).Return(&model.Content{Model: gorm.Model{ID: contentID}}, errors.New("no no"))
 	mockColl.On("FindByID", collectionID).Return(&model.Collection{Model: gorm.Model{ID: collectionID}}, nil)
+	mockContent.On("FindContentsWithDisplayContentValue").Return([]model.Content{}, nil)
+	mockAsset.On("List", 1, 100000).Return([]model.Asset{}, int64(0), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/content/collections/1/edit/qwe", nil)
+	srv.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusSeeOther, rec.Code)
+}
+
+func Test_showEditContent_collectionnotfound(t *testing.T) {
+	srv, rec, mockColl, mockContent, _, mockAsset, _ := setup(t)
+
+	collectionID := uint(1)
+	contentID := uint(42)
+
+	mockContent.On("FindByID", contentID).Return(&model.Content{Model: gorm.Model{ID: contentID}}, nil)
+	mockColl.On("FindByID", collectionID).Return(&model.Collection{Model: gorm.Model{ID: collectionID}}, errors.New("no col"))
 	mockContent.On("FindContentsWithDisplayContentValue").Return([]model.Content{}, nil)
 	mockAsset.On("List", 1, 100000).Return([]model.Asset{}, int64(0), nil)
 
