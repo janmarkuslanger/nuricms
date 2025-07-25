@@ -2,6 +2,7 @@ package asset
 
 import (
 	"bytes"
+	"errors"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -117,6 +118,30 @@ func Test_showEditAsset_success(t *testing.T) {
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected status 200, got %d", rec.Code)
+	}
+}
+
+func Test_showEditAsset_paramredirect(t *testing.T) {
+	srv, rec, mockAsset, _ := setupAssetTest()
+	mockAsset.On("FindByID", uint(123)).Return(&model.Asset{Name: "Test", Path: "/path"}, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/assets/edit/asd", nil)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Errorf("expected status 303, got %d", rec.Code)
+	}
+}
+
+func Test_showEditAsset_notfound(t *testing.T) {
+	srv, rec, mockAsset, _ := setupAssetTest()
+	mockAsset.On("FindByID", uint(123)).Return(&model.Asset{}, errors.New("not found"))
+
+	req := httptest.NewRequest(http.MethodGet, "/assets/edit/123", nil)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Errorf("expected status 303, got %d", rec.Code)
 	}
 }
 
