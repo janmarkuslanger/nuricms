@@ -10,9 +10,7 @@
 
 ---
 
-
-
-## Installation
+## Installation & Usage
 
 To install and use NuriCMS as a dependency in your Go project, follow the steps below.
 
@@ -23,8 +21,6 @@ You can add NuriCMS to your Go project using `go get`. In your Go project direct
 ```bash
 go get github.com/janmarkuslanger/nuricms
 ```
-
-This will add NuriCMS as a dependency to your project and fetch the latest version.
 
 ### 2. Create Your `main.go` to Start the Server
 
@@ -42,7 +38,6 @@ import (
 )
 
 func main() {
-
 	config := config.Server{
 		Port:        "8080",
 		HookPlugins: []plugin.HookPlugin{},
@@ -52,7 +47,7 @@ func main() {
 }
 ```
 
-The JWT_SECRET environment variable should be set:
+### 3. Set JWT Secret
 
 ```bash
 # Set a basic JWT secret (for development purposes)
@@ -62,7 +57,7 @@ export JWT_SECRET=anything
 export JWT_SECRET=$(openssl rand -base64 32)
 ```
 
-Then run the following command to start the server:
+### 4. Start the Server
 
 ```bash
 go run main.go
@@ -74,6 +69,8 @@ If the server gets started and there is no user in the system there will be an a
 - Password: mysecret
 
 The server will now run at `http://localhost:8080`. You can change the port by modifying the configuration.
+
+---
 
 ## Plugin System
 
@@ -94,11 +91,9 @@ config := config.Server{
 nuricms.Run(config)
 ```
 
----
-
 ### HookPlugin
 
-A `HookPlugin` allows you to register functions for specific system events (hooks), such as `"content:beforeSave"`. A hook plugin implements the following interface:
+A `HookPlugin` allows you to register functions for specific system events (hooks), such as "content:beforeSave". A hook plugin implements the following interface:
 
 ```go
 type HookPlugin interface {
@@ -136,7 +131,6 @@ func (p *SlugPlugin) Register(h *plugin.HookRegistry) {
 		return nil
 	})
 }
-
 ```
 
 Then register your plugin in your `main.go`:
@@ -152,8 +146,62 @@ cfg := config.Server{
 nuricms.Run(cfg)
 ```
 
-### Events 
+### Available Hook Events
 
-- contentValue:beforeSave 
+- `contentValue:beforeSave`
 
 ---
+
+## Architecture Overview
+
+NuriCMS is built on a layered architecture:
+
+```
+├── cmd/              → main entry point (nuricms server)
+├── internal/
+│   ├── controller/   → HTTP controllers
+│   ├── service/      → Business logic
+│   ├── repository/   → Database access (via GORM)
+│   ├── model/        → Core entities and types
+│   └── handler/      → Generic HTTP handler logic (reused)
+├── pkg/
+│   ├── config/       → App configuration
+│   └── plugin/       → Hook/plugin interface support
+└── templates/        → HTML templates for admin UI
+```
+
+- Controllers handle HTTP and delegate to services (mostly via handler funcs).
+- Services coordinate business logic and validate input.
+- Repositories access the database.
+- Plugin system allows you to register custom logic at runtime.
+
+---
+
+## Contributing & Development
+
+### Code Guidelines
+
+- All new code **must be tested**.
+- Keep logic modular and covered with **unit tests**.
+- Use **dependency injection** where applicable to make components testable.
+- Follow standard Go formatting (`gofmt` is CI-enforced).
+
+### Testing
+
+To run tests and generate coverage reports:
+
+```bash
+go test ./... -coverprofile=cover.out
+go tool cover -html=cover.out
+```
+
+For integration tests and full coverage across services:
+
+```bash
+GOCOVERDIR=coverage go test -coverpkg=./... -covermode=atomic ./...
+go tool covdata textfmt -i=coverage -o coverage.txt
+```
+
+---
+
+For questions or contributions, feel free to open an issue or pull request.
