@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,8 +12,10 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/janmarkuslanger/nuricms/internal/dto"
+	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/testutils"
+	"github.com/janmarkuslanger/nuricms/testutils/mockrepo"
 )
 
 func newTestWebhookServiceWithClient(t *testing.T, client *http.Client) *webhookService {
@@ -157,4 +160,18 @@ func TestWebhookService_Dispatch(t *testing.T) {
 
 	assert.True(t, called, "Dispatch should have triggered HTTP call")
 	assert.NotZero(t, hook.ID)
+}
+
+func TestWebhookService_Dispatch_ListByEventFails(t *testing.T) {
+	mockRepo := &mockrepo.MockWebhookRepo{}
+	mockRepo.On("ListByEvent", "dispatch").Return([]model.Webhook{}, errors.New("db error"))
+
+	svc := &webhookService{
+		repos:      &repository.Set{Webhook: mockRepo},
+		httpClient: http.DefaultClient,
+	}
+
+	svc.Dispatch("dispatch", map[string]string{"key": "value"})
+
+	mockRepo.AssertCalled(t, "ListByEvent", "dispatch")
 }
