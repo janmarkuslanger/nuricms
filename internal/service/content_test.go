@@ -38,6 +38,75 @@ func TestDeleteByID(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDeleteByID_Failed(t *testing.T) {
+	testDB := testutils.SetupTestDB(t)
+	mockContentRepo := new(mockrepo.MockContentRepo)
+	mockContentValueRepo := new(mockrepo.MockContentValueRepo)
+
+	repos := &repository.Set{
+		Content:      mockContentRepo,
+		ContentValue: mockContentValueRepo,
+	}
+
+	s := service.NewContentService(repos, testDB)
+
+	id := uint(1)
+	mockContentRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(mockContentRepo)
+	mockContentValueRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(mockContentValueRepo)
+	mockContentRepo.On("DeleteByID", id).Return(errors.New("error"))
+	mockContentValueRepo.On("FindByContentID", id).Return([]model.ContentValue{{}}, nil)
+	mockContentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(nil)
+
+	err := s.DeleteByID(id)
+	assert.Error(t, err)
+}
+
+func TestDeleteByID_FindByContentIDErr(t *testing.T) {
+	testDB := testutils.SetupTestDB(t)
+	mockContentRepo := new(mockrepo.MockContentRepo)
+	mockContentValueRepo := new(mockrepo.MockContentValueRepo)
+
+	repos := &repository.Set{
+		Content:      mockContentRepo,
+		ContentValue: mockContentValueRepo,
+	}
+
+	s := service.NewContentService(repos, testDB)
+
+	id := uint(1)
+	mockContentRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(mockContentRepo)
+	mockContentValueRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(mockContentValueRepo)
+	mockContentRepo.On("DeleteByID", id).Return(nil)
+	mockContentValueRepo.On("FindByContentID", id).Return([]model.ContentValue{{}}, errors.New("error"))
+	mockContentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(nil)
+
+	err := s.DeleteByID(id)
+	assert.Error(t, err)
+}
+
+func TestDeleteByID_DeleteErr(t *testing.T) {
+	testDB := testutils.SetupTestDB(t)
+	mockContentRepo := new(mockrepo.MockContentRepo)
+	mockContentValueRepo := new(mockrepo.MockContentValueRepo)
+
+	repos := &repository.Set{
+		Content:      mockContentRepo,
+		ContentValue: mockContentValueRepo,
+	}
+
+	s := service.NewContentService(repos, testDB)
+
+	id := uint(1)
+	mockContentRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(mockContentRepo)
+	mockContentValueRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(mockContentValueRepo)
+	mockContentRepo.On("DeleteByID", id).Return(nil)
+	mockContentValueRepo.On("FindByContentID", id).Return([]model.ContentValue{{}}, nil)
+	mockContentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(errors.New("failed"))
+
+	err := s.DeleteByID(id)
+	assert.Error(t, err)
+}
+
 func TestCreate(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
 	mockContentRepo := new(mockrepo.MockContentRepo)
