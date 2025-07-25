@@ -20,7 +20,7 @@ type WebhookService interface {
 	FindByID(id uint) (*model.Webhook, error)
 	Save(webhook *model.Webhook) error
 	DeleteByID(id uint) error
-	Dispatch(event string, payload any)
+	Dispatch(event string, payload any) error
 	UpdateByID(id uint, dto dto.WebhookData) (*model.Webhook, error)
 }
 
@@ -127,17 +127,15 @@ func (s *webhookService) DeleteByID(id uint) error {
 	return s.repos.Webhook.Delete(webhook)
 }
 
-func (s *webhookService) Dispatch(event string, payload any) {
+func (s *webhookService) Dispatch(event string, payload any) error {
 	hooks, err := s.repos.Webhook.ListByEvent(event)
 	if err != nil {
-		fmt.Println("Webhook find error:", err)
-		return
+		return err
 	}
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Println("Webhook payload error:", err)
-		return
+		return err
 	}
 
 	for _, hook := range hooks {
@@ -157,4 +155,6 @@ func (s *webhookService) Dispatch(event string, payload any) {
 			resp.Body.Close()
 		}(hook)
 	}
+
+	return nil
 }

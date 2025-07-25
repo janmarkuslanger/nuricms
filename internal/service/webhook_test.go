@@ -14,6 +14,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
+
 	"github.com/janmarkuslanger/nuricms/testutils"
 	"github.com/janmarkuslanger/nuricms/testutils/mockrepo"
 )
@@ -162,16 +163,64 @@ func TestWebhookService_Dispatch(t *testing.T) {
 	assert.NotZero(t, hook.ID)
 }
 
-func TestWebhookService_Dispatch_ListByEventFails(t *testing.T) {
+func newTestWebhookServiceWithMockRepo(t *testing.T, repo repository.WebhookRepo) WebhookService {
+	return NewWebhookService(&repository.Set{Webhook: repo})
+}
+
+func Test_Dispatch_ListByEventFails_ReturnsError(t *testing.T) {
 	mockRepo := &mockrepo.MockWebhookRepo{}
-	mockRepo.On("ListByEvent", "dispatch").Return([]model.Webhook{}, errors.New("db error"))
+	mockRepo.On("ListByEvent", "event").Return([]model.Webhook{}, errors.New("db error"))
 
-	svc := &webhookService{
-		repos:      &repository.Set{Webhook: mockRepo},
-		httpClient: http.DefaultClient,
-	}
+	svc := newTestWebhookServiceWithMockRepo(t, mockRepo)
 
-	svc.Dispatch("dispatch", map[string]string{"key": "value"})
+	err := svc.Dispatch("event", map[string]string{"key": "value"})
 
-	mockRepo.AssertCalled(t, "ListByEvent", "dispatch")
+	assert.Error(t, err)
+	assert.EqualError(t, err, "db error")
+	mockRepo.AssertCalled(t, "ListByEvent", "event")
+}
+
+func Test_Dispatch_JSONMarshalFails_ReturnsError(t *testing.T) {
+	mockRepo := &mockrepo.MockWebhookRepo{}
+	mockRepo.On("ListByEvent", "event").Return([]model.Webhook{
+		{Name: "Bad", Url: "http://localhost", RequestType: "POST"},
+	}, nil)
+
+	svc := newTestWebhookServiceWithMockRepo(t, mockRepo)
+
+	err := svc.Dispatch("event", map[string]interface{}{"key": make(chan int)})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "json: unsupported type")
+	mockRepo.AssertCalled(t, "ListByEvent", "event")
+}
+
+func Test_Dispatch_NewRequestFails_SafeFallback(t *testing.T) {
+	mockRepo := &mockrepo.MockWebhookRepo{}
+	mockRepo.On("ListByEvent", "event").Return([]model.Webhook{
+		{Name: "BadMethod", Url: "http://localhost", RequestType: "INVALID"},
+	}, nil)
+
+	svc := newTestWebhookServiceWithMockRepo(t, mockRepo)
+
+	err := svc.Dispatch("event", map[string]string{"key": "value"})
+	assert.NoError(t, err)
+
+	time.Sleep(100 * time.Millisecond)
+	mockRepo.AssertCalled(t, "ListByEvent", "event")
+}
+
+func Test_Dispatch_HTTPDeliveryFails(t *testing.T) {
+	mockRepo := &mockrepo.MockWebhookRepo{}
+	mockRepo.On("ListByEvent", "event").Return([]model.Webhook{
+		{Name: "FailingHook", Url: "http://127.0.0.1:9999", RequestType: "POST"},
+	}, nil)
+
+	svc := newTestWebhookServiceWithMockRepo(t, mockRepo)
+
+	err := svc.Dispatch("event", map[string]string{"key": "value"})
+	assert.NoError(t, err)
+
+	time.Sleep(200 * time.Millisecond)
+	mockRepo.AssertCalled(t, "ListByEvent", "event")
 }
