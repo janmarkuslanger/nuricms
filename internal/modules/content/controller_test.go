@@ -1,6 +1,7 @@
 package content
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -78,7 +79,7 @@ func Test_showCollections(t *testing.T) {
 	}
 }
 
-func Test_createContent_Success(t *testing.T) {
+func Test_createContent_success(t *testing.T) {
 	srv, rec, _, mockCont, _, _, mockWebhook := setup(t)
 
 	form := url.Values{}
@@ -97,7 +98,7 @@ func Test_createContent_Success(t *testing.T) {
 	}
 }
 
-func Test_editContent_Success(t *testing.T) {
+func Test_editContent_success(t *testing.T) {
 	srv, rec, _, mockCont, _, _, mockWebhook := setup(t)
 
 	form := url.Values{}
@@ -116,7 +117,7 @@ func Test_editContent_Success(t *testing.T) {
 	}
 }
 
-func Test_deleteContent_Success(t *testing.T) {
+func Test_deleteContent_success(t *testing.T) {
 	srv, rec, _, mockCont, _, _, mockWebhook := setup(t)
 
 	mockCont.On("DeleteByID", uint(2)).Return(nil)
@@ -130,7 +131,7 @@ func Test_deleteContent_Success(t *testing.T) {
 	}
 }
 
-func Test_showCreateContent_Success(t *testing.T) {
+func Test_showCreateContent_success(t *testing.T) {
 	srv, rec, mockColl, mockContent, mockField, mockAsset, _ := setup(t)
 
 	collectionID := uint(1)
@@ -153,7 +154,53 @@ func Test_showCreateContent_Success(t *testing.T) {
 	}
 }
 
-func Test_listContent_Success(t *testing.T) {
+func Test_showCreateContent_paramredirect(t *testing.T) {
+	srv, rec, mockColl, mockContent, mockField, mockAsset, _ := setup(t)
+
+	collectionID := uint(1)
+
+	mockField.On("FindByCollectionID", collectionID).Return([]model.Field{
+		{Alias: "title"},
+	}, nil)
+
+	mockColl.On("FindByID", collectionID).Return(&model.Collection{}, nil)
+
+	mockContent.On("FindContentsWithDisplayContentValue").Return([]model.Content{}, nil)
+
+	mockAsset.On("List", 1, 100000).Return([]model.Asset{}, int64(0), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/content/collections/asdfsadf/create", nil)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Errorf("expected 303 OK, got %d", rec.Code)
+	}
+}
+
+func Test_showCreateContent_notfound(t *testing.T) {
+	srv, rec, mockColl, mockContent, mockField, mockAsset, _ := setup(t)
+
+	collectionID := uint(1)
+
+	mockField.On("FindByCollectionID", collectionID).Return([]model.Field{
+		{Alias: "title"},
+	}, nil)
+
+	mockColl.On("FindByID", collectionID).Return(&model.Collection{}, errors.New("asd"))
+
+	mockContent.On("FindContentsWithDisplayContentValue").Return([]model.Content{}, nil)
+
+	mockAsset.On("List", 1, 100000).Return([]model.Asset{}, int64(0), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/content/collections/asdfsadf/create", nil)
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Errorf("expected 303 OK, got %d", rec.Code)
+	}
+}
+
+func Test_listContent_success(t *testing.T) {
 	srv, rec, _, mockContent, mockField, _, _ := setup(t)
 
 	collectionID := uint(1)
@@ -172,7 +219,7 @@ func Test_listContent_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
-func Test_showEditContent_Success(t *testing.T) {
+func Test_showEditContent_success(t *testing.T) {
 	srv, rec, mockColl, mockContent, _, mockAsset, _ := setup(t)
 
 	collectionID := uint(1)
@@ -187,4 +234,38 @@ func Test_showEditContent_Success(t *testing.T) {
 	srv.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func Test_showEditContent_paramredirect(t *testing.T) {
+	srv, rec, mockColl, mockContent, _, mockAsset, _ := setup(t)
+
+	collectionID := uint(1)
+	contentID := uint(42)
+
+	mockContent.On("FindByID", contentID).Return(&model.Content{Model: gorm.Model{ID: contentID}}, nil)
+	mockColl.On("FindByID", collectionID).Return(&model.Collection{Model: gorm.Model{ID: collectionID}}, nil)
+	mockContent.On("FindContentsWithDisplayContentValue").Return([]model.Content{}, nil)
+	mockAsset.On("List", 1, 100000).Return([]model.Asset{}, int64(0), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/content/collections/1/edit/qwe", nil)
+	srv.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusSeeOther, rec.Code)
+}
+
+func Test_showEditContent_notfound(t *testing.T) {
+	srv, rec, mockColl, mockContent, _, mockAsset, _ := setup(t)
+
+	collectionID := uint(1)
+	contentID := uint(42)
+
+	mockContent.On("FindByID", contentID).Return(&model.Content{Model: gorm.Model{ID: contentID}}, errors.New("no no"))
+	mockColl.On("FindByID", collectionID).Return(&model.Collection{Model: gorm.Model{ID: collectionID}}, nil)
+	mockContent.On("FindContentsWithDisplayContentValue").Return([]model.Content{}, nil)
+	mockAsset.On("List", 1, 100000).Return([]model.Asset{}, int64(0), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/content/collections/1/edit/qwe", nil)
+	srv.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusSeeOther, rec.Code)
 }
