@@ -107,7 +107,7 @@ func (ct Controller) createAsset(ctx server.Context) {
 	defer file.Close()
 
 	name := ctx.Request.FormValue("name")
-	filePath, err := ct.services.Asset.UploadFile(ctx, header)
+	filePath, err := ct.services.Asset.UploadFile(ctx, header, header.Filename)
 	if err != nil {
 		http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 		return
@@ -142,7 +142,7 @@ func (ct Controller) editAsset(ctx server.Context) {
 	file, header, err := ctx.Request.FormFile("file")
 	if err == nil && file != nil {
 		defer file.Close()
-		path, err := ct.services.Asset.UploadFile(ctx, header)
+		path, err := ct.services.Asset.UploadFile(ctx, header, header.Filename)
 		if err != nil {
 			http.Redirect(ctx.Writer, ctx.Request, "/assets", http.StatusSeeOther)
 			return

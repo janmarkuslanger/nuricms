@@ -37,7 +37,9 @@ func SetupApp(opts config.Config, envs env.EnvSource) (*App, error) {
 	MigrateModels(db)
 	repos := repository.NewSet(db)
 
-	services, err := service.NewSet(repos, hooks, db, env)
+	fs := service.OsFileOps{}
+
+	services, err := service.NewSet(repos, hooks, db, env, fs)
 	if err != nil {
 		return nil, err
 	}

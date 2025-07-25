@@ -1,9 +1,8 @@
 package testutils
 
 import (
-	"mime/multipart"
-
 	"github.com/janmarkuslanger/nuricms/internal/dto"
+	"github.com/janmarkuslanger/nuricms/internal/fs"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository/base"
 	"github.com/janmarkuslanger/nuricms/internal/server"
@@ -112,8 +111,8 @@ func (m *MockAssetService) Create(asset *model.Asset) error {
 	return args.Error(0)
 }
 
-func (m *MockAssetService) UploadFile(ctx server.Context, file *multipart.FileHeader) (string, error) {
-	args := m.Called(ctx, file)
+func (m *MockAssetService) UploadFile(ctx server.Context, file fs.FileOpener, filename string) (string, error) {
+	args := m.Called(ctx, file, filename)
 	return args.String(0), args.Error(1)
 }
 

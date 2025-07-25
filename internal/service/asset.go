@@ -2,10 +2,10 @@ package service
 
 import (
 	"io"
-	"mime/multipart"
 	"os"
 	"path/filepath"
 
+	"github.com/janmarkuslanger/nuricms/internal/fs"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/internal/server"
@@ -16,34 +16,36 @@ type AssetService interface {
 	DeleteByID(id uint) error
 	Save(asset *model.Asset) error
 	Create(asset *model.Asset) error
-	UploadFile(ctx server.Context, file *multipart.FileHeader) (string, error)
+	UploadFile(ctx server.Context, header fs.FileOpener, filename string) (string, error)
 	FindByID(id uint) (*model.Asset, error)
 }
 
 type assetService struct {
 	repos *repository.Set
+	fs    fs.FileOps
 }
 
-func NewAssetService(repos *repository.Set) AssetService {
+func NewAssetService(repos *repository.Set, fs fs.FileOps) AssetService {
 	return &assetService{
 		repos: repos,
+		fs:    fs,
 	}
 }
 
-func (s *assetService) UploadFile(ctx server.Context, header *multipart.FileHeader) (string, error) {
+func (s *assetService) UploadFile(ctx server.Context, header fs.FileOpener, filename string) (string, error) {
 	src, err := header.Open()
 	if err != nil {
 		return "", err
 	}
 	defer src.Close()
 
-	savePath := filepath.Join("public", "assets", header.Filename)
+	savePath := filepath.Join("public", "assets", filename)
 
-	if err := os.MkdirAll(filepath.Dir(savePath), 0755); err != nil {
+	if err := s.fs.MkdirAll(filepath.Dir(savePath), 0755); err != nil {
 		return "", err
 	}
 
-	dst, err := os.Create(savePath)
+	dst, err := s.fs.Create(savePath)
 	if err != nil {
 		return "", err
 	}

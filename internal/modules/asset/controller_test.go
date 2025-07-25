@@ -77,7 +77,7 @@ func Test_showCreateAsset(t *testing.T) {
 func Test_createAsset_success(t *testing.T) {
 	srv, rec, mockAsset, _ := setupAssetTest()
 
-	mockAsset.On("UploadFile", mock.Anything, mock.Anything).Return("/uploaded/test.png", nil)
+	mockAsset.On("UploadFile", mock.Anything, mock.Anything, mock.Anything).Return("/uploaded/test.png", nil)
 	mockAsset.On("Create", mock.Anything).Return(nil)
 
 	body := &bytes.Buffer{}
@@ -123,7 +123,7 @@ func Test_showEditAsset_success(t *testing.T) {
 func Test_editAsset_withFile(t *testing.T) {
 	srv, rec, mockAsset, _ := setupAssetTest()
 	mockAsset.On("FindByID", uint(123)).Return(&model.Asset{Name: "Old", Path: "old.png"}, nil)
-	mockAsset.On("UploadFile", mock.Anything, mock.Anything).Return("new.png", nil)
+	mockAsset.On("UploadFile", mock.Anything, mock.Anything, mock.Anything).Return("new.png", nil)
 	mockAsset.On("Save", mock.Anything).Return(nil)
 
 	body := &bytes.Buffer{}
