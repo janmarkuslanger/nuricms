@@ -86,6 +86,25 @@ func TestListByCollectionAlias(t *testing.T) {
 	assert.Len(t, contents, 1)
 }
 
+func TestListByCollectionAlias_FindByAliasErr(t *testing.T) {
+	testDB := testutils.SetupTestDB(t)
+	mockContentRepo := new(mockrepo.MockContentRepo)
+	mockCollectionRepo := new(testutils.MockCollectionRepo)
+	repos := &repository.Set{
+		Content:    mockContentRepo,
+		Collection: mockCollectionRepo,
+	}
+	s := service.NewContentService(repos, testDB)
+
+	collection := &model.Collection{}
+	collection.ID = 1
+	mockCollectionRepo.On("FindByAlias", "blog").Return(collection, errors.New("Err"))
+
+	contents, err := s.ListByCollectionAlias("blog", 0, 10)
+	assert.NotNil(t, err)
+	assert.Len(t, contents, 0)
+}
+
 func TestFindByCollectionID(t *testing.T) {
 	testDB := testutils.SetupTestDB(t)
 	mockContentRepo := new(mockrepo.MockContentRepo)
@@ -123,7 +142,7 @@ func TestFindContentsWithDisplayContentValue(t *testing.T) {
 	assert.Len(t, result, 1)
 }
 
-func TestCreateWithValues(t *testing.T) {
+func setupWithValues(t *testing.T) (*gorm.DB, *mockrepo.MockFieldRepo, *mockrepo.MockContentRepo, *mockrepo.MockContentValueRepo, *repository.Set) {
 	testDB := testutils.SetupTestDB(t)
 
 	fieldRepo := new(mockrepo.MockFieldRepo)
@@ -136,6 +155,11 @@ func TestCreateWithValues(t *testing.T) {
 		ContentValue: contentValueRepo,
 	}
 
+	return testDB, fieldRepo, contentRepo, contentValueRepo, repos
+}
+
+func TestCreateWithValues(t *testing.T) {
+	testDB, fieldRepo, contentRepo, contentValueRepo, repos := setupWithValues(t)
 	s := service.NewContentService(repos, testDB)
 
 	fields := []model.Field{
@@ -150,8 +174,8 @@ func TestCreateWithValues(t *testing.T) {
 	}
 
 	form := map[string][]string{
-		"1": {"My Title"},
-		"2": {"My Description"},
+		"title": {"My Title"},
+		"desc":  {"My Description"},
 	}
 
 	fieldRepo.On("WithTx", mock.Anything).Return(fieldRepo)
@@ -178,17 +202,7 @@ func TestCreateWithValues(t *testing.T) {
 }
 
 func TestCreateWithValues_FindByCollectionErr(t *testing.T) {
-	testDB := testutils.SetupTestDB(t)
-
-	fieldRepo := new(mockrepo.MockFieldRepo)
-	contentRepo := new(mockrepo.MockContentRepo)
-	contentValueRepo := new(mockrepo.MockContentValueRepo)
-
-	repos := &repository.Set{
-		Content:      contentRepo,
-		Field:        fieldRepo,
-		ContentValue: contentValueRepo,
-	}
+	testDB, fieldRepo, contentRepo, contentValueRepo, repos := setupWithValues(t)
 
 	s := service.NewContentService(repos, testDB)
 
@@ -204,8 +218,8 @@ func TestCreateWithValues_FindByCollectionErr(t *testing.T) {
 	}
 
 	form := map[string][]string{
-		"1": {"My Title"},
-		"2": {"My Description"},
+		"title": {"My Title"},
+		"desc":  {"My Description"},
 	}
 
 	fieldRepo.On("WithTx", mock.Anything).Return(fieldRepo)
@@ -225,18 +239,7 @@ func TestCreateWithValues_FindByCollectionErr(t *testing.T) {
 }
 
 func TestCreateWithValues_CreateErr(t *testing.T) {
-	testDB := testutils.SetupTestDB(t)
-
-	fieldRepo := new(mockrepo.MockFieldRepo)
-	contentRepo := new(mockrepo.MockContentRepo)
-	contentValueRepo := new(mockrepo.MockContentValueRepo)
-
-	repos := &repository.Set{
-		Content:      contentRepo,
-		Field:        fieldRepo,
-		ContentValue: contentValueRepo,
-	}
-
+	testDB, fieldRepo, contentRepo, contentValueRepo, repos := setupWithValues(t)
 	s := service.NewContentService(repos, testDB)
 
 	fields := []model.Field{
@@ -251,8 +254,8 @@ func TestCreateWithValues_CreateErr(t *testing.T) {
 	}
 
 	form := map[string][]string{
-		"1": {"My Title"},
-		"2": {"My Description"},
+		"title": {"My Title"},
+		"desc":  {"My Description"},
 	}
 
 	fieldRepo.On("WithTx", mock.Anything).Return(fieldRepo)
@@ -277,18 +280,7 @@ func TestCreateWithValues_CreateErr(t *testing.T) {
 }
 
 func TestEditWithValues(t *testing.T) {
-	testDB := testutils.SetupTestDB(t)
-
-	fieldRepo := new(mockrepo.MockFieldRepo)
-	contentRepo := new(mockrepo.MockContentRepo)
-	contentValueRepo := new(mockrepo.MockContentValueRepo)
-
-	repos := &repository.Set{
-		Content:      contentRepo,
-		Field:        fieldRepo,
-		ContentValue: contentValueRepo,
-	}
-
+	testDB, fieldRepo, contentRepo, contentValueRepo, repos := setupWithValues(t)
 	s := service.NewContentService(repos, testDB)
 
 	fields := []model.Field{
@@ -297,8 +289,8 @@ func TestEditWithValues(t *testing.T) {
 	}
 
 	form := map[string][]string{
-		"1": {"Updated Title"},
-		"2": {"Updated Description"},
+		"title": {"Updated Title"},
+		"desc":  {"Updated Description"},
 	}
 
 	content := &model.Content{
@@ -328,6 +320,119 @@ func TestEditWithValues(t *testing.T) {
 		assert.Equal(t, uint(42), result.ID)
 		assert.Equal(t, uint(123), result.CollectionID)
 	}
+
+	fieldRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+	contentValueRepo.AssertExpectations(t)
+}
+
+func TestEditWithValues_NotFound(t *testing.T) {
+	testDB, fieldRepo, contentRepo, contentValueRepo, repos := setupWithValues(t)
+	s := service.NewContentService(repos, testDB)
+	form := map[string][]string{
+		"title": {"Updated Title"},
+		"desc":  {"Updated Description"},
+	}
+
+	content := &model.Content{
+		Model:        gorm.Model{ID: 42},
+		CollectionID: 123,
+	}
+
+	contentRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(contentRepo)
+	contentRepo.On("FindByID", mock.Anything).Return(content, errors.New("oh no"))
+
+	contentValueRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(contentValueRepo).Maybe()
+	contentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(nil).Maybe()
+	contentValueRepo.On("Create", mock.AnythingOfType("*model.ContentValue")).Return(nil).Maybe()
+
+	fieldRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(fieldRepo).Maybe()
+
+	_, err := s.EditWithValues(dto.ContentWithValues{
+		ContentID:    42,
+		CollectionID: 123,
+		FormData:     form,
+	})
+
+	assert.Error(t, err)
+
+	fieldRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+	contentValueRepo.AssertExpectations(t)
+}
+
+func TestEditWithValues_CollectionIDInvalid(t *testing.T) {
+	testDB, fieldRepo, contentRepo, contentValueRepo, repos := setupWithValues(t)
+	s := service.NewContentService(repos, testDB)
+	form := map[string][]string{
+		"title": {"Updated Title"},
+		"desc":  {"Updated Description"},
+	}
+
+	content := &model.Content{
+		Model:        gorm.Model{ID: 42},
+		CollectionID: 123,
+	}
+
+	contentRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(contentRepo)
+	contentRepo.On("FindByID", mock.Anything).Return(content, nil)
+
+	contentValueRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(contentValueRepo).Maybe()
+	contentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(nil).Maybe()
+	contentValueRepo.On("Create", mock.AnythingOfType("*model.ContentValue")).Return(nil).Maybe()
+
+	fieldRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(fieldRepo).Maybe()
+
+	_, err := s.EditWithValues(dto.ContentWithValues{
+		ContentID:    42,
+		CollectionID: 123 + 1,
+		FormData:     form,
+	})
+
+	assert.Error(t, err)
+
+	fieldRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+	contentValueRepo.AssertExpectations(t)
+}
+
+func TestEditWithValues_NoFields(t *testing.T) {
+	testDB, fieldRepo, contentRepo, contentValueRepo, repos := setupWithValues(t)
+	s := service.NewContentService(repos, testDB)
+
+	fields := []model.Field{
+		{Model: gorm.Model{ID: 1}, Alias: "title"},
+		{Model: gorm.Model{ID: 2}, Alias: "desc"},
+	}
+
+	form := map[string][]string{
+		"title": {"Updated Title"},
+		"desc":  {"Updated Description"},
+	}
+
+	content := &model.Content{
+		Model:        gorm.Model{ID: 42},
+		CollectionID: 123,
+	}
+
+	contentRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(contentRepo)
+	contentRepo.On("FindByID", mock.Anything).Return(content, nil)
+
+	contentValueRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(contentValueRepo).Maybe()
+	contentValueRepo.On("FindByContentID", uint(42)).Return([]model.ContentValue{}, nil)
+	contentValueRepo.On("Delete", mock.AnythingOfType("*model.ContentValue")).Return(nil).Maybe()
+	contentValueRepo.On("Create", mock.AnythingOfType("*model.ContentValue")).Return(nil).Maybe()
+
+	fieldRepo.On("WithTx", mock.AnythingOfType("*gorm.DB")).Return(fieldRepo).Maybe()
+	fieldRepo.On("FindByCollectionID", uint(123)).Return(fields, errors.New("no fields"))
+
+	_, err := s.EditWithValues(dto.ContentWithValues{
+		ContentID:    42,
+		CollectionID: 123,
+		FormData:     form,
+	})
+
+	assert.Error(t, err)
 
 	fieldRepo.AssertExpectations(t)
 	contentRepo.AssertExpectations(t)
