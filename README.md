@@ -72,6 +72,53 @@ The server will now run at `http://localhost:8080`. You can change the port by m
 
 ---
 
+## 🧱 How it works
+
+At the core of **nuricms** are three key concepts:
+
+### 1. Collections
+
+A **collection** defines the structure of a content type – such as `blog`, `product`, or `page`. Each collection is made up of multiple fields.
+
+### 2. Fields
+
+A **field** describes a single property of a collection, such as `title`, `price`, or `image`. Fields have:
+- A name and alias
+- A type (e.g. `text`, `number`, `boolean`, `date`, `richtext`, `asset`, `collection`)
+- Optional settings like default values or whether they are required
+
+### 3. Content
+
+Once a collection is created, you can add content entries for it. Each entry stores values for every field defined in the collection.
+
+Values are grouped by their field alias and contain both the field value and its type.
+
+Example: A `blog` collection with fields `title` and `body` might return the following content entry via the API:
+
+```json
+{
+  "id": 29,
+  "created_at": "2025-07-26T12:23:28.705057+02:00",
+  "updated_at": "2025-07-26T12:23:28.705057+02:00",
+  "collection": {
+    "id": 12
+  },
+  "values": {
+    "title": {
+      "id": 215,
+      "value": "A wonderful blog",
+      "field_type": "Text"
+    },
+    "body": {
+      "id": 216,
+      "value": "<p>This is my blog body</p>",
+      "field_type": "RichText"
+    }
+  }
+}
+```
+---
+
 ## Plugin System
 
 `nuricms` provides a modular plugin system. Plugins can be passed to the CMS via the `ServerConfig` at startup and allow extending various parts of the system — such as hooks, routes, or UI components.
