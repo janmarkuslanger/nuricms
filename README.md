@@ -38,7 +38,7 @@ import (
 )
 
 func main() {
-	config := config.Server{
+	config := config.Config{
 		Port:        "8080",
 		HookPlugins: []plugin.HookPlugin{},
 	}
