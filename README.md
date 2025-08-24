@@ -3,6 +3,7 @@
 **nuricms is a api first content management system written in go.**
 
 [![codecov](https://codecov.io/gh/janmarkuslanger/nuricms/graph/badge.svg?token=U51WPEFN5Y)](https://codecov.io/gh/janmarkuslanger/nuricms)
+<a href="https://goreportcard.com/report/github.com/janmarkuslanger/nuricms"><img src="https://goreportcard.com/badge/github.com/janmarkuslanger/nuricms" alt="Go Report"></a>
 
 ---
 
