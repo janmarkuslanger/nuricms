@@ -78,6 +78,12 @@
                     newField.querySelector('[data-field]').value = '';
                     fieldContainer.appendChild(newField);
     
+                    const rich = newField.querySelector('[data-richtext]');
+                    if (rich) {
+                        rich.removeAttribute('data-initial-html');
+                        rich.innerHTML = '';
+                    }
+
                     initField(newField);
                 });
             };
