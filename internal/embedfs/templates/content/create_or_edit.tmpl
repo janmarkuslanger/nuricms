@@ -32,6 +32,13 @@
             return findFieldRoot(element.parentElement);
         }
 
+        function decodeEntities(s) {
+            if (!s) return s;
+            const ta = document.createElement('textarea');
+            ta.innerHTML = s;
+            return ta.value;
+        }
+
         function initQuill(element) {
             const richText = element.querySelector('[data-richtext]');
 
@@ -44,6 +51,11 @@
             const quill = new Quill(richText, {
                 theme: 'snow'
             });
+
+            const esc = richText.getAttribute('data-initial-html') || '';
+            if (esc.trim()) {
+                quill.clipboard.dangerouslyPasteHTML(decodeEntities(esc), 'api');
+            }
 
             inputHidden.value = quill.getText().trim() !== "" ? quill.getSemanticHTML() : ''
 
@@ -66,6 +78,12 @@
                     newField.querySelector('[data-field]').value = '';
                     fieldContainer.appendChild(newField);
     
+                    const rich = newField.querySelector('[data-richtext]');
+                    if (rich) {
+                        rich.removeAttribute('data-initial-html');
+                        rich.innerHTML = '';
+                    }
+
                     initField(newField);
                 });
             };
