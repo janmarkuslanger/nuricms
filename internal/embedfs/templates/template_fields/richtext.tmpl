@@ -13,7 +13,8 @@
                     <input type="hidden" data-field name="{{ $field.Alias }}" {{ if $field.IsRequired }}required{{ end }} value="{{ $value.Value }}" />
                     <div
                         data-richtext
-                    >{{ $value.Value }}</div>
+                        data-initial-html="{{ .Value }}"
+                    ></div>
                     
                     {{ if $field.IsList }}
                         <button class="btn" type="button" data-action-add>Add</button>
