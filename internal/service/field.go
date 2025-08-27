@@ -7,6 +7,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/repository"
 	"github.com/janmarkuslanger/nuricms/internal/utils"
+	"gorm.io/gorm"
 )
 
 type FieldService interface {
@@ -40,7 +41,9 @@ func (s *fieldService) FindByID(id uint) (*model.Field, error) {
 }
 
 func (s *fieldService) List(page, pageSize int) ([]model.Field, int64, error) {
-	return s.repos.Field.List(page, pageSize)
+	return s.repos.Field.List(page, pageSize, func(db *gorm.DB) *gorm.DB {
+		return db.Preload("Collection")
+	})
 }
 
 func (s *fieldService) UpdateByID(id uint, data dto.FieldData) (*model.Field, error) {
