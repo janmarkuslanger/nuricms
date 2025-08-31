@@ -1,9 +1,16 @@
-# nuri-cms
 
-**nuricms is a api first content management system written in go.**
 
-[![codecov](https://codecov.io/gh/janmarkuslanger/nuricms/graph/badge.svg?token=U51WPEFN5Y)](https://codecov.io/gh/janmarkuslanger/nuricms)
-<a href="https://goreportcard.com/report/github.com/janmarkuslanger/nuricms"><img src="https://goreportcard.com/badge/github.com/janmarkuslanger/nuricms" alt="Go Report"></a>
+<p align="center"><img src="/logo.svg" alt="Logo" width="200" /></p>
+<h1 align="center">NURICMS</h1>
+<p align="center">API content management system.</p>
+
+<p align="center">
+  <a href="https://codecov.io/gh/janmarkuslanger/nuricms"><img src="https://codecov.io/gh/janmarkuslanger/nuricms/graph/badge.svg?token=token=U51WPEFN5Y" alt="Code coverage"></a>
+  <a href="https://goreportcard.com/report/github.com/janmarkuslanger/ssgo"><img src="https://goreportcard.com/badge/github.com/janmarkuslanger/ssgo" alt="Go Report"></a>
+  <a href="https://github.com/janmarkuslanger/nuricms/releases"><img src="https://img.shields.io/github/release/janmarkuslanger/nuricms" alt="Latest Release"></a>
+  <a href="https://github.com/janmarkuslanger/nuricms/actions"><img src="https://github.com/janmarkuslanger/nuricms/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
+  <a href="https://github.com/janmarkuslanger/nuricms/archive/refs/heads/main.zip"><img src="https://img.shields.io/badge/Download-ZIP-blue" alt="Download ZIP"></a>
+</p>
 
 ---
 
