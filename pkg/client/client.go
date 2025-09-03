@@ -40,11 +40,18 @@ type Pagination struct {
 	Page    int `json:"page"`
 }
 
+type CollectionInfo struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Alias string `json:"alias"`
+}
+
 type ContentItem struct {
-	ID        uint                   `json:"id"`
-	CreatedAt string                 `json:"created_at"`
-	UpdatedAt string                 `json:"updated_at"`
-	Values    map[string]interface{} `json:"values"`
+	ID         uint                   `json:"id"`
+	CreatedAt  string                 `json:"created_at"`
+	UpdatedAt  string                 `json:"updated_at"`
+	Values     map[string]interface{} `json:"values"`
+	Collection *CollectionInfo        `json:"collection,omitempty"`
 }
 
 func (c *ApiClient) get(path string, target any) error {
