@@ -18,7 +18,7 @@ type ApiClient struct {
 
 func New(baseURL, apiKey string) *ApiClient {
 	return &ApiClient{
-		BaseURL:    strings.TrimRight(baseURL, "/"),
+		BaseURL:    strings.TrimRight(strings.TrimSpace(baseURL), "/"),
 		ApiKey:     apiKey,
 		HTTPClient: &http.Client{Timeout: 15 * time.Second},
 	}
