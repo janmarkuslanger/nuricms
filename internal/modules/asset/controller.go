@@ -55,6 +55,9 @@ func (ct Controller) RegisterRoutes(s *server.Server) {
 		middleware.Userauth(ct.services.User),
 		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
 	)
+
+	s.Static("/public/assets", "./public/assets")
+
 }
 
 func (ct Controller) showAssets(ctx server.Context) {

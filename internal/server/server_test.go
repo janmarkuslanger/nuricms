@@ -4,6 +4,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -92,4 +94,52 @@ func TestServer_ServeHTTP_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusTeapot, rec.Code)
 	require.Equal(t, "hello world", rec.Body.String())
+}
+
+func TestServer_Static_GET(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "nested"), 0o755))
+	want := []byte("hello")
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "nested", "file.txt"), want, 0o644))
+
+	srv := server.NewServer()
+	srv.Static("/public/assets", dir)
+
+	req := httptest.NewRequest(http.MethodGet, "/public/assets/nested/file.txt", nil)
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	body, _ := io.ReadAll(rec.Body)
+	require.Equal(t, string(want), string(body))
+}
+
+func TestServer_Static_HEAD(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "file.txt"), []byte("content"), 0o644))
+
+	srv := server.NewServer()
+	srv.Static("/public/assets", dir)
+
+	req := httptest.NewRequest(http.MethodHead, "/public/assets/file.txt", nil)
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, 0, rec.Body.Len())
+	require.NotEmpty(t, rec.Header().Get("Content-Length"))
+}
+
+func TestServer_Static_MethodNotAllowedLike(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "file.txt"), []byte("x"), 0o644))
+
+	srv := server.NewServer()
+	srv.Static("/public/assets", dir)
+
+	req := httptest.NewRequest(http.MethodPost, "/public/assets/file.txt", nil)
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusMethodNotAllowed, rec.Code)
 }
