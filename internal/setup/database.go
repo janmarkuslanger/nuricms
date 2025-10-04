@@ -24,6 +24,7 @@ func MigrateModels(db *gorm.DB) {
 	db.AutoMigrate(
 		&model.Collection{},
 		&model.Field{},
+		&model.FieldOption{},
 		&model.Content{},
 		&model.ContentValue{},
 		&model.Asset{},
