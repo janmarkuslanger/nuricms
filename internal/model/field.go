@@ -7,14 +7,15 @@ import (
 type FieldType string
 
 const (
-	FieldTypeText       FieldType = "Text"
-	FieldTypeNumber     FieldType = "Number"
-	FieldTypeBoolean    FieldType = "Boolean"
-	FieldTypeDate       FieldType = "Date"
-	FieldTypeAsset      FieldType = "Asset"
-	FieldTypeCollection FieldType = "Collection"
-	FieldTypeTextarea   FieldType = "Textarea"
-	FieldTypeRichText   FieldType = "RichText"
+	FieldTypeText        FieldType = "Text"
+	FieldTypeNumber      FieldType = "Number"
+	FieldTypeBoolean     FieldType = "Boolean"
+	FieldTypeDate        FieldType = "Date"
+	FieldTypeAsset       FieldType = "Asset"
+	FieldTypeCollection  FieldType = "Collection"
+	FieldTypeTextarea    FieldType = "Textarea"
+	FieldTypeRichText    FieldType = "RichText"
+	FieldTypeMultiSelect FieldType = "MultiSelect"
 )
 
 type Field struct {
