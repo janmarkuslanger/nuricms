@@ -11,6 +11,7 @@ import (
 type Set struct {
 	Collection   CollectionService
 	Field        FieldService
+	FieldOption  FieldOptionService
 	Content      ContentService
 	ContentValue ContentValueService
 	Asset        AssetService
@@ -24,6 +25,7 @@ func NewSet(r *repository.Set, hr *plugin.HookRegistry, db *gorm.DB, env *env.En
 	return &Set{
 		Collection:   NewCollectionService(r),
 		Field:        NewFieldService(r),
+		FieldOption:  NewFieldOptionService(r),
 		Content:      NewContentService(r, db),
 		ContentValue: NewContentValueService(r, hr),
 		Asset:        NewAssetService(r, fs),

@@ -8,6 +8,7 @@ import (
 	"github.com/janmarkuslanger/nuricms/internal/modules/collection"
 	"github.com/janmarkuslanger/nuricms/internal/modules/content"
 	"github.com/janmarkuslanger/nuricms/internal/modules/field"
+	fieldoptions "github.com/janmarkuslanger/nuricms/internal/modules/field_options"
 	"github.com/janmarkuslanger/nuricms/internal/modules/home"
 	"github.com/janmarkuslanger/nuricms/internal/modules/user"
 	"github.com/janmarkuslanger/nuricms/internal/modules/webhook"
@@ -49,6 +50,7 @@ func SetupApp(opts config.Config, envs env.EnvSource) (*App, error) {
 	ctrl := []server.Controller{
 		collection.NewController(services),
 		field.NewController(services),
+		fieldoptions.NewController(services),
 		content.NewController(services),
 		asset.NewController(services),
 		user.NewController(services),

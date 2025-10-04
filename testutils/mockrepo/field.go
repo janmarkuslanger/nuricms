@@ -50,6 +50,11 @@ func (m *MockFieldRepo) FindByCollectionID(collectionID uint) ([]model.Field, er
 	return args.Get(0).([]model.Field), args.Error(1)
 }
 
+func (m *MockFieldRepo) FindByFieldTypes(fieldTypes []model.FieldType) ([]model.Field, error) {
+	args := m.Called(fieldTypes)
+	return args.Get(0).([]model.Field), args.Error(1)
+}
+
 func (m *MockFieldRepo) FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {
 	args := m.Called(collectionID)
 	return args.Get(0).([]model.Field), args.Error(1)

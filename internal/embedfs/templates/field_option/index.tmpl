@@ -1,0 +1,27 @@
+{{ define "content" }}
+
+    {{ $root := . }}
+    <h1 class="mb-4 text-4xl font-extrabold">Field options</h1>
+    <a class="btn btn-primary mb-4" href="/field-options/{{ $root.Type }}/create">Create new {{ $root.Type }}</a>
+
+    <table class="table mb-4">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+          
+            
+            {{ range $index, $value := $root.Types }}
+                <tr>
+                    <th>{{ $value }}</th>
+                    <td><a href="/field-options/{{$value}}">Show</a></td>
+                </tr>
+            {{end}}
+
+        </tbody>
+    </table>
+
+{{end}}

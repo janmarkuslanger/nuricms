@@ -1,0 +1,30 @@
+{{ define "content" }}
+    {{ $item := .Item }}
+    {{ if $item }}<h1>Edit field option</h1>{{else}}<h1>New field option</h1>{{end}}
+    
+    <form method="POST">
+
+        <fieldset class="fieldset">
+            <legend class="fieldset-legend">Value:</legend>
+            <input class="input" type="value" name="value" {{ if $item.Value }}value="{{ $item.Value }}"{{ end }}>
+        </fieldset>
+
+        <fieldset class="fieldset">
+        <legend class="fieldset-legend">Field:</legend>
+        <select class="select" name="field">
+            {{ range .Fields }}
+                <option value="{{ .ID }}">{{ .Name }}</option>
+            {{ end }}
+        </select>
+        </fieldset>
+
+        <button class="btn my-4" type="submit">{{ if $item }}Update{{ else }}Create{{ end }}</button>
+    </form>
+
+    {{ if $item }}
+        <form method="POST" action="/field-options/delete/{{ $item.ID }}" onsubmit="return confirm('Confirm deletion?');">
+            <button class="btn" type="submit">Delete</button>
+        </form>
+    {{ end }}
+
+{{ end }}
