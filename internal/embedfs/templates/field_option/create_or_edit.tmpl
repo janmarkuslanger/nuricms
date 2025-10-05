@@ -11,10 +11,17 @@
 
         <fieldset class="fieldset">
         <legend class="fieldset-legend">Field:</legend>
-        <select class="select" name="field">
-            {{ range .Fields }}
-                <option value="{{ .ID }}">{{ .Name }}</option>
+        <select class="select" name="field" {{ if $item.FieldID }}disabled{{ end }}>
+
+            {{ if $item.FieldID }}
+                <option selected value="{{ $item.Field.ID }}">{{ $item.Field.Name }}</option>
+            {{ else }}
+                {{ range .Fields }}
+                    <option value="{{ .ID }}">{{ .Name }}</option>
+                {{ end }}
             {{ end }}
+
+            
         </select>
         </fieldset>
 
@@ -22,7 +29,7 @@
     </form>
 
     {{ if $item }}
-        <form method="POST" action="/field-options/delete/{{ $item.ID }}" onsubmit="return confirm('Confirm deletion?');">
+        <form method="POST" action="/field-options/SelectOption/delete/{{ $item.ID }}" onsubmit="return confirm('Confirm deletion?');">
             <button class="btn" type="submit">Delete</button>
         </form>
     {{ end }}

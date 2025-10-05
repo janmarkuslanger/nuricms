@@ -3,6 +3,8 @@ package fieldoptions
 import (
 	"net/http"
 
+	"github.com/janmarkuslanger/nuricms/internal/dto"
+	"github.com/janmarkuslanger/nuricms/internal/handler"
 	"github.com/janmarkuslanger/nuricms/internal/middleware"
 	"github.com/janmarkuslanger/nuricms/internal/model"
 	"github.com/janmarkuslanger/nuricms/internal/server"
@@ -42,6 +44,24 @@ func (ct Controller) RegisterRoutes(s *server.Server) {
 		middleware.Userauth(ct.services.User),
 		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
 	)
+
+	s.Handle("GET /field-options/SelectOption/edit/{id}",
+		ct.showEditFieldOption,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
+
+	s.Handle("POST /field-options/SelectOption/edit/{id}",
+		ct.editFieldOption,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
+
+	s.Handle("POST /field-options/SelectOption/delete/{id}",
+		ct.deleteFieldOption,
+		middleware.Userauth(ct.services.User),
+		middleware.Roleauth(model.RoleAdmin, model.RoleEditor),
+	)
 }
 
 func (ct Controller) listFieldOptions(ctx server.Context) {
@@ -51,9 +71,7 @@ func (ct Controller) listFieldOptions(ctx server.Context) {
 }
 
 func (ct Controller) indexFieldOptions(ctx server.Context) {
-	utils.RenderWithLayoutHTTP(ctx, "field_option/index.tmpl", map[string]any{
-		"Type": string(model.FieldOptionTypeSelectOption),
-	}, http.StatusOK)
+	handler.HandleList(ctx, ct.services.FieldOption, "field_option/index.tmpl")
 }
 
 func (ct Controller) showCreateFieldOption(ctx server.Context) {
@@ -68,14 +86,34 @@ func (ct Controller) showCreateFieldOption(ctx server.Context) {
 }
 
 func (ct Controller) createFieldOption(ctx server.Context) {
-	v := ctx.Request.FormValue("value")
-	f := ctx.Request.FormValue("field")
-
-	fo := model.FieldOption{
-		OptionType: model.FieldOptionTypeSelectOption,
-		Value:      v,
-		FieldID:    uint(f),
+	dto := dto.FieldOption{
+		Value:   ctx.Request.FormValue("value"),
+		FieldID: ctx.Request.FormValue("field"),
 	}
 
-	utils.RenderWithLayoutHTTP(ctx, "field_option/create_or_edit.tmpl", map[string]any{}, http.StatusOK)
+	ct.services.FieldOption.Create(dto)
+	http.Redirect(ctx.Writer, ctx.Request, "/field-options/SelectOption", http.StatusSeeOther)
+}
+
+func (ct Controller) editFieldOption(ctx server.Context) {
+	handler.HandleEdit(ctx, ct.services.FieldOption, ctx.Request.PathValue("id"), dto.FieldOption{
+		Value: ctx.Request.PostFormValue("value"),
+	}, handler.HandlerOptions{
+		RedirectOnSuccess: "/field-options/SelectOption",
+		RedirectOnFail:    "/field-options/SelectOption/edit/" + ctx.Request.PathValue("id"),
+	})
+}
+
+func (ct Controller) showEditFieldOption(ctx server.Context) {
+	handler.HandleShowEdit(ctx, ct.services.FieldOption, ctx.Request.PathValue("id"), handler.HandlerOptions{
+		RedirectOnFail:  "/field-options/SelectOption",
+		RenderOnSuccess: "field_option/create_or_edit.tmpl",
+	})
+}
+
+func (ct *Controller) deleteFieldOption(ctx server.Context) {
+	handler.HandleDelete(ctx, ct.services.FieldOption, ctx.Request.PathValue("id"), handler.HandlerOptions{
+		RedirectOnSuccess: "/field-options/SelectOption/",
+		RedirectOnFail:    "/field-options/SelectOption/",
+	})
 }

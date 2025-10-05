@@ -1,27 +1,37 @@
 {{ define "content" }}
 
-    {{ $root := . }}
-    <h1 class="mb-4 text-4xl font-extrabold">Field options</h1>
-    <a class="btn btn-primary mb-4" href="/field-options/{{ $root.Type }}/create">Create new {{ $root.Type }}</a>
-
+    <h1 class="mb-4 text-4xl font-extrabold">Field list</h1>
+    <a class="btn btn-primary mb-4" href="/fields/create">Create new field</a>
     <table class="table mb-4">
         <thead>
             <tr>
-                <th>Type</th>
+                <th>Collection</th>
+                <th>Field</th>
+                <th>Value</th>
+                
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-          
-            
-            {{ range $index, $value := $root.Types }}
-                <tr>
-                    <th>{{ $value }}</th>
-                    <td><a href="/field-options/{{$value}}">Show</a></td>
-                </tr>
-            {{end}}
-
+            {{ range .Items }}
+            <tr>
+                <td>{{ .Field.Collection.Name }}</td>
+                <td>{{ .Field.Name }}</td>
+                <td>{{ .Value }}</td>
+                <td><a href="/field-options/SelectOption/edit/{{ .ID }}">Edit</a></td>
+            </tr>
+            {{ end }}
         </tbody>
     </table>
+
+    <div>
+		{{if gt .CurrentPage 1}}
+			<a href="?page={{sub .CurrentPage 1}}&pageSize={{.PageSize}}">Previous</a>
+		{{end}}
+		<span>Page {{.CurrentPage}} of {{.TotalPages}}</span>
+		{{if lt .CurrentPage .TotalPages}}
+			<a href="?page={{add .CurrentPage 1}}&pageSize={{.PageSize}}">Next page</a>
+		{{end}}
+	</div>
 
 {{end}}
