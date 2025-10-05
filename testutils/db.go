@@ -18,6 +18,7 @@ func CreateTestDB() (*gorm.DB, error) {
 	err = gormDB.AutoMigrate(
 		&model.Collection{},
 		&model.Field{},
+		&model.FieldOption{},
 		&model.Content{},
 		&model.ContentValue{},
 		&model.Asset{},
@@ -46,6 +47,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 			&model.Webhook{},
 			&model.Apikey{},
 			&model.Field{},
+			&model.FieldOption{},
 			&model.Collection{},
 			&model.User{},
 		}

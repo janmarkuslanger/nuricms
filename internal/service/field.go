@@ -13,6 +13,7 @@ import (
 type FieldService interface {
 	DeleteByID(id uint) error
 	FindByCollectionID(collectionID uint) ([]model.Field, error)
+	FindByFieldTypes(fieldTypes []model.FieldType) ([]model.Field, error)
 	FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error)
 	FindByID(id uint) (*model.Field, error)
 	List(page, pageSize int) ([]model.Field, int64, error)
@@ -24,12 +25,16 @@ type fieldService struct {
 	repos *repository.Set
 }
 
-func NewFieldService(repos *repository.Set) FieldService {
+func NewFieldService(repos *repository.Set) *fieldService {
 	return &fieldService{repos: repos}
 }
 
 func (s *fieldService) FindByCollectionID(collectionID uint) ([]model.Field, error) {
 	return s.repos.Field.FindByCollectionID(collectionID)
+}
+
+func (s *fieldService) FindByFieldTypes(fieldTypes []model.FieldType) ([]model.Field, error) {
+	return s.repos.Field.FindByFieldTypes(fieldTypes)
 }
 
 func (s *fieldService) FindDisplayFieldsByCollectionID(collectionID uint) ([]model.Field, error) {

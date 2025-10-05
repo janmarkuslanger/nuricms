@@ -71,7 +71,7 @@ func loadFieldData(s service.CollectionService) (map[string]any, error) {
 	data["Types"] = []model.FieldType{
 		model.FieldTypeText, model.FieldTypeNumber, model.FieldTypeBoolean,
 		model.FieldTypeDate, model.FieldTypeAsset, model.FieldTypeCollection,
-		model.FieldTypeTextarea, model.FieldTypeRichText,
+		model.FieldTypeTextarea, model.FieldTypeRichText, model.FieldTypeMultiSelect,
 	}
 
 	return data, nil
