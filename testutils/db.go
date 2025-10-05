@@ -47,6 +47,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 			&model.Webhook{},
 			&model.Apikey{},
 			&model.Field{},
+			&model.FieldOption{},
 			&model.Collection{},
 			&model.User{},
 		}
