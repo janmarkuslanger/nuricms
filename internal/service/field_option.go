@@ -52,8 +52,9 @@ func (s *fieldOptionService) Create(dto dto.FieldOption) (*model.FieldOption, er
 	}
 
 	fo := model.FieldOption{
-		Value:   dto.Value,
-		FieldID: fieldID,
+		Value:      dto.Value,
+		FieldID:    fieldID,
+		OptionType: model.FieldOptionType(dto.OptionType),
 	}
 
 	err := s.repos.FieldOption.Create(&fo)

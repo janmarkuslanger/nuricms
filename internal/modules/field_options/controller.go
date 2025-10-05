@@ -87,8 +87,9 @@ func (ct Controller) showCreateFieldOption(ctx server.Context) {
 
 func (ct Controller) createFieldOption(ctx server.Context) {
 	dto := dto.FieldOption{
-		Value:   ctx.Request.FormValue("value"),
-		FieldID: ctx.Request.FormValue("field"),
+		Value:      ctx.Request.FormValue("value"),
+		FieldID:    ctx.Request.FormValue("field"),
+		OptionType: string(model.FieldOptionTypeSelectOption),
 	}
 
 	ct.services.FieldOption.Create(dto)
