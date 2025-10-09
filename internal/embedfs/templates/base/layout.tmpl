@@ -9,20 +9,38 @@
 </head>
 <body class="h-screen pb-4">
 
-    <header>
+    <header class="lg:mb-20">
         <div class="container mx-auto flex items-center justify-between py-4">
         <a href="/">nuricms</a>
         {{ if .IsLoggedIn }}
             <nav>
                 <ul class="menu menu-vertical lg:menu-horizontal bg-base-200 rounded-box">
-                    <li><a href="/collections">Collections</a></li>
-                    <li><a href="/fields">Fields</a></li>
-                    <li><a href="/field-options">Field options</a></li>
+                    <li>
+                        <details>
+                            <summary>Modeling</summary>
+                            <ul>
+                                <li><a href="/collections">Collections</a></li>
+                                <li><a href="/fields">Fields</a></li>
+                                <li><a href="/field-options">Field options</a></li>
+                            </ul>
+                        </details>
+                    </li>
+
                     <li><a href="/content/collections">Content</a></li>
                     <li><a href="/assets">Assets</a></li>
-                    <li><a href="/user">User</a></li>
-                    <li><a href="/apikeys">API Keys</a></li>
-                    <li><a href="/webhooks">Webhooks</a></li>
+
+                    <li>
+                        <details>
+                            <summary>Administration</summary>
+                            <ul>
+                                <li><a href="/user">User</a></li>
+                                <li><a href="/apikeys">API Keys</a></li>
+                                <li><a href="/webhooks">Webhooks</a></li>
+                            </ul>
+                        </details>
+                    </li>
+                    
+                    <li class="ml-4 bg-primary text-secondary rounded-box"><a href="/logout">Logout</a></li>
                 </ul>
             </nav>
         {{ end }}
