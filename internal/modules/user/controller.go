@@ -2,6 +2,7 @@ package user
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/janmarkuslanger/nuricms/internal/dto"
 	"github.com/janmarkuslanger/nuricms/internal/handler"
@@ -22,6 +23,8 @@ func NewController(services *service.Set) *Controller {
 
 func (ct *Controller) RegisterRoutes(s *server.Server) {
 	s.Handle("GET /login", ct.showLogin)
+	s.Handle("GET /logout", ct.logout)
+	s.Handle("POST /logout", ct.logout)
 	s.Handle("POST /login", ct.login)
 
 	s.Handle("GET /user",
@@ -82,6 +85,18 @@ func (ct *Controller) login(ctx server.Context) {
 		HttpOnly: true,
 		Secure:   false,
 		MaxAge:   3600 * 24,
+	})
+
+	http.Redirect(ctx.Writer, ctx.Request, "/", http.StatusSeeOther)
+}
+
+func (ct *Controller) logout(ctx server.Context) {
+	http.SetCookie(ctx.Writer, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Unix(0, 0),
 	})
 
 	http.Redirect(ctx.Writer, ctx.Request, "/", http.StatusSeeOther)
