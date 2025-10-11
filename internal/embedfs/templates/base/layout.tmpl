@@ -39,8 +39,11 @@
                             </ul>
                         </details>
                     </li>
-                    
-                    <li class="ml-4 bg-primary text-secondary rounded-box"><a href="/logout">Logout</a></li>
+                     <li class="ml-4 rounded-box bg-primary text-secondary">
+                        <form method="POST" action="/logout">
+                            <button type="submit" class="cursor-pointer">Logout</button>
+                        </form>
+                    </li>
                 </ul>
             </nav>
         {{ end }}

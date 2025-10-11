@@ -23,7 +23,6 @@ func NewController(services *service.Set) *Controller {
 
 func (ct *Controller) RegisterRoutes(s *server.Server) {
 	s.Handle("GET /login", ct.showLogin)
-	s.Handle("GET /logout", ct.logout)
 	s.Handle("POST /logout", ct.logout)
 	s.Handle("POST /login", ct.login)
 
