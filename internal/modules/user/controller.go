@@ -1,6 +1,7 @@
 package user
 
 import (
+	"crypto/subtle"
 	"net/http"
 	"time"
 
@@ -90,11 +91,28 @@ func (ct *Controller) login(ctx server.Context) {
 }
 
 func (ct *Controller) logout(ctx server.Context) {
+	postToken := ctx.Request.PostFormValue("logout_csrf")
+	csrfCookie, err := ctx.Request.Cookie("logout_csrf")
+	if err != nil || csrfCookie.Value == "" || subtle.ConstantTimeCompare([]byte(postToken), []byte(csrfCookie.Value)) != 1 {
+		http.Error(ctx.Writer, "Invalid logout request", http.StatusForbidden)
+		return
+	}
+
 	http.SetCookie(ctx.Writer, &http.Cookie{
 		Name:     "auth_token",
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
+		Expires:  time.Unix(0, 0),
+	})
+
+	http.SetCookie(ctx.Writer, &http.Cookie{
+		Name:     "logout_csrf",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   false,
 		Expires:  time.Unix(0, 0),
 	})
 

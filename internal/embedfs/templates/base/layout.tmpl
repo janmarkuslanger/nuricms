@@ -41,6 +41,7 @@
                     </li>
                      <li class="ml-4 rounded-box bg-primary text-secondary">
                         <form method="POST" action="/logout">
+                            <input type="hidden" name="logout_csrf" value="{{ .LogoutCSRFToken }}">
                             <button type="submit" class="cursor-pointer">Logout</button>
                         </form>
                     </li>

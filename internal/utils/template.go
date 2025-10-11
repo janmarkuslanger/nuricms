@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -27,8 +29,39 @@ var funcMap = template.FuncMap{
 }
 
 var RenderWithLayoutHTTP = func(ctx server.Context, contentTemplate string, data map[string]any, statusCode int) {
+	if data == nil {
+		data = make(map[string]any)
+	}
+
 	_, err := ctx.Request.Cookie("auth_token")
 	data["IsLoggedIn"] = err == nil
+
+	if err == nil {
+		csrfToken := ""
+		if csrfCookie, cookieErr := ctx.Request.Cookie("logout_csrf"); cookieErr == nil && csrfCookie.Value != "" {
+			csrfToken = csrfCookie.Value
+		} else {
+			random := make([]byte, 32)
+			if _, randErr := rand.Read(random); randErr != nil {
+				http.Error(ctx.Writer, "Failed to generate logout token", http.StatusInternalServerError)
+				return
+			}
+			csrfToken = hex.EncodeToString(random)
+		}
+
+		http.SetCookie(ctx.Writer, &http.Cookie{
+			Name:     "logout_csrf",
+			Value:    csrfToken,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+			Secure:   false,
+		})
+
+		data["LogoutCSRFToken"] = csrfToken
+	} else {
+		delete(data, "LogoutCSRFToken")
+	}
 
 	tmpl, err := template.New("layout.tmpl").
 		Funcs(funcMap).
